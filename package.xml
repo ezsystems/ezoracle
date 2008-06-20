@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package version="1.0"
+         development="true"
+         xmlns:ezpackage="http://ez.no/ezpackage"
+         install_type="install">
+  <warning>This format was made with a development version and will not work with any release versions.
+The format of this file is also subject to change until the release version.
+Upgrades to the development format will not be supported.</warning>
+  <name>ezoracle</name>
+  <summary>eZ Oracle extension</summary>
+  <description>This extension adds support for the Oracle database to eZ publish by plugging into the database framework. After it is installed you can connect to any Oracle database that fits the minimum requirements.</description>
+  <ezpublish xmlns:ezpublish="http://ez.no/ezpublish"> 
+    <version>3.5.0</version>
+    <named-version>3.5</named-version>
+  </ezpublish>
+  <maintainers xmlns:ezmaintainer="http://ez.no/ezpackage">
+    <maintainer>
+      <name>eZ systems</name>
+      <email>info@ez.no</email>
+      <role>lead</role>
+    </maintainer>
+  </maintainers>
+  <packaging xmlns:ezpackaging="http://ez.no/ezpackage">
+    <timestamp>1086168206</timestamp>
+    <host>drakhen.ez.no</host>
+  </packaging>
+  <documents>
+    <document mime-type="text/plain"
+              name="README" />
+    <document mime-type="text/plain"
+              name="LICENSE" />
+    <document mime-type="text/plain"
+              name="INSTALL" />
+    <document mime-type="text/plain"
+              name="FAQ" />
+  </documents>
+  <changelog xmlns:ezchangelog="http://ez.no/ezpackage">
+    <entry timestamp="1086168206"  
+           person="eZ systems"
+           email="info@ez.no"
+           release="1">
+      <change>First public release</change>
+    </entry>
+  </changelog>
+  <version xmlns:ezversion="http://ez.no/ezpackage">
+    <number>1.0</number>
+    <release>beta1</release>
+  </version>
+  <licence>eZ Propritary license.</licence>
+  <state>beta</state>
+  <dependencies xmlns:ezdependency="http://ez.no/ezpackage">
+    <provides>
+      <provide type="ezextension"
+               name="ezoracle"
+               value="1.0" />
+      <provide type="ezdb"
+               name="handler"
+               value="ezoracle" />
+      <provide type="ezdbschema"
+               name="handler"
+               value="ezoracle" />
+    </provides>
+    <requires>
+      <require type="ezpublish"
+               name="version"
+               value="3.5" />
+    </requires>
+    <obsoletes />
+    <conflicts />
+  </dependencies>
+  <install xmlns:ezinstall="http://ez.no/ezpackage">
+    <item type="ezextension"
+          name="ezoracle" />
+  </install>
+  <uninstall xmlns:ezinstall="http://ez.no/ezpackage">
+    <item type="ezextension"
+          name="ezoracle" />
+  </uninstall>
+</package>
