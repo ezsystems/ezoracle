@@ -13,7 +13,7 @@ Introduction
 2. License
    -------
 
-   This software is licensed under the eZ Proprietary license. The complete
+   This software is licensed under the [EXTENSION_LICENSE]. The complete
    license agreement is included in the LICENSE file. For more information
    or questions please contact info@ez.no
 
@@ -24,7 +24,7 @@ Introduction
 
    o  eZ publish version:
 
-      Make sure you use eZ publish version 4.0.1 or 4.1 or higher, earlier
+      Make sure you use eZ publish version [EXTENSION_PUBLISH_VERSION] or higher, earlier
       versions did not take Oracle properly into account and will not work
       correctly.
 
@@ -55,7 +55,7 @@ You can download a version of eZ publish from ez.no, you will find the
 various versions at:
 http://ez.no/download/ez_publish/ez_publish_4_stable_releases
 
-NOTE: You will require eZ publish 4.0.1 or 4.1 or higher
+NOTE: You will require eZ publish [EXTENSION_PUBLISH_VERSION] or higher
 
 Information on the installation of eZ publish can be found at:
 http://ez.no/ezpublish/documentation/installation
@@ -80,7 +80,7 @@ Installing eZ Oracle extension
    $ unzip ezoracle-extension-[ExtensionVersion].zip
 
 
-3. We must now enable the extension in eZ publish. To do this edit site.ini.append(.php) in the 
+3. Enable the extension in eZ publish. To do this edit site.ini.append(.php) in the 
    folder root_of_ezpublish/settings. If this file does not exist, create it. Locate (or add)
    the block [ExtensionSettings] and add the line:
 
