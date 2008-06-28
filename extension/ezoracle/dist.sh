@@ -1,8 +1,8 @@
 #!/bin/bash
-EXTENSION_NAME="eZ oracle"
+EXTENSION_NAME="eZ Oracle"
 EXTENSION_IDENTIFIER="ezoracle"
 EXTENSION_SUMMARY="Adds support for Oracle database in eZ publish"
-EXTENSION_LICENSE="eZ Proprietary License"
+EXTENSION_LICENSE="GNU General Public License v2.0"
 EXTENSION_VERSION="2.0"
 EXTENSION_PUBLISH_VERSION="4.0.1"
 EXTENSION_ARCHIVE_NAME="ezoracle"
