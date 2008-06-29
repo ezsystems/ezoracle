@@ -3,13 +3,15 @@
 
 Short Oracle introduction
 ------------------------
-Oracle is a strange program which is quite different from other databases. Here are a few hints to get you going.
-- There are no databases only oracle instances. (see oracle doc on how to setup an instance)
-- The instances on your system can be found in the tnsnames.ora file.
+Oracle is a unique program which is quite different from other databases. Here are a few hints to get you going.
+- There are no databases that form a server, only oracle instances. (see oracle doc on how to setup an instance)
+- The instances you can connect to from your system can generally be found in the tnsnames.ora file.
+- The instances running on your system can generally be found in the listener.ora file.
 - Each instance can have several users.
-- Users can not see the tables of each other effectively creating a new database.
+- Users can not by default see the data of each other, effectively creating a new database for each user.
+- The set of objects belonging to one user is called schema
 
-Updating the Oracle SQL chemas
+Updating the Oracle SQL schemas
 -----------------------------
 - Remember to test on both Oracle 8 and 9
 
@@ -21,7 +23,7 @@ Oracle SQL oddities
 1.1.
 
 Oracle does not support identifiers longer than 30 characters. That is,
-table, column, trigger or sequence name cannot exceed this limit. Since some
+table, column, trigger or sequence names cannot exceed this limit. Since some
 fields of eZ Publish tables have names too long for Oracle we use "short
 field names" as fields aliases when working with Oracle. To use this feature
 in your class (derived from eZPersistentObject) you should specify
@@ -50,8 +52,8 @@ function &definition()
 
 1.2.
 
-The sequences made for oracle starts with s_ instead of ez. The reason for
-this is the 30 character limitation, if _s was appended to the table names
+The sequences made for oracle start with s_ instead of ez. The reason for
+this is the 30 character limitation: if _s was appended to the table names
 the identifier would exceed this value. Instead ez at the start is replaced
 with s_.
 
@@ -91,7 +93,7 @@ WHERE DBMS_LOB.getlength(data_text)=5 AND DBMS_LOB.substr(data_text,5)='BW015'
 
 3.2.
 
-Oracle is unable to create indexes on CLOB fields.
+Oracle is unable to create standard indexes on CLOB fields.
 
 3.3.
 
@@ -128,8 +130,12 @@ how to do it please look at eZPersistentObject::storeObject() method.
 
 3.4.
 
-Oracle 8 has a limit of 3218 characters for key in an index, setting the length
+Oracle 8 has a a default limit of 3218 characters for key in an index, setting the length
 of a varchar or char to 3100 keeps it below that value.
+In fact the limit is tied to the db block size parameter, which defaults to 8K. If the
+block size used was for the db was doubled there would be no problem at all.
+Oracle 9 and later have higher limits on index key length, so that even with a block
+size of 8k there is no problem in using a varchar2(4000) column as index key.
 
 4. SQL Errors with PHP
 
@@ -220,20 +226,23 @@ Here come two cases:
 The first case is simple and can be solved in a DBMS-portable way like this:
 
     WHERE LENGTH(name) > 0
+or
+	WHERE (name != '' and name IS NOT NULL)
 
-(works at least on Oracle, MySQL, PostgreSQL)
+(these work at least on Oracle, MySQL, PostgreSQL. Null strings are filtered out together with empty ones)
 
 If you don't need compatibility with other DBMSs, you can of course use
 the following clause:
 
     WHERE name IS NOT NULL
 
-The second case is more complex and there is no such a portable
-solution. However, you can use the following clause:
+The second case is more complex. However, you can use the following clause:
 
     WHERE desc || 'x' = 'x'
+or
+	WHERE (desc = '' OR desc IS NULL)
 
-(this works on PostgreSQL as well)
+(this works on PostgreSQL as well. Null strings are selected together with empty ones)
 
 Or, if compatitibility is not needed, the following one:
 
