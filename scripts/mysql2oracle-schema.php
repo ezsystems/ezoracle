@@ -69,7 +69,8 @@ $columnsWithDefaultNullVal = array(
     'ezproductcollection.currency_code',
     'ezmedia.filename',
     'ezmedia.original_filename',
-    'ezmedia.mime_type'
+    'ezmedia.mime_type',
+    'ezrss_import.import_description'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
