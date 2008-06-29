@@ -53,6 +53,7 @@ ColumnOptionTranslations[ezproductcollection.currency_code]=null
 ColumnOptionTranslations[ezmedia.filename]=null
 ColumnOptionTranslations[ezmedia.original_filename]=null
 ColumnOptionTranslations[ezmedia.mime_type]=null
+ColumnOptionTranslations[ezrss_import.import_description]=null
 
 IndexNameTranslation[ezcontentobject_attribute.ezcontentobject_attribute_contentobject_id]=ezco_attr_co_id
 IndexNameTranslation[ezcontentobject_attribute.ezcontentobject_attribute_co_id_ver_lang_code]=ezco_attr_co_id_ver_lang_code
