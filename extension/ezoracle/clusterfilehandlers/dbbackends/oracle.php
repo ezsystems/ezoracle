@@ -453,7 +453,7 @@ class eZDBFileHandlerOracleBackend
         // Create temporary file.
         /// @todo improve unique name generation: $_SERVER["SERVER_ADDR"] is not avail on cli sapi
         if ( strrpos( $filePath, '.' ) > 0 )
-            $tmpFilePath = substr_replace( $filePath, $_SERVER["SERVER_ADDR"] . '.' . getmypid() . '.' . microtime(true) . '.tmp', strrpos( $filePath, '.' ), 0  );
+            $tmpFilePath = substr_replace( $filePath, '.' . $_SERVER["SERVER_ADDR"] . '.' . getmypid() . '.' . microtime(true) . '.tmp', strrpos( $filePath, '.' ), 0  );
         else
             $tmpFilePath = $filePath . '.' . $_SERVER["SERVER_ADDR"] . '.' . getmypid(). '.' . microtime(true) . '.tmp';
 //        $tmpFilePath = $filePath.getmypid().'tmp';
@@ -1313,7 +1313,8 @@ class eZDBFileHandlerOracleBackend
         eZDebug::writeNotice( "$query", "cluster::oracle::{$fname}[{$rowText}" . number_format( $timeTaken, 3 ) . " ms] query number per page:" . $numQueries++, $backgroundClass );
     }
 
-    var $db = null;
+    public $db = null;
+    public $transactionCount = 0;
     var $dbparams = null;
     //var $lockedfile = null;
     var $error = false;
