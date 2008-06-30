@@ -14,3 +14,4 @@ END bitor;
 ALTER TABLE ezurl MODIFY (url varchar2(3000));
 ALTER TABLE ezrss_import MODIFY (url varchar2(3100));
 ALTER TABLE ezurlalias_ml MODIFY (action NULL);
+ALTER TABLE ezrss_import  MODIFY (import_description NULL);
