@@ -188,7 +188,7 @@ rm "$PHP_TEST_SCRIPT"
 echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 
-# Find eZ publish and make sure it has the extension
+# Find eZ Publish and make sure it has the extension
 
 EZP_PATH=`pwd`
 EZORACLE_EXT_PATH=`pwd`
@@ -218,7 +218,7 @@ function is_ezpublish_dir
     return 0
 }
 
-echo -n "Looking for eZ publish installation"
+echo -n "Looking for eZ Publish installation"
 if ! is_ezpublish_dir "$EZP_PATH"; then
     # also check if running from ezoracle script dir
     if ! is_ezpublish_dir "$EZP_PATH/../../.."; then
@@ -233,9 +233,9 @@ else
 fi
 if [ -z "$EZP_PATH" ]; then
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-    echo "No eZ publish directory found"
+    echo "No eZ Publish directory found"
     while [ -z "$EZP_PATH" ]; do
-    echo -n "Please enter full eZ publish path: "
+    echo -n "Please enter full eZ Publish path: "
     read DIR
     if [ -z "$DIR" ]; then
         exit
@@ -243,12 +243,12 @@ if [ -z "$EZP_PATH" ]; then
     if [ ! -d "$DIR" ]; then
         echo "Directory $DIR does not exist"
     elif ! is_ezpublish_dir "$DIR"; then
-        echo "Directory $DIR is not an eZ publish installation"
+        echo "Directory $DIR is not an eZ Publish installation"
     else
         EZP_PATH="$DIR"
     fi
     done
-    echo -n "Checking eZ publish installation"
+    echo -n "Checking eZ Publish installation"
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
     EZORACLE_EXT_PATH="$EZP_PATH/extension/ezoracle"
 else
@@ -258,13 +258,13 @@ fi
 echo -n "Testing eZOracle extension"
 if [ ! -d "$EZORACLE_EXT_PATH" ]; then
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-    echo "The Oracle extension is not installed in the eZ publish directory"
+    echo "The Oracle extension is not installed in the eZ Publish directory"
     echo "Please copy the extension to $EZP_PATH/extension/"
     exit 1
 fi
 if [ ! -f "$EZORACLE_EXT_PATH/ezdb/dbms-drivers/ezoracledb.php" ]; then
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-    echo "The Oracle extension is not installed in the eZ publish directory"
+    echo "The Oracle extension is not installed in the eZ Publish directory"
     echo "Please copy the extension to $EZP_PATH/extension/"
     exit 1
 fi

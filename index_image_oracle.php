@@ -1,6 +1,6 @@
 <?php
 
-// Copy this file to root directory of your eZ publish installation.
+// Copy this file to root directory of your eZ Publish installation.
 
 define( 'TABLE_METADATA', 'ezdbfile' );
 
@@ -41,7 +41,7 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
     /* Set cache time out to 10 minutes, this should be good enough to work around an IE bug */
     header( "Expires: ". gmdate('D, d M Y H:i:s', time() + 6000) . ' GMT' );
     header( "Connection: close" );
-    header( "X-Powered-By: eZ publish" );
+    header( "X-Powered-By: eZ Publish" );
     header( "Accept-Ranges: none" );
     header( 'Served-by: ' . $_SERVER["SERVER_NAME"] );
 
