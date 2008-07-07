@@ -3,7 +3,7 @@ eZ Oracle extension [ExtensionVersion] README
 What is the eZ Oracle extension?
 ================================
 
-This extension adds support for the Oracle database to eZ publish by
+This extension adds support for the Oracle database to eZ Publish by
 plugging into the database framework. After it is installed you can
 connect to any Oracle database that fits the minimum requirements.
 
@@ -28,9 +28,9 @@ Requirements
 
 The following requirements exists for using eZ Oracle extension:
 
-o  eZ publish version:
+o  eZ Publish version:
 
-   Make sure you eZ publish version [EXTENSION_PUBLISH_VERSION] or higher  (4.0.x), earlier
+   Make sure you eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher  (4.0.x), earlier
    versions did not take Oracle properly into account and will not work
    correctly.
 

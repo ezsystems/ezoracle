@@ -6,7 +6,7 @@ Introduction
 1. What is the eZ Oracle extension?
    --------------------------------
 
-   This extension adds support for the Oracle database to eZ publish by
+   This extension adds support for the Oracle database to eZ Publish by
    plugging into the database framework. After it is installed you can
    connect to any Oracle database that fits the minimum requirements.
 
@@ -22,9 +22,9 @@ Introduction
 
    The following requirements exists for using eZ Oracle extension:
 
-   o  eZ publish version:
+   o  eZ Publish version:
 
-      Make sure you use eZ publish version [EXTENSION_PUBLISH_VERSION] or higher (4.0.x), earlier
+      Make sure you use eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher (4.0.x), earlier
       versions did not take Oracle properly into account and will not work
       correctly. For eZ Publish 4.1 or later, use eZ Oracle 2.0 or later.
 
@@ -48,24 +48,24 @@ Introduction
       following elements: session, table, trigger, sequence and procedure.
 
 
-Getting eZ publish
+Getting eZ Publish
 ==================
 
-You can download a version of eZ publish from ez.no, you will find the
+You can download a version of eZ Publish from ez.no, you will find the
 various versions at:
 http://ez.no/download/ez_publish/ez_publish_4_stable_releases
 
-NOTE: You will require eZ publish [EXTENSION_PUBLISH_VERSION] or higher (4.0.x)
+NOTE: You will require eZ Publish [EXTENSION_PUBLISH_VERSION] or higher (4.0.x)
 
-Information on the installation of eZ publish can be found at:
-http://ez.no/ezpublish/documentation/installation
+Information on the installation of eZ Publish can be found at:
+http://ez.no/doc/ez_publish/technical_manual/4_0/installation
 
 
 Installing eZ Oracle extension
 ==============================
 
 1. Copy or untar the package into the `extension' directory in the root of your
-   eZ publish installation.
+   eZ Publish installation.
 
 2. Unpack the files in the distribution. The command necessary depends on the
    type of file you downloaded.
@@ -80,9 +80,9 @@ Installing eZ Oracle extension
    $ unzip ezoracle-extension-[ExtensionVersion].zip
 
 
-3. Enable the extension in eZ publish. To do this edit site.ini.append(.php) in the 
-   folder root_of_ezpublish/settings. If this file does not exist, create it. Locate (or add)
-   the block [ExtensionSettings] and add the line:
+3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the 
+   folder root_of_ezpublish/settings/override. If this file does not exist, create it.
+   Locate (or add) the block [ExtensionSettings] and add the line:
 
    ActiveExtensions[]=ezoracle
 
@@ -101,7 +101,7 @@ Initializing Oracle database
 1. Automated install with ora-initialize.sh
    ----------------------------------------
 
-   Go to the eZ publish installation directory and run the script:
+   Go to the eZ Publish installation directory and run the script:
 
    $ ./extension/ezoracle/scripts/ora-initialize.sh
 
@@ -148,12 +148,12 @@ Initializing Oracle database
 
    o  Cleaning up existing elements in database
 
-      If eZ publish has been previously installed it will remove any elements
+      If eZ Publish has been previously installed it will remove any elements
       left.
 
    o  Creating the database schema and inserting data
 
-      The schema and data will be taken from the eZ publish installation files
+      The schema and data will be taken from the eZ Publish installation files
       and initialized in the database.
 
 2. Manual install
@@ -216,7 +216,7 @@ EOF
         ------------------
 
         You can start from scratch by using the schema bundled with the
-        eZ publish installation, and filling it with the basic data.
+        eZ Publish installation, and filling it with the basic data.
 
         o  Create the schema
            $ ./bin/php/ezsqlinsertschema.php --type=oracle --user=<user> \
@@ -251,12 +251,12 @@ EOF
         $ ./ora-update-seqs.php scott/tiger@orcl
 
 
-Configuring eZ publish
+Configuring eZ Publish
 ======================
 
-1. Changing eZ publish database handler
+1. Changing eZ Publish database handler
 
-   Before eZ publish will start using the Oracle database, the current
+   Before eZ Publish will start using the Oracle database, the current
    database handler must be changed.
 
    Edit your settings/override/site.ini.append.php and make sure the

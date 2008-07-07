@@ -1,16 +1,16 @@
 #!/bin/sh
 # Transfers schema and data from MySQL to Oracle using ezdbschema interface
-# that is available in eZ publish 3.5+.
+# that is available in eZ Publish 3.5+.
 #
 # The script doesn't introduce any new functionality. It just calls
-# subsequently standard eZ publish scripts.
+# subsequently standard eZ Publish scripts.
 #
 # The result should be equal to running
 # ora-drop-schema.sh, mysql2oracle-schema.php,
 # mysql2oracle-data.php and ora-update-seqs.php
 #
 # Adjust database connection parameters below, then
-# run this script from root directory of eZ publish.
+# run this script from root directory of eZ Publish.
 
 MY_DB=stable35
 MY_USER=root
@@ -48,7 +48,7 @@ function is_ezpublish_dir
 ###############################################################################
 
 if ! is_ezpublish_dir; then
-    echo Please go to root directory of your eZ publish installation.
+    echo Please go to root directory of your eZ Publish installation.
     exit 1
 fi
 
