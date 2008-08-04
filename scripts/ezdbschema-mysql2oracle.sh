@@ -6,7 +6,7 @@
 # subsequently standard eZ Publish scripts.
 #
 # The result should be equal to running
-# ora-drop-schema.sh, mysql2oracle-schema.php,
+# ora-drop-schema.php, mysql2oracle-schema.php,
 # mysql2oracle-data.php and ora-update-seqs.php
 #
 # Adjust database connection parameters below, then
@@ -38,11 +38,11 @@ function is_ezpublish_dir
 
     if grep -q 'EZ_SDK_VERSION_MAJOR' lib/version.php 2>/dev/null &&
        grep -q 'EZ_SDK_VERSION_MINOR' lib/version.php 2>/dev/null &&
-       grep -q 'EZ_SDK_VERSION_STATE' lib/version.php 2>/dev/null 
+       grep -q 'EZ_SDK_VERSION_STATE' lib/version.php 2>/dev/null
     then
         return 0
     fi
-    
+
     return 1
 }
 ###############################################################################
