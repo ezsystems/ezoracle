@@ -15,6 +15,7 @@ Changes from 1.5 to 2.0
 - Removed quotes around default values for columns that are of type DECIMAL in mysql
 - Added function databaseServerVersion() to database driver
 - Improved error reporting and shutdown when a query fails inside a transaction
+- Implemented request #013445: Reimplemented script ora-drop-schema.sh in php, to improve portability and reduce dependency on sqlplus; added dropping of functions and stored procedures, cleaning of recycle bin
 
 
 *Bugfixes:
