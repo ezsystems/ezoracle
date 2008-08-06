@@ -5,8 +5,8 @@
 // Created on: <03-May-2006 11:28:15 vs>
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
-// SOFTWARE NAME: eZ Publish
-// SOFTWARE RELEASE: 3.8.x
+// SOFTWARE NAME: eZ Oracle
+// SOFTWARE RELEASE: 1.8.x
 // COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >

@@ -4,8 +4,8 @@
 //
 // Created on: <19-Apr-2006 16:01:30 vs>
 //
-// SOFTWARE NAME: eZ Publish
-// SOFTWARE RELEASE: 4.0.1rc1
+// SOFTWARE NAME: eZ Oracle
+// SOFTWARE RELEASE: 1.8.x
 // BUILD VERSION: 21995
 // COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0

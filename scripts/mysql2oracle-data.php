@@ -1,5 +1,30 @@
 #!/usr/bin/env php
 <?php
+//
+// ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
+// SOFTWARE NAME: eZ 0racle
+// SOFTWARE RELEASE: 1.8.x
+// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// SOFTWARE LICENSE: GNU General Public License v2.0
+// NOTICE: >
+//   This program is free software; you can redistribute it and/or
+//   modify it under the terms of version 2.0  of the GNU General
+//   Public License as published by the Free Software Foundation.
+//
+//   This program is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of version 2.0 of the GNU General
+//   Public License along with this program; if not, write to the Free
+//   Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+//   MA 02110-1301, USA.
+//
+//
+// ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
+//
+
 # Transfers all data from a given MySQL DB to an Oracle DB.
 # Run the script without arguments to see its usage.
 
@@ -16,19 +41,19 @@ $columnNameTransTable = array(
  Parses given MySQL login string of the following form:
  <dbname>:<user>/<pass>@<host>[:<port>]
  \param $loginString (in) login string to parse
- \param &$db   (out) db name
+ \param &$dbname (out) db name
  \param &$user (out) db user
  \param &$pass (out) db password
  \param &$host (out) host mysql is running on
  \return true if the string was parsed successfully, false otherwise
 */
-function parseMysqlLoginString( $loginString, &$db, &$user, &$pass, &$host )
+function parseMysqlLoginString( $loginString, &$dbname, &$user, &$pass, &$host )
 {
     if ( !preg_match( '#(\S+):(\S+)/(\S*)@(\S+)#', $loginString, $matches ) )
         return false;
 
     array_shift( $matches );
-    list( $db, $user, $pass, $host ) = $matches;
+    list( $dbname, $user, $pass, $host ) = $matches;
 
     return true;
 }

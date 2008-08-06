@@ -1025,7 +1025,7 @@ class eZOracleDB extends eZDBInterface
 
         if ( $maxTries == 0 )
         {
-            eZDebug::writeError( "Tried to generate an uninque temp table name for $maxTries time with no luck" );
+            eZDebug::writeError( "Tried to generate an unique temp table name for $maxTries time with no luck" );
         }
 
         return $tableName;
