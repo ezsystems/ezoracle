@@ -7,6 +7,6 @@ CREATE INDEX ezcontent_language_name ON ezcontent_language (name);
 CREATE INDEX ezcontentobject_owner ON ezcontentobject (owner_id);
 
 CREATE UNIQUE INDEX ezcontentobject_remote_id ON ezcontentobject (remote_id);
--- END: from 3.10.1
 
 ALTER TABLE ezurlalias_ml ADD alias_redirects number(11) NOT NULL default 1;
+-- END: from 3.10.1
