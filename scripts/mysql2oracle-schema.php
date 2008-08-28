@@ -396,12 +396,17 @@ function dumpAutoIcrements( &$autoIncrementColumns, &$seqs, &$triggers, $drop )
         $trname  = shorten( $table.'_'.$col, 30-3 ) .'_tr';
 
         /* eZ Publish-specific hack for sequnce name to be always <= 30 characters
-           (no longer that table name, at lest)
+           (no longer that table name, at least)
          */
-        $seqname = eregi_replace('^ez', 's_', $table);
+        $seqname = eregi_replace( '^ez', 's_', $table );
+        if ( $seqname == $table )
+        {
+            // table name does not start with 'ez': an extension, most likely
+            $seqname = substr( 'se_' . $seqname, 0, 30 );
+        }
 
         if ( $drop )
-            $seqs .= "DROP   SEQUENCE $seqname;\n";
+            $seqs .= "DROP SEQUENCE $seqname;\n";
 
         $seqs .= "CREATE SEQUENCE $seqname;\n";
 

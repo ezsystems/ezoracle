@@ -453,6 +453,11 @@ class eZOracleSchema extends eZDBSchemaInterface
     function generateAutoIncrement( $table_name, $field_name, $field_def, $params, $withClosure = true )
     {
         $seqName  = preg_replace( '/^ez/', 's_', $table_name );
+        if ( $seqName == $table_name )
+        {
+            // table name does not start with 'ez': an extension, most likely
+            $seqName = substr( 'se_' . $seqName, 0, 30 );
+        }
         $trigName = eZOracleSchema::shorten( $table_name . '_' . $field_name, 30-3 ) .'_tr';
         $sqlSeq = "CREATE SEQUENCE $seqName";
         if ( $withClosure )
