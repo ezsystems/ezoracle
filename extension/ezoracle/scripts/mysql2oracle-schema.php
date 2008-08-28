@@ -399,6 +399,11 @@ function dumpAutoIcrements( &$autoIncrementColumns, &$seqs, &$triggers, $drop )
            (no longer that table name, at lest)
          */
         $seqname = eregi_replace('^ez', 's_', $table);
+        if ( $seqname == $table )
+        {
+            // table name does not start with 'ez': an extension, most likely
+            $seqname = substr( 'se_' . $seqname, 0, 30 );
+        }
 
         if ( $drop )
             $seqs .= "DROP   SEQUENCE $seqname;\n";
