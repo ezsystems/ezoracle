@@ -915,6 +915,7 @@ class eZOracleDB extends eZDBInterface
 
     /*!
       \reimp
+	  NB: this code should at least log a warning if the regexp does not match
     */
     function dropTempTable( $dropTableQuery = '' )
     {
@@ -1011,6 +1012,11 @@ class eZOracleDB extends eZDBInterface
 
     /*!
      \reimp
+	 This reimplementation differs a bit from the base version:
+	  a - it ignores the randomizeindex
+	  b - it has a finite number of retries
+	  A is most likely done to make sure that every temp table is used by only one php session, never many ones (advantages in dropping)
+	  B could be possibly removed. Especially considering that in such a case the returned temp table name is duplicate...
      */
     function generateUniqueTempTableName( $pattern, $randomizeIndex = false )
     {
@@ -1025,7 +1031,7 @@ class eZOracleDB extends eZDBInterface
 
         if ( $maxTries == 0 )
         {
-            eZDebug::writeError( "Tried to generate an uninque temp table name for $maxTries time with no luck" );
+            eZDebug::writeError( "Tried to generate an unique temp table name for $maxTries time with no luck" );
         }
 
         return $tableName;
