@@ -49,6 +49,7 @@ ColumnOptionTranslations[ezcollab_item.data_text1]=null
 ColumnOptionTranslations[ezcollab_item.data_text2]=null
 ColumnOptionTranslations[ezcollab_item.data_text3]=null
 ColumnOptionTranslations[ezgeneral_digest_user_settings.day]=null
+ColumnOptionTranslations[ezgeneral_digest_user_settings.time]=null
 ColumnOptionTranslations[ezproductcollection.currency_code]=null
 ColumnOptionTranslations[ezmedia.filename]=null
 ColumnOptionTranslations[ezmedia.original_filename]=null
