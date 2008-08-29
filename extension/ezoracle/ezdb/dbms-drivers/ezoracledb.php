@@ -194,7 +194,7 @@ class eZOracleDB extends eZDBInterface
         return ':' . $fieldDef['name'];
     }
 
-    function analizeQuery( $sql )
+    function analizeQuery( $sql, $server = false )
     {
         $analysisText = false;
         // If query analysis is enable we need to run the query
@@ -297,7 +297,7 @@ class eZOracleDB extends eZDBInterface
     /*!
       \reimp
     */
-    function query( $sql )
+    function query( $sql, $server = false )
     {
         // note: the other database drivers do not reset the error message here...
         $this->ErrorMessage = false;
@@ -325,7 +325,7 @@ class eZOracleDB extends eZDBInterface
             $this->startTimer();
         }
 
-        $analysisText = $this->analizeQuery( $sql );
+        $analysisText = $this->analizeQuery( $sql, $server );
 
         $statement = oci_parse( $this->DBConnection, $sql );
 
@@ -400,7 +400,7 @@ class eZOracleDB extends eZDBInterface
     /*!
       \reimp
     */
-    function arrayQuery( $sql, $params = false )
+    function arrayQuery( $sql, $params = false, $server = false )
     {
         $resultArray = array();
 
@@ -439,7 +439,7 @@ class eZOracleDB extends eZDBInterface
             eZDebug::accumulatorStop( 'oracle_conversion' );
         }
 
-        $analysisText = $this->analizeQuery( $sql );
+        $analysisText = $this->analizeQuery( $sql, $server );
 
         if ( $this->OutputSQL )
         {
@@ -843,7 +843,7 @@ class eZOracleDB extends eZDBInterface
     /*!
      \reimp
     */
-    function eZTableList()
+    function eZTableList( $server = self::SERVER_MASTER )
     {
         $array = array();
         if ( $this->isConnected() )
@@ -863,7 +863,7 @@ class eZOracleDB extends eZDBInterface
                     $matchText = "WHERE LOWER( SUBSTR( $field, 0, " . strlen( $ignoreName ) . " ) ) != '$ignoreName'";
                 }
                 $sql = "SELECT LOWER( $field ) AS $field FROM $table $matchText";
-                foreach ( $this->arrayQuery( $sql, array( 'column' => '0' ) ) as $result )
+                foreach ( $this->arrayQuery( $sql, array( 'column' => '0' ), $server ) as $result )
                 {
                     $array[$result] = $relationType;
                 }
@@ -906,25 +906,25 @@ class eZOracleDB extends eZDBInterface
     /*!
       \reimp
     */
-    function createTempTable( $createTableQuery = '' )
+    function createTempTable( $createTableQuery = '', $server = self::SERVER_SLAVE )
     {
         $createTableQuery = preg_replace( '#CREATE\s+TEMPORARY\s+TABLE#', 'CREATE GLOBAL TEMPORARY TABLE', $createTableQuery );
         $createTableQuery .= " ON COMMIT PRESERVE ROWS";
-        $this->query( $createTableQuery );
+        $this->query( $createTableQuery, $server );
     }
 
     /*!
       \reimp
-	  NB: this code should at least log a warning if the regexp does not match
+      NB: this code should at least log a warning if the regexp does not match
     */
-    function dropTempTable( $dropTableQuery = '' )
+    function dropTempTable( $dropTableQuery = '', $server = self::SERVER_SLAVE )
     {
         if( preg_match( '#DROP\s+TABLE\s+(\S+)#', $dropTableQuery, $matches ) )
         {
-            $this->query( 'TRUNCATE TABLE ' . $matches[1] );
+            $this->query( 'TRUNCATE TABLE ' . $matches[1], $server );
         }
 
-        $this->query( $dropTableQuery );
+        $this->query( $dropTableQuery, $server );
     }
 
 
@@ -1012,20 +1012,20 @@ class eZOracleDB extends eZDBInterface
 
     /*!
      \reimp
-	 This reimplementation differs a bit from the base version:
-	  a - it ignores the randomizeindex
-	  b - it has a finite number of retries
-	  A is most likely done to make sure that every temp table is used by only one php session, never many ones (advantages in dropping)
-	  B could be possibly removed. Especially considering that in such a case the returned temp table name is duplicate...
+     This reimplementation differs a bit from the base version:
+      a - it ignores the randomizeindex
+      b - it has a finite number of retries
+      A is most likely done to make sure that every temp table is used by only one php session, never many ones (advantages in dropping)
+      B could be possibly removed. Especially considering that in such a case the returned temp table name is duplicate...
      */
-    function generateUniqueTempTableName( $pattern, $randomizeIndex = false )
+    function generateUniqueTempTableName( $pattern, $randomizeIndex = false, $server = self::SERVER_SLAVE )
     {
         $maxTries = 10;
         do
         {
             $num = rand( 10000000, 99999999 );
             $tableName = strtoupper( str_replace( '%', $num, $pattern ) );
-            $cntResult = $this->arrayQuery( "SELECT count(*) AS cnt FROM user_tables WHERE table_name='$tableName'" );
+            $cntResult = $this->arrayQuery( "SELECT count(*) AS cnt FROM user_tables WHERE table_name='$tableName'", $server );
             $maxTries--;
         } while( $cntResult && $cntResult[0]['cnt'] > 0 && $maxTries > 0 );
 
