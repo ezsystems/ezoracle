@@ -18,7 +18,7 @@ CREATE UNIQUE INDEX ezgeneral_digest_user_sett_add on ezgeneral_digest_user_sett
 DELETE FROM ezgeneral_digest_user_settings WHERE address not in (SELECT email FROM ezuser);
 
 -- START: from 3.10.1
-ALTER TABLE ezurlalias_ml ADD alias_redirects number(11) NOT NULL default 1;
+ALTER TABLE ezurlalias_ml ADD alias_redirects number(11)  default 1 NOT NULL;
 -- END: from 3.10.1
 
 ALTER TABLE ezbinaryfile MODIFY (mime_type VARCHAR2(255));
