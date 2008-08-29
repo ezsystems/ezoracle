@@ -123,7 +123,9 @@ function myGetTablesList( $mydb )
 function oraDeleteTableData( $oradb, $table )
 {
     echo "Deleting old Oracle data from table $table.\n";
-    $deleteStmt = OCIParse( $oradb, "DELETE FROM $table" );
+    // Truncate is faster than delete
+    //$deleteStmt = OCIParse( $oradb, "DELETE FROM $table" );
+    $deleteStmt = OCIParse( $oradb, "TRUNCATE TABLE $table" );
     OCIExecute( $deleteStmt );
     OCIFreeStatement( $deleteStmt );
 }
@@ -220,7 +222,7 @@ function createOracleInsertQuery( $tableName, &$columns, $oraColums = array() )
 }
 
 /*!
- Copies all data from the given Oracle table to the MySQL one.
+ Copies all data from the given MySQL table to the Oracle one.
  \return true on success, false otherwise
 */
 function copyData( $mydb, $oradb, $tableName )
@@ -335,10 +337,10 @@ function copyData( $mydb, $oradb, $tableName )
             if ( ( $nRowsProcessed % 1000 ) == 0 )
                 printf( "%02d%%|", $nRowsProcessed/$nRows*100 );
         }
-        mysql_free_result($result);
+        OCICommit( $oradb ); // commit all uncommitted data (if any)
+        mysql_free_result( $result );
     }
 
-    OCICommit( $oradb ); // commit all uncommitted data (if any)
     echo "\n";
 
     OCIFreeStatement( $insertStmt );
