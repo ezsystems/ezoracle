@@ -406,7 +406,7 @@ class eZOracleSchema extends eZDBSchemaInterface
     /*!
      * \private
      */
-    function generateAddFieldSql( $table_name, $field_name, $def )
+    function generateAddFieldSql( $table_name, $field_name, $def, $params )
     {
         $sql = "ALTER TABLE $table_name ADD ";
         $sql .= eZOracleSchema::generateFieldDef ( $field_name, $def );
@@ -478,9 +478,9 @@ BEGIN\n".
     /*!
      \reimp
     */
-    function generateTableSchema( $tableName, $table_def )
+    function generateTableSchema( $tableName, $table_def, $params )
     {
-        $arrays = $this->generateTableSQL( $tableName, $table_def, $params = null, true );
+        $arrays = $this->generateTableSQL( $tableName, $table_def, $params, true );
         return ( join( "\n\n", $arrays['sequences'] ) . "\n" .
                  join( "\n\n", $arrays['tables'] ) . "\n" .
                  join( "\n\n", $arrays['triggers'] ) . "\n" .
