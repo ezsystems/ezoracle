@@ -498,59 +498,35 @@ class eZOracleDB extends eZDBInterface
             }
         }
 
-        $numCols = oci_num_fields( $statement );
+        //$numCols = oci_num_fields( $statement );
         $results = array();
 
         eZDebug::accumulatorStart( 'looping_oracle_results', 'oracle_total', 'Oracle looping results' );
 
         if ( $column !== false )
         {
-            oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_NUM );
-            $rowCount = count( $results );
-
-            // we might speed up the 'column' case by using OCI_FETCHSTATEMENT_BY_COL and array_map...
-            if ( $this->InputTextCodec )
+            $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COL + OCI_NUM );
+            $results = $results[$column];
+            if ( $rowCount > 0 )
             {
-                for ( $i = 0; $i < $rowCount; ++$i )
+                if ( $this->InputTextCodec )
                 {
-                     $resultArray[$i + $offset] = $this->OutputTextCodec->convertString( $results[$i][$column] );
+                    array_walk( $results, array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
                 }
-            }
-            else
-            {
-                for ( $i = 0; $i < $rowCount; ++$i )
-                {
-                    $resultArray[$i + $offset] = $results[$i][$column];
-                }
+                $resultArray = $offset == 0 ? $results : array_combine( range( $offset, $offset + $rowCount -1 ), $results );
             }
         }
         else
         {
-            oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC );
-            $rowCount = count( $results );
-
-            if ( $this->InputTextCodec )
+            $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC );
+            if ( $rowCount > 0 )
             {
-                for ( $i = 0; $i < $rowCount; ++$i )
-                {
-                    $newRow = array();
-                    foreach ( $results[$i] as $key => $value )
-                    {
-                        // we might speed this up by calculating the lowercase keys only once and storing them.
-                        // it would also be nice to use array_walk, but syntax of convertString differs...
-                        $newRow[strtolower( $key )] = $this->OutputTextCodec->convertString( $value );
-                    }
-                    $resultArray[$i + $offset] = $newRow;
-                }
-            }
-            else
-            {
-                for ( $i = 0; $i < $rowCount; ++$i )
-                {
-                    $resultArray[$i + $offset] = array_change_key_case( $results[$i], CASE_LOWER );
-                }
+                $keys = array_keys( array_change_key_case( $results[0] ) );
+                array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
+                $resultArray = $rowCount == 0 ? $results : array_combine( range( $offset, $offset + $rowCount - 1 ), $results );
             }
         }
+
         eZDebug::accumulatorStop( 'looping_oracle_results' );
         oci_free_statement( $statement );
 
@@ -1267,6 +1243,27 @@ class eZOracleDB extends eZDBInterface
         $versionArray = explode( '.', $versionInfo );
         return array( 'string' => $versionInfo,
                       'values' => $versionArray );
+    }
+
+    /**
+    * Used with array_map to change charset encoding in mono dimensional arrays
+    */
+    static function arrayConvertStrings(&$value, $key, $codec )
+    {
+        $value = $codec->convertString( $value );
+    }
+
+    /**
+    * Used with array_map to change array keys to lower case in bi-dimensional arrays.
+    * Optionally does charset conversion.
+    */
+    static function arrayChangeKeys(&$value, $key, $params )
+    {
+        if ( $params[0] )
+        {
+            array_map( array( 'eZOracleDB', 'arrayConvertStrings' ), $value, $params[0] );
+        }
+        $value = array_combine( $params[1], $value );
     }
 
     /// \privatesection
