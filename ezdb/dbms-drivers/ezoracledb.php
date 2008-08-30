@@ -506,9 +506,14 @@ class eZOracleDB extends eZDBInterface
         if ( $column !== false )
         {
             $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
-            $results = $results[$column];
-            if ( $rowCount > 0 )
+            // optimize to our best the special case: 1 row
+			if ( $rowCount == 1 )
+			{
+				$resultArray[$offset] = $this->InputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
+			}
+			else if ( $rowCount > 0 )
             {
+                $results = $results[$column];
                 if ( $this->InputTextCodec )
                 {
                     array_walk( $results, array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
@@ -519,11 +524,20 @@ class eZOracleDB extends eZDBInterface
         else
         {
             $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC );
-            if ( $rowCount > 0 )
+            // optimize to our best the special case: 1 row
+			if ( $rowCount == 1 )
+			{
+                if ( $this->InputTextCodec )
+                {
+                    array_walk( $results[0], array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
+                }
+				$resultArray[$offset] = array_change_key_case( $results[0] );
+			}
+            else if ( $rowCount > 0 )
             {
                 $keys = array_keys( array_change_key_case( $results[0] ) );
                 array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
-                $resultArray = $rowCount == 0 ? $results : array_combine( range( $offset, $offset + $rowCount - 1 ), $results );
+                $resultArray = $offset == 0 ? $results : array_combine( range( $offset, $offset + $rowCount - 1 ), $results );
             }
         }
 
