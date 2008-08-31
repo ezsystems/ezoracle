@@ -33,3 +33,4 @@ Changes from 1.5 to 2.0
 - Fixed bug #011627: cannot compare ezurlalias_ml.action with plain strings in oracle
 - Fixed bug #011051: ezoracle sql updates out of date
 - Fixed bug: bad sequence name generated when importing an existing mysql installation that contains extensions tables with an autoincrement column
+- Fixed bug: System Upgrade page in admin interface would give unnecessary warnings about tables with decimal columns
