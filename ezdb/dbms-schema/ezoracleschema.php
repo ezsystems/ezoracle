@@ -109,7 +109,9 @@ class eZOracleSchema extends eZDBSchemaInterface
                  "         decode (a.nullable, 'N', 1, 'Y', 0) AS not_null, " .
                  "         a.data_type AS col_type, " .
                  "         a.data_length AS col_size, " .
-                 "         a.data_default AS default_val " .
+                 "         a.data_default AS default_val, " .
+                 "         a.data_precision AS col_precision, " .
+                 "         a.data_scale AS col_scale " .
                  "FROM     user_tab_columns a ".
                  "WHERE    upper(a.table_name) = '$table' " .
                  "ORDER BY a.column_id";
@@ -148,15 +150,15 @@ class eZOracleSchema extends eZDBSchemaInterface
             elseif ( in_array( $colType, $oraNumericTypes ) ) // number
             {
                 if ( $colType != 'FLOAT' )
-                    $field['length'] = (int) eZOracleSchema::parseLength( $colType, $colLength );
-                $field['type']   = eZOracleSchema::parseType( $colType );
+                    $field['length'] = eZOracleSchema::parseLength( $colType, $colLength, $row['col_precision'], $row['col_scale'] );
+                $field['type']   = eZOracleSchema::parseType( $colType, isset( $field['length'] ) ? $field['length'] : '' );
 
                 if ( $colNotNull )
                     $field['not_null'] = (string) $colNotNull;
 
                 if ( $colDefault !== null && $colDefault !== false )
                 {
-                    $field['default'] = (int) $colDefault;
+                    $field['default'] = (float) $colDefault;
                 }
             }
             elseif ( in_array( $colType, $oraStringTypes ) ) // string
@@ -175,8 +177,8 @@ class eZOracleSchema extends eZDBSchemaInterface
             }
             else // what else?
             {
-                $field['length'] = (int) eZOracleSchema::parseLength( $colType, $colLength );
-                $field['type']   = eZOracleSchema::parseType( $colType );
+                $field['length'] = eZOracleSchema::parseLength( $colType, $colLength, $row['col_precision'], $row['col_scale'] );
+                $field['type']   = eZOracleSchema::parseType( $colType, $field['length'] );
                 if ( $colNotNull )
                     $field['not_null'] = (string) $colNotNull;
 
@@ -261,11 +263,15 @@ class eZOracleSchema extends eZDBSchemaInterface
     /*!
      * \private
      */
-    function parseType( $type )
+    function parseType( $type, $length = '' )
     {
         switch ( $type )
         {
         case 'NUMBER':
+            if ( strpos( $length, ',' ) !== false )
+            {
+                return 'decimal';
+            }
             return 'int';
         case 'FLOAT':
             return 'float';
@@ -284,10 +290,23 @@ class eZOracleSchema extends eZDBSchemaInterface
     /*!
      * \private
      */
-    function parseLength( $oraType, $oraLength )
+    function parseLength( $oraType, $oraLength, $oraPrecision = '', $oraScale = '' )
     {
+        // for NUMBER, we say default lenght is 11,0 unless there is more info in the db
         if ( $oraType == 'NUMBER' )
-            return 11;
+        {
+            $length = 11;
+            if ( $oraPrecision )
+            {
+                $length = $oraPrecision;
+                if ( $oraScale )
+                {
+                    $length = $length . ',' . $oraScale;
+                }
+            }
+
+            return $length;
+        }
         return $oraLength;
     }
 
