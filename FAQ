@@ -1,0 +1,35 @@
+eZ Oracle extension [ExtensionVersion] FAQ
+
+Oracle errors
+=============
+
+If you receive some Oracle error codes it may be related to these issues.
+
+   ORA-12162 or OCI_INVALID_HANDLE
+   -------------------------------
+
+      ORA-12162: Error while trying to retrieve text for error
+      or
+      ocilogon(): _oci_open_session: OCIHandleAlloc OCI_HTYPE_SVCCTX:
+      OCI_INVALID_HANDLE in
+      extension/ezoracle/ezdb/dbms-drivers/ezoracledb.php on line 68
+
+      Most probably it meens that you haven't set ORACLE_HOME environment
+      variable before starting Apache.
+
+      Set it manually:
+      $ export ORACLE_HOME=/u01/app/oracle/product/10.1.0/db_1 # or whatever
+      or with oraenv script coming with Oracle:
+      $ . oraenv
+      and then restart Apache in the same terminal:
+      $ apachectl restart
+
+
+   ORA-12545
+   ---------
+
+      Most likely the server is not listening on incoming requests or has a badly
+      configured instance.
+
+      See this page for more information.
+      http://www.orafaq.com/error/ora-12545.htm
