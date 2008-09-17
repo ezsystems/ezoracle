@@ -10,7 +10,7 @@ ALTER TABLE ezcontentclass_attribute MODIFY (serialized_name_list VARCHAR2(3100)
 CREATE TABLE ezisbn_group (
   id int NOT NULL,
   description varchar2(255) default '' NOT NULL ,
-  group_number int default '0' NOT NULL,
+  group_number int default 0 NOT NULL,
   PRIMARY KEY  (id)
 );
 CREATE SEQUENCE s_isbn_group;
@@ -24,11 +24,11 @@ END;
 
 CREATE TABLE ezisbn_group_range (
   id int NOT NULL,
-  from_number int default '0' NOT NULL,
-  to_number int default '0' NOT NULL,
+  from_number int default 0 NOT NULL,
+  to_number int default 0 NOT NULL,
   group_from varchar2(32) default '' NOT NULL,
   group_to varchar2(32) default '' NOT NULL,
-  group_length int default '0' NOT NULL,
+  group_length int default 0 NOT NULL,
   PRIMARY KEY  (id)
 );
 CREATE SEQUENCE s_isbn_group_range;
@@ -42,12 +42,12 @@ END;
 
 CREATE TABLE ezisbn_registrant_range (
   id int NOT NULL,
-  from_number int default '0' NOT NULL,
-  to_number int default '0' NOT NULL,
+  from_number int default 0 NOT NULL,
+  to_number int default 0 NOT NULL,
   registrant_from varchar2(32) default '' NOT NULL,
   registrant_to varchar2(32) default '' NOT NULL,
-  registrant_length int default '0' NOT NULL,
-  isbn_group_id int default '0' NOT NULL,
+  registrant_length int default 0 NOT NULL,
+  isbn_group_id int default 0 NOT NULL,
   PRIMARY KEY  (id)
 );
 CREATE SEQUENCE s_isbn_registrant_range;
@@ -61,7 +61,7 @@ END;
 
 
 -- URL alias name pattern
-ALTER TABLE ezcontentclass ADD url_alias_name VARCHAR(255) AFTER contentobject_name;
+ALTER TABLE ezcontentclass ADD url_alias_name VARCHAR2(255);
 
 -- URL alias
 CREATE TABLE ezurlalias_ml (
@@ -69,9 +69,9 @@ CREATE TABLE ezurlalias_ml (
   link      integer DEFAULT 0 NOT NULL,
   parent    integer DEFAULT 0 NOT NULL,
   lang_mask integer DEFAULT 0 NOT NULL,
-  text      varchar2(3100) DEFAULT '' NOT NULL,
+  text      varchar2(3000) DEFAULT '',
   text_md5  varchar2(32) DEFAULT '' NOT NULL,
-  action    varchar2(3100) DEFAULT '' NOT NULL,
+  action    varchar2(3000) DEFAULT '' NOT NULL,
   action_type varchar2(32) DEFAULT '' NOT NULL,
   is_original integer DEFAULT 0 NOT NULL,
   is_alias    integer DEFAULT 0 NOT NULL,

@@ -16,10 +16,10 @@ BEGIN
   SELECT s_urlwildcard.nextval INTO :new.id FROM dual;
 END;
 
+-- START: from 3.9.5
 CREATE INDEX ezcontent_language_name ON ezcontent_language (name);
 
 CREATE INDEX ezcontentobject_owner ON ezcontentobject (owner_id);
 
 CREATE UNIQUE INDEX ezcontentobject_remote_id ON ezcontentobject (remote_id);
-
-/
+-- END: from 3.9.5

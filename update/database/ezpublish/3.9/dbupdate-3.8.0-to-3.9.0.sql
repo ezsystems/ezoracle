@@ -145,7 +145,7 @@ CREATE INDEX ezsrch_search_phrase_phr ON ezsearch_search_phrase ( phrase );
 
 CREATE TABLE ezsearch_search_phrase_new (
   id int NOT NULL,
-  phrase varchar(250) default NULL,
+  phrase varchar2(250) default NULL,
   phrase_count int default 0,
   result_count int default 0,
   PRIMARY KEY( id )
@@ -171,7 +171,7 @@ FROM     ezsearch_search_phrase,
 WHERE    ezsearch_search_phrase.id = ezsearch_return_count.phrase_id
 GROUP BY lower( ezsearch_search_phrase.phrase );
 
--- ezsearch_return_count is of no (additional) use in a normal eZ publish installation
+-- ezsearch_return_count is of no (additional) use in a normal eZ Publish installation
 -- but perhaps someone built something for himself, then it is not BC
 -- to not break BC apply the CREATE and INSERT statements
 
