@@ -505,7 +505,7 @@ class eZOracleDB extends eZDBInterface
 
         if ( $column !== false )
         {
-            $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COL + OCI_NUM );
+            $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
             // optimize to our best the special case: 1 row
 			if ( $rowCount == 1 )
 			{
