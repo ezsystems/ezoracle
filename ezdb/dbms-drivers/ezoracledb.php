@@ -186,17 +186,7 @@ class eZOracleDB extends eZDBInterface
     {
         if ( $this->InputTextCodec )
         {
-            if ( is_array( $value ) )
-            {
-                foreach($value as $key => $val)
-                {
-                    $value[$key] = $this->InputTextCodec->convertString( $val );
-                }
-            }
-            else
-            {
-                $value = $this->InputTextCodec->convertString( $value );
-            }
+            $value = $this->InputTextCodec->convertString( $value );
         }
         $this->BindVariableArray[] = array( 'name' => $fieldDef['name'],
                                             'dbname' => ':' . $fieldDef['name'],
@@ -341,77 +331,32 @@ class eZOracleDB extends eZDBInterface
 
         if ( $statement )
         {
-            $iterations = 0;
-            $iterationsvar = array();
-            $bindingok = true;
-            foreach ( $this->BindVariableArray as $i => $bindVar )
+            foreach ( $this->BindVariableArray as $bindVar )
             {
-                if ( is_array( $bindVar['value'] ) )
-                {
-                    $iterations = count( $bindVar['value'] );
-                    $iterationsvar[$i] = "";
-                    // max length is unknown, so we go for max col width for varchar2
-                    oci_bind_by_name( $statement, $bindVar['dbname'], $iterationsvar[$i], 4000 );
-                }
-                else
-                {
-                    $iterations = 0;
-                    oci_bind_by_name( $statement, $bindVar['dbname'], $bindVar['value'], -1 );
-                }
-                if ( $i && $iterations != $previterations )
-                {
-                    $bindingok = false;
-                    $result = false;
-                    eZDebug::writeError( "Trying to do a query with array bind params of different length!", "eZOracleDB"  );
-                    break;
-                }
-                $previterations = $iterations;
+                oci_bind_by_name( $statement, $bindVar['dbname'], $bindVar['value'], -1 );
             }
 
-            if ( $bindingok )
+            // we do not use $this->Mode here because we might have nested transactions
+            $exec = @oci_execute( $statement, OCI_DEFAULT );
+            if ( !$exec )
             {
-
-                if ( $iterations == 0 )
+                if ( $this->setError( $statement, 'query()' ) )
                 {
-                    // we do not use $this->Mode here because we might have nested transactions
-                    $exec = @oci_execute( $statement, OCI_DEFAULT );
+                    $result = false;
                 }
-                else
-                {
-                    for ( $j = 0; $j < $iterations; $j++ )
-                    {
-                        foreach ( $this->BindVariableArray as $i => $bindVar )
-                        {
-                            $iterationsvar[$i] = $bindVar['value'][$j];
-                        }
-                        if ( !$exec = @oci_execute( $statement, OCI_DEFAULT ) )
-                        {
-                            break;
-                        }
-                    }
-                }
+            }
+            else
+            {
+                // small api change: we do not commit if exec fails and oci_error says no error.
+                // previously we did commit anyway...
 
-                if ( !$exec )
+                // Commit when we are not in a transaction and we use an 'autocommit' mode.
+                // This is done because we execute queries in non-autocomiit mode, while
+                // by default the db driver works in autocommit
+                if ( $this->Mode != OCI_DEFAULT && $this->TransactionCounter == 0)
                 {
-                    if ( $this->setError( $statement, 'query()' ) )
-                    {
-                        $result = false;
-                    }
+                    oci_commit( $this->DBConnection );
                 }
-                else
-                {
-                    // small api change: we do not commit if exec fails and oci_error says no error.
-                    // previously we did commit anyway...
-
-                    // Commit when we are not in a transaction and we use an 'autocommit' mode.
-                    // This is done because we execute queries in non-autocomiit mode, while
-                    // by default the db driver works in autocommit
-                    if ( $this->Mode != OCI_DEFAULT && $this->TransactionCounter == 0)
-                    {
-                        oci_commit( $this->DBConnection );
-                    }
-                }
-
             }
 
             oci_free_statement( $statement );
