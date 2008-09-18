@@ -91,6 +91,7 @@ $columnsWithDefaultNullVal = array(
     'ezcollab_item.data_text2',
     'ezcollab_item.data_text3',
     'ezgeneral_digest_user_settings.day',
+    'ezgeneral_digest_user_settings.time',
     'ezproductcollection.currency_code',
     'ezmedia.filename',
     'ezmedia.original_filename',

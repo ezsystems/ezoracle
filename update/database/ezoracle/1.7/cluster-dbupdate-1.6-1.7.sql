@@ -18,4 +18,32 @@ ALTER TABLE ezdbfile ADD CONSTRAINT pk_ezdbfile PRIMARY KEY ( name_hash );
 
 CREATE INDEX ezdbfile_mtime ON ezdbfile ( mtime );
 
-CREATE UNIQUE INDEX ezdbfile_expired_name ON ezdbfile ( expired, name );
+ALTER TABLE  EZDBFILE MODIFY ( NAME VARCHAR2(4000) );
+
+--CREATE UNIQUE INDEX ezdbfile_expired_name ON ezdbfile ( expired, name );
+
+CREATE OR REPLACE PROCEDURE EZEXCLUSIVELOCK ( P_NAME IN VARCHAR2, P_NAME_HASH  IN VARCHAR2 ) AS
+  -- Get exclusive lock on a table row (or die waiting!)
+  --
+  -- @todo use oracle MERGE statement instead of this poor man's version
+  V_HASH EZDBFILE.NAME_HASH%TYPE;
+BEGIN
+  SELECT NAME_HASH
+  INTO V_HASH
+  FROM EZDBFILE
+  WHERE NAME_HASH = P_NAME_HASH
+  FOR UPDATE;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    BEGIN
+      INSERT INTO EZDBFILE ( NAME, NAME_HASH, FILESIZE, MTIME ) VALUES ( P_NAME, P_NAME_HASH, -1, -1);
+    EXCEPTION
+      WHEN DUP_VAL_ON_INDEX THEN
+        NULL;
+    END;
+    SELECT NAME_HASH
+    INTO V_HASH
+    FROM EZDBFILE
+    WHERE NAME_HASH = P_NAME_HASH
+    FOR UPDATE;
+END;
