@@ -7,7 +7,7 @@
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Oracle
 // SOFTWARE RELEASE: 1.8.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ systems AS
+// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -83,6 +83,8 @@ EXCEPTION
     WHERE NAME_HASH = P_NAME_HASH
     FOR UPDATE;
 END;
+/
+
 */
 
 //require_once( 'lib/ezutils/classes/ezdebugsetting.php' );
