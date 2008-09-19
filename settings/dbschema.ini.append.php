@@ -9,6 +9,7 @@ ColumnNameTranslation[ezurl_object_link.contentobject_attribute_version]=content
 ColumnNameTranslation[ezdbfile.size]=filesize
 
 ColumnTypeTranslation[ezurlalias.source_url]=longtext;varchar(3000)
+ColumnTypeTranslation[ezurl.url]=longtext;varchar(3000)
 ColumnTypeTranslation[ezurlalias.destination_url]=longtext;varchar(3000)
 ColumnTypeTranslation[ezcontentobject_tree.path_identification_string]=longtext;varchar(3100)
 ColumnTypeTranslation[ezcontentobject_trash.path_identification_string]=longtext;varchar(3100)
@@ -18,8 +19,7 @@ ColumnTypeTranslation[ezrss_import.url]=longtext;varchar(3100)
 ColumnTypeTranslation[ezrss_import.import_description]=longtext;varchar(3100)
 ColumnTypeTranslation[ezcontentclass.serialized_name_list]=longtext;varchar(3100)
 ColumnTypeTranslation[ezcontentclass_attribute.serialized_name_list]=longtext;varchar(3100)
-ColumnTypeTranslation[ezurl.url]=longtext;varchar(3000)
-
+ColumnTypeTranslation[ezpending_actions.param]=longtext;varchar(3000)
 
 # Translation of column options, such as NOT NULL and DEFAULT xxx.
 # Currently only "null" (remove "NOT NULL" requirement) is supported.
@@ -27,6 +27,7 @@ ColumnOptionTranslations[ezcontentobject_attribute.sort_key_string]=null
 ColumnOptionTranslations[eznode_assignment.parent_remote_id]=null
 ColumnOptionTranslations[ezsearch_object_word_link.identifier]=null
 ColumnOptionTranslations[ezurlalias.source_url]=null
+ColumnOptionTranslations[ezurl.url]=null
 ColumnOptionTranslations[ezurlalias.destination_url]=null
 ColumnOptionTranslations[eznotificationevent.data_text1]=null
 ColumnOptionTranslations[eznotificationevent.data_text2]=null
@@ -45,6 +46,12 @@ ColumnOptionTranslations[ezcollab_item.data_text1]=null
 ColumnOptionTranslations[ezcollab_item.data_text2]=null
 ColumnOptionTranslations[ezcollab_item.data_text3]=null
 ColumnOptionTranslations[ezgeneral_digest_user_settings.day]=null
+ColumnOptionTranslations[ezgeneral_digest_user_settings.time]=null
+ColumnOptionTranslations[ezproductcollection.currency_code]=null
+ColumnOptionTranslations[ezmedia.filename]=null
+ColumnOptionTranslations[ezmedia.original_filename]=null
+ColumnOptionTranslations[ezmedia.mime_type]=null
+ColumnOptionTranslations[ezrss_import.import_description]=null
 
 IndexNameTranslation[ezcontentobject_attribute.ezcontentobject_attribute_contentobject_id]=ezco_attr_co_id
 IndexNameTranslation[ezcontentobject_attribute.ezcontentobject_attribute_co_id_ver_lang_code]=ezco_attr_co_id_ver_lang_code

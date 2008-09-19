@@ -1,5 +1,30 @@
 #!/usr/bin/env php
 <?php
+//
+// ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
+// SOFTWARE NAME: eZ 0racle
+// SOFTWARE RELEASE: 1.6.x
+// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// SOFTWARE LICENSE: GNU General Public License v2.0
+// NOTICE: >
+//   This program is free software; you can redistribute it and/or
+//   modify it under the terms of version 2.0  of the GNU General
+//   Public License as published by the Free Software Foundation.
+//
+//   This program is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of version 2.0 of the GNU General
+//   Public License along with this program; if not, write to the Free
+//   Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+//   MA 02110-1301, USA.
+//
+//
+// ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
+//
+
 # Connects to MySQL, retrieves DB schema and dumps it in a format understandable by Oracle
 #
 # KNOWN BUGS:
@@ -21,10 +46,11 @@ $columnTypeTransTable = array(
     'ezcontentobject_trash.path_identification_string' => 'VARCHAR2(3100)',
     'ezimagefile.filepath' => 'VARCHAR2(3000)',
     'eznotificationcollection.data_subject' => 'VARCHAR2(3100)',
-    'ezrss_import.url' => 'VARCHAR2(3000)',
+    'ezrss_import.url' => 'VARCHAR2(3100)',
     'ezrss_import.import_description' => 'VARCHAR2(3100)',
     'ezcontentclass.serialized_name_list' => 'VARCHAR2(3100)',
-    'ezcontentclass_attribute.serialized_name_list' => 'VARCHAR2(3100)'
+    'ezcontentclass_attribute.serialized_name_list' => 'VARCHAR2(3100)',
+    'ezpending_actions.param' => 'VARCHAR2(3000)'
     );
 
 // columns that could not have default value
@@ -61,10 +87,12 @@ $columnsWithDefaultNullVal = array(
     'ezcollab_item.data_text2',
     'ezcollab_item.data_text3',
     'ezgeneral_digest_user_settings.day',
+    'ezgeneral_digest_user_settings.time',
     'ezproductcollection.currency_code',
     'ezmedia.filename',
     'ezmedia.original_filename',
-    'ezmedia.mime_type'
+    'ezmedia.mime_type',
+    'ezrss_import.import_description'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
@@ -255,7 +283,7 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
     }
     else // numeric column
     {
-        if( $col['Default'] !== null )
+        if( "$col['Default']" !== "" )
             $colDef .= " DEFAULT ". $col['Default'];  // strings should be enclosed in quotes
         if ( $col['Null'] !== 'YES' )
             $colDef .= ' NOT NULL';
@@ -365,12 +393,17 @@ function dumpAutoIcrements( &$autoIncrementColumns, &$seqs, &$triggers, $drop )
         $trname  = shorten( $table.'_'.$col, 30-3 ) .'_tr';
 
         /* eZ Publish-specific hack for sequnce name to be always <= 30 characters
-           (no longer that table name, at lest)
+           (no longer that table name, at least)
          */
-        $seqname = eregi_replace('^ez', 's_', $table);
+        $seqname = eregi_replace( '^ez', 's_', $table );
+        if ( $seqname == $table )
+        {
+            // table name does not start with 'ez': an extension, most likely
+            $seqname = substr( 'se_' . $seqname, 0, 30 );
+        }
 
         if ( $drop )
-            $seqs .= "DROP   SEQUENCE $seqname;\n";
+            $seqs .= "DROP SEQUENCE $seqname;\n";
 
         $seqs .= "CREATE SEQUENCE $seqname;\n";
 

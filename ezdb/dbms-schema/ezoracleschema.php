@@ -2,9 +2,9 @@
 //
 // Created on: <29-Oct-2004 12:04:28 vs>
 //
-// Copyright (C) 1999-2005 eZ systems as. All rights reserved.
+// Copyright (C) 1999-2008 eZ systems as. All rights reserved.
 //
-// This source file is part of the eZ publish (tm) Open Source Content
+// This source file is part of the eZ Publish (tm) Open Source Content
 // Management System.
 //
 // This file may be distributed and/or modified under the terms of the
@@ -12,15 +12,15 @@
 // Software Foundation and appearing in the file LICENSE included in
 // the packaging of this file.
 //
-// Licencees holding a valid "eZ publish professional licence" version 2
-// may use this file in accordance with the "eZ publish professional licence"
+// Licencees holding a valid "eZ Publish professional licence" version 2
+// may use this file in accordance with the "eZ Publish professional licence"
 // version 2 Agreement provided with the Software.
 //
 // This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING
 // THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 // PURPOSE.
 //
-// The "eZ publish professional licence" version 2 is available at
+// The "eZ Publish professional licence" version 2 is available at
 // http://ez.no/ez_publish/licences/professional/ and in the file
 // PROFESSIONAL_LICENCE included in the packaging of this file.
 // For pricing of this licence please contact us via e-mail to licence@ez.no.
@@ -109,7 +109,9 @@ class eZOracleSchema extends eZDBSchemaInterface
                  "         decode (a.nullable, 'N', 1, 'Y', 0) AS not_null, " .
                  "         a.data_type AS col_type, " .
                  "         a.data_length AS col_size, " .
-                 "         a.data_default AS default_val " .
+                 "         a.data_default AS default_val, " .
+                 "         a.data_precision AS col_precision, " .
+                 "         a.data_scale AS col_scale " .
                  "FROM     user_tab_columns a ".
                  "WHERE    upper(a.table_name) = '$table' " .
                  "ORDER BY a.column_id";
@@ -148,15 +150,15 @@ class eZOracleSchema extends eZDBSchemaInterface
             elseif ( in_array( $colType, $oraNumericTypes ) ) // number
             {
                 if ( $colType != 'FLOAT' )
-                    $field['length'] = (int) eZOracleSchema::parseLength( $colType, $colLength );
-                $field['type']   = eZOracleSchema::parseType( $colType );
+                    $field['length'] = eZOracleSchema::parseLength( $colType, $colLength, $row['col_precision'], $row['col_scale'] );
+                $field['type']   = eZOracleSchema::parseType( $colType, isset( $field['length'] ) ? $field['length'] : '' );
 
                 if ( $colNotNull )
                     $field['not_null'] = (string) $colNotNull;
 
                 if ( $colDefault !== null && $colDefault !== false )
                 {
-                    $field['default'] = (int) $colDefault;
+                    $field['default'] = (float) $colDefault;
                 }
             }
             elseif ( in_array( $colType, $oraStringTypes ) ) // string
@@ -175,8 +177,8 @@ class eZOracleSchema extends eZDBSchemaInterface
             }
             else // what else?
             {
-                $field['length'] = (int) eZOracleSchema::parseLength( $colType, $colLength );
-                $field['type']   = eZOracleSchema::parseType( $colType );
+                $field['length'] = eZOracleSchema::parseLength( $colType, $colLength, $row['col_precision'], $row['col_scale'] );
+                $field['type']   = eZOracleSchema::parseType( $colType, $field['length'] );
                 if ( $colNotNull )
                     $field['not_null'] = (string) $colNotNull;
 
@@ -261,11 +263,15 @@ class eZOracleSchema extends eZDBSchemaInterface
     /*!
      * \private
      */
-    function parseType( $type )
+    function parseType( $type, $length = '' )
     {
         switch ( $type )
         {
         case 'NUMBER':
+            if ( strpos( $length, ',' ) !== false )
+            {
+                return 'decimal';
+            }
             return 'int';
         case 'FLOAT':
             return 'float';
@@ -284,10 +290,23 @@ class eZOracleSchema extends eZDBSchemaInterface
     /*!
      * \private
      */
-    function parseLength( $oraType, $oraLength )
+    function parseLength( $oraType, $oraLength, $oraPrecision = '', $oraScale = '' )
     {
+        // for NUMBER, we say default lenght is 11,0 unless there is more info in the db
         if ( $oraType == 'NUMBER' )
-            return 11;
+        {
+            $length = 11;
+            if ( $oraPrecision )
+            {
+                $length = $oraPrecision;
+                if ( $oraScale )
+                {
+                    $length = $length . ',' . $oraScale;
+                }
+            }
+
+            return $length;
+        }
         return $oraLength;
     }
 
@@ -406,7 +425,7 @@ class eZOracleSchema extends eZDBSchemaInterface
     /*!
      * \private
      */
-    function generateAddFieldSql( $table_name, $field_name, $def )
+    function generateAddFieldSql( $table_name, $field_name, $def, $params )
     {
         $sql = "ALTER TABLE $table_name ADD ";
         $sql .= eZOracleSchema::generateFieldDef ( $field_name, $def );
@@ -453,6 +472,11 @@ class eZOracleSchema extends eZDBSchemaInterface
     function generateAutoIncrement( $table_name, $field_name, $field_def, $params, $withClosure = true )
     {
         $seqName  = preg_replace( '/^ez/', 's_', $table_name );
+        if ( $seqName == $table_name )
+        {
+            // table name does not start with 'ez': an extension, most likely
+            $seqName = substr( 'se_' . $seqName, 0, 30 );
+        }
         $trigName = eZOracleSchema::shorten( $table_name . '_' . $field_name, 30-3 ) .'_tr';
         $sqlSeq = "CREATE SEQUENCE $seqName";
         if ( $withClosure )
@@ -473,9 +497,9 @@ BEGIN\n".
     /*!
      \reimp
     */
-    function generateTableSchema( $tableName, $table_def )
+    function generateTableSchema( $tableName, $table_def, $params )
     {
-        $arrays = $this->generateTableSQL( $tableName, $table_def, $params = null, true );
+        $arrays = $this->generateTableSQL( $tableName, $table_def, $params, true );
         return ( join( "\n\n", $arrays['sequences'] ) . "\n" .
                  join( "\n\n", $arrays['tables'] ) . "\n" .
                  join( "\n\n", $arrays['triggers'] ) . "\n" .
