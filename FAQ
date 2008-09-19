@@ -1,5 +1,26 @@
 eZ Oracle extension [ExtensionVersion] FAQ
 
+Connection problems
+===================
+
+Please refer to the online php manual at www.php.net to find more information
+about configuring your php server to connect to an Oracle database. A lot of
+valuable information is contained within the users comments.
+
+The first step to see if the Oracle support is activated in php is to check the
+output of the phpinfo() php function, or to run `php -i' on the command line. If
+it is, a section titled `oci8' will be present. When php is compiled in a modular
+fashion (as on windows), remember to enable the oracle extension in the php.ini file.
+
+The second step is to have a simple php script connecting to a known database.
+This way you can make sure that all the environment variables needed by the
+Oracle client are properly set up and accessible to the php process.
+
+If you cannot connect to the database, Oracle provides useful command-line
+utilities to troubleshoot connection problems: tnsping, sqlplus, lsnrctl.
+Please refer to the Oracle documentation for more information about those.
+
+
 Oracle errors
 =============
 

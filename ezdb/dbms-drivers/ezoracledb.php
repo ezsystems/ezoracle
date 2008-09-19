@@ -4,9 +4,9 @@
 //
 // Created on: <25-Feb-2002 14:50:11 ce>
 //
-// Copyright (C) 1999-2005 eZ systems as. All rights reserved.
+// Copyright (C) 1999-2008 eZ Systems as. All rights reserved.
 //
-// This source file is part of the eZ publish (tm) Open Source Content
+// This source file is part of the eZ Publish (tm) Open Source Content
 // Management System.
 //
 // This file may be distributed and/or modified under the terms of the
@@ -14,15 +14,15 @@
 // Software Foundation and appearing in the file LICENSE.GPL included in
 // the packaging of this file.
 //
-// Licencees holding valid "eZ publish professional licences" may use this
-// file in accordance with the "eZ publish professional licence" Agreement
+// Licencees holding valid "eZ Publish professional licences" may use this
+// file in accordance with the "eZ Publish professional licence" Agreement
 // provided with the Software.
 //
 // This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING
 // THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 // PURPOSE.
 //
-// The "eZ publish professional licence" is available at
+// The "eZ Publish professional licence" is available at
 // http://ez.no/products/licences/professional/. For pricing of this licence
 // please contact us via e-mail to licence@ez.no. Further contact
 // information is available at http://ez.no/home/contact/.
@@ -194,7 +194,7 @@ class eZOracleDB extends eZDBInterface
         return ':' . $fieldDef['name'];
     }
 
-    function analizeQuery( $sql )
+    function analizeQuery( $sql, $server = false )
     {
         $analysisText = false;
         // If query analysis is enable we need to run the query
@@ -297,7 +297,7 @@ class eZOracleDB extends eZDBInterface
     /*!
       \reimp
     */
-    function &query( $sql )
+    function &query( $sql, $server = false )
     {
         // note: the other database drivers do not reset the error message here...
         $this->ErrorMessage = false;
@@ -325,7 +325,7 @@ class eZOracleDB extends eZDBInterface
             $this->startTimer();
         }
 
-        $analysisText = $this->analizeQuery( $sql );
+        $analysisText = $this->analizeQuery( $sql, $server );
 
         $statement = OCIParse( $this->DBConnection, $sql );
 
@@ -469,7 +469,7 @@ class eZOracleDB extends eZDBInterface
     /*!
       \reimp
     */
-    function& arrayQuery( $sql, $params = false )
+    function& arrayQuery( $sql, $params = false, $server = false )
     {
         $resultArray = array();
 
@@ -508,7 +508,7 @@ class eZOracleDB extends eZDBInterface
             eZDebug::accumulatorStop( 'oracle_conversion' );
         }
 
-        $analysisText = $this->analizeQuery( $sql );
+        $analysisText = $this->analizeQuery( $sql, $server );
 
         if ( $this->OutputSQL )
         {
@@ -567,8 +567,52 @@ class eZOracleDB extends eZDBInterface
             }
         }
 
-        $numCols = OCINumcols( $statement );
-        $resultArray = array();
+        //$numCols = OCINumcols( $statement );
+        $results = array();
+
+        eZDebug::accumulatorStart( 'looping_oracle_results', 'oracle_total', 'Oracle looping results' );
+
+        if ( $column !== false )
+        {
+            $rowCount = OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
+            // optimize to our best the special case: 1 row
+			if ( $rowCount == 1 )
+			{
+				$resultArray[$offset] = $this->InputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
+			}
+			else if ( $rowCount > 0 )
+            {
+                $results = $results[$column];
+                if ( $this->InputTextCodec )
+                {
+                    array_walk( $results, array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
+                }
+                $resultArray = $offset == 0 ? $results : array_combine( range( $offset, $offset + $rowCount -1 ), $results );
+            }
+        }
+        else
+        {
+            $rowCount = OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC );
+            // optimize to our best the special case: 1 row
+			if ( $rowCount == 1 )
+			{
+                if ( $this->InputTextCodec )
+                {
+                    array_walk( $results[0], array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
+                }
+				$resultArray[$offset] = array_change_key_case( $results[0] );
+			}
+            else if ( $rowCount > 0 )
+            {
+                $keys = array_keys( array_change_key_case( $results[0] ) );
+                array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
+                $resultArray = $offset == 0 ? $results : array_combine( range( $offset, $offset + $rowCount - 1 ), $results );
+            }
+        }
+
+        eZDebug::accumulatorStop( 'looping_oracle_results' );
+        OCIFreeStatement( $statement );
+        /*$resultArray = array();
         $row = array();
 
         $results = array();
@@ -639,7 +683,7 @@ class eZOracleDB extends eZDBInterface
         eZDebug::accumulatorStop( 'looping_oracle_results' );
         OCIFreeStatement( $statement );
         unset( $statement );
-        unset( $row );
+        unset( $row );*/
 
         return $resultArray;
     }
@@ -929,7 +973,7 @@ class eZOracleDB extends eZDBInterface
     /*!
      \reimp
     */
-    function eZTableList()
+    function eZTableList( $server = EZ_DB_SERVER_MASTER )
     {
         $array = array();
         if ( $this->isConnected() )
@@ -992,24 +1036,24 @@ class eZOracleDB extends eZDBInterface
     /*!
       \reimp
     */
-    function createTempTable( $createTableQuery = '' )
+    function createTempTable( $createTableQuery = '', $server = EZ_DB_SERVER_SLAVE )
     {
         $createTableQuery = preg_replace( '#CREATE\s+TEMPORARY\s+TABLE#', 'CREATE GLOBAL TEMPORARY TABLE', $createTableQuery );
         $createTableQuery .= " ON COMMIT PRESERVE ROWS";
-        $this->query( $createTableQuery );
+        $this->query( $createTableQuery, $server );
     }
 
     /*!
       \reimp
     */
-    function dropTempTable( $dropTableQuery = '' )
+    function dropTempTable( $dropTableQuery = '', $server = EZ_DB_SERVER_SLAVE  )
     {
         if( preg_match( '#DROP\s+TABLE\s+(\S+)#', $dropTableQuery, $matches ) )
         {
-            $this->query( 'TRUNCATE TABLE ' . $matches[1] );
+            $this->query( 'TRUNCATE TABLE ' . $matches[1], $server );
         }
 
-        $this->query( $dropTableQuery );
+        $this->query( $dropTableQuery, $server );
     }
 
 
@@ -1021,7 +1065,7 @@ class eZOracleDB extends eZDBInterface
         if ( $this->isConnected() )
         {
             $triggers = array();
-            $rows = $this->arrayQuery( "SELECT table_name, trigger_body FROM user_triggers" );
+            $rows = $this->arrayQuery( "SELECT table_name, trigger_body FROM user_triggers WHERE table_name NOT LIKE 'BIN$%'" );
             foreach ( $rows as $row )
             {
                 $triggers[] = array( 'table_name'   => $row['table_name'],
@@ -1098,20 +1142,20 @@ class eZOracleDB extends eZDBInterface
     /*!
      \reimp
      */
-    function generateUniqueTempTableName( $pattern )
+    function generateUniqueTempTableName( $pattern, $randomizeIndex = false, $server = EZ_DB_SERVER_SLAVE  )
     {
         $maxTries = 10;
         do
         {
             $num = rand( 10000000, 99999999 );
             $tableName = strtoupper( str_replace( '%', $num, $pattern ) );
-            $cntResult = $this->arrayQuery( "SELECT count(*) AS cnt FROM user_tables WHERE table_name='$tableName'" );
+            $cntResult = $this->arrayQuery( "SELECT count(*) AS cnt FROM user_tables WHERE table_name='$tableName'", $server );
             $maxTries--;
         } while( $cntResult && $cntResult[0]['cnt'] > 0 && $maxTries > 0 );
 
         if ( $maxTries == 0 )
         {
-            eZDebug::writeError( "Tried to generate an uninque temp table name for $maxTries time with no luck" );
+            eZDebug::writeError( "Tried to generate an unique temp table name for $maxTries time with no luck" );
         }
 
         return $tableName;
@@ -1222,7 +1266,7 @@ class eZOracleDB extends eZDBInterface
      \return A string with the correct IN statement like for example
              "columnName IN ( element1, element2 )"
      */
-    function generateSQLINStatement( $elements, $columnName, $not = false, $unique = true, $type = false  )
+    function generateSQLINStatement( $elements, $columnName, $not = false, /*$unique = true,*/ $type = false  )
     {
         $connector = ' OR ';
         $result    = '';
@@ -1236,13 +1280,13 @@ class eZOracleDB extends eZDBInterface
         {
             $elements = array( $elements );
         }
-        else
+        /*else
         {
             if ( $unique )
             {
                 $elements = array_unique( $elements );
             }
-        }
+        }*/
         $amountElements = count( $elements );
         $length = 1000;
         if ( $amountElements > $length )
@@ -1346,6 +1390,27 @@ class eZOracleDB extends eZDBInterface
         $versionArray = explode( '.', $versionInfo );
         return array( 'string' => $versionInfo,
                       'values' => $versionArray );
+    }
+
+    /**
+    * Used with array_map to change charset encoding in mono dimensional arrays
+    */
+    static function arrayConvertStrings(&$value, $key, $codec )
+    {
+        $value = $codec->convertString( $value );
+    }
+
+    /**
+    * Used with array_map to change array keys to lower case in bi-dimensional arrays.
+    * Optionally does charset conversion.
+    */
+    static function arrayChangeKeys(&$value, $key, $params )
+    {
+        if ( $params[0] )
+        {
+            array_map( array( 'eZOracleDB', 'arrayConvertStrings' ), $value, $params[0] );
+        }
+        $value = array_combine( $params[1], $value );
     }
 
     /// \privatesection

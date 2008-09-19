@@ -1,5 +1,30 @@
 #!/usr/bin/env php
 <?php
+//
+// ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
+// SOFTWARE NAME: eZ 0racle
+// SOFTWARE RELEASE: 1.7.x
+// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// SOFTWARE LICENSE: GNU General Public License v2.0
+// NOTICE: >
+//   This program is free software; you can redistribute it and/or
+//   modify it under the terms of version 2.0  of the GNU General
+//   Public License as published by the Free Software Foundation.
+//
+//   This program is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+//
+//   You should have received a copy of version 2.0 of the GNU General
+//   Public License along with this program; if not, write to the Free
+//   Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+//   MA 02110-1301, USA.
+//
+//
+// ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
+//
+
 #
 # Updates all sequences in a given DB to contain maximum value in
 # related table column: seq.val = select max(col) from related_table;
@@ -39,7 +64,7 @@ function oraParseLoginString( $loginString, &$oraUser, &$oraPass, &$oraInst )
 function& oraFetchTriggersInfo( $oraDB )
 {
     $triggers = array();
-    $query = "SELECT table_name,trigger_body FROM user_triggers";
+    $query = "SELECT table_name,trigger_body FROM user_triggers WHERE table_name NOT LIKE 'BIN$%'";
     $statement = OCIParse( $oraDB, $query );
     OCIExecute( $statement );
     while ( OCIFetchInto( $statement, $row,
@@ -73,6 +98,7 @@ function& getSequences( &$triggers )
             continue;
         $seqs[$sequenceName] = array( $tableName, $tableCol );
     }
+    ksort($seqs);
     return $seqs;
 }
 
@@ -109,7 +135,7 @@ function oraDoQuery( $oraDB, $query )
 ##############################################################################
 function oraUpdateSeqence( $oraDB, $seq, $table, $col )
 {
-    $curColVal = oraSelectOneVar( $oraDB, "SELECT MAX($col) FROM \"$table\"" );
+    $curColVal = (int)oraSelectOneVar( $oraDB, "SELECT MAX($col) FROM \"$table\"" );
     $curSeqVal = oraSelectOneVar( $oraDB, "SELECT $seq.nextval FROM DUAL" );
     $inc = $curColVal - $curSeqVal;
 

@@ -2,7 +2,8 @@ Changes from 1.5 to 1.7
 
 *General:
 - Implemented request #011767: Added query analysis support.
-- Improved oracle cluster handler (uses less queries, bind parameters).
+- Improved oracle cluster handler (uses less queries, bind parameters; can provide debug traces; increased max allowed file path length).
+- Improved oracle cluster handler index_image.php file.
 - Better time measuring.
 - More correct time accumulators.
 - Improved script ora-initialize.sh.
@@ -23,3 +24,5 @@ Changes from 1.5 to 1.7
 - Fixed bug : Wrong table conversion from mysql. ezurl.url field should be varchar2 in oracle.
 - Fixed bugs #009802 and #009807: errors in ora-initialise.sh
 - Fixed bug: arrayQuery() would not honor offset with limit = -1
+- Fixed bug: bad sequence name generated when importing an existing mysql installation that contains extensions tables with an autoincrement column
+- Fixed bug: System Upgrade page in admin interface would give unnecessary warnings about tables with decimal columns
