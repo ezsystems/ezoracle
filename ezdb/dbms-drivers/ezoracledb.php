@@ -1239,6 +1239,89 @@ class eZOracleDB extends eZDBInterface
     }
 
     /*!
+     \static
+
+     This function can be used to create a SQL IN statement to be used in a WHERE clause
+     according to the description that can be found in the \c eZDBInterface class for the
+     same function.
+
+     According to the restriction of the Oracle database, which only allows a total amount
+     of 1000 elements in an IN statement, this function will create multiple IN statements
+     that are connected using \c OR or \c AND, depending on the \c $not parameter. Example:
+
+     IN ( 1, ..., 1500 )
+
+     will be
+
+     IN ( 1, ...., 1000 ) OR IN ( 1001, ... , 1500 )
+
+     and
+
+     NOT IN ( 1, ..., 1500 )
+
+     will be
+
+     NOT IN ( 1, ...., 1000 ) AND NOT IN ( 1001, ... , 1500 )
+
+     \return A string with the correct IN statement like for example
+             "columnName IN ( element1, element2 )"
+     */
+    function generateSQLINStatement( $elements, $columnName, $not = false, $unique = true, $type = false  )
+    {
+        $connector = ' OR ';
+        $result    = '';
+        $statement = ' IN';
+        if ( $not === true )
+        {
+            $connector = ' AND ';
+            $statement = ' NOT IN';
+        }
+        if ( !is_array( $elements ) )
+        {
+            $elements = array( $elements );
+        }
+        else
+        {
+            if ( $unique )
+            {
+                $elements = array_unique( $elements );
+            }
+        }
+        $amountElements = count( $elements );
+        $length = 1000;
+        if ( $amountElements > $length )
+        {
+            $parts  = array();
+            $offset = 0;
+            while ( $offset < $amountElements )
+            {
+                if ( $type !== false )
+                {
+                    $parts[] = $statement . ' ( ' . $this->implodeWithTypeCast( ', ', array_slice( $elements, $offset, $length ) ) . ' )';
+                }
+                else
+                {
+                    $parts[] = $statement . ' ( ' . implode( ', ', array_slice( $elements, $offset, $length ) ) . ' )';
+                }
+                $offset += $length;
+            }
+            $result = $columnName . ' ' . implode( $connector . ' ' . $columnName, $parts );
+        }
+        else
+        {
+            if ( $type !== false )
+            {
+                $result = $columnName . $statement . ' ( ' . $this->implodeWithTypeCast( ', ', $elements ) . ' )';
+            }
+            else
+            {
+                $result = $columnName . $statement . ' ( ' . implode( ', ', $elements ) . ' )';
+            }
+        }
+        return $result;
+    }
+
+    /*!
       Works slightly differently from other databases, both beacuse of the way
       oci-error calls work and because we retain backward compatibility (ie.
       the code that calls this expects it to print ezdebugs too)
