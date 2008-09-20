@@ -52,7 +52,7 @@ Upgrades to the development format will not be supported.</warning>
     <provides>
       <provide type="ezextension"
                name="ezoracle"
-               value="1.0" />
+               value="1.7" />
       <provide type="ezdb"
                name="handler"
                value="ezoracle" />
@@ -63,7 +63,7 @@ Upgrades to the development format will not be supported.</warning>
     <requires>
       <require type="ezpublish"
                name="version"
-               value="3.5" />
+               value="4.0.1" />
     </requires>
     <obsoletes />
     <conflicts />

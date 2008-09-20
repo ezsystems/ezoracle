@@ -13,7 +13,7 @@ Introduction
 2. License
    -------
 
-   This software is licensed under the eZ Proprietary license. The complete
+   This software is licensed under the [EXTENSION_LICENSE]. The complete
    license agreement is included in the LICENSE file. For more information
    or questions please contact info@ez.no
 
@@ -24,26 +24,28 @@ Introduction
 
    o  eZ Publish version:
 
-      Make sure you use eZ Publish version 3.10.1 or 3.9.5 or higher, earlier
+      Make sure you use eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher (3.10.x), earlier
       versions did not take Oracle properly into account and will not work
-      correctly.
+      correctly. For eZ Publish 4.0 or later, use eZ Oracle 1.8 or later.
 
    o  Oracle version:
 
       Make sure you have Oracle 8 or higher (client and server).
+      Please note that the Oci8 page on the PHP manual at www.php.net states
+      that only Oracle version 9 and higher is supported for the client side.
 
    o  PHP with Oracle support:
 
       Make sure your PHP installation has compiled in support for Oracle. To
       compile this you will need the Oracle client libraries and headers.
+      The standard windows version of php includes the dll needed for oracle support.
+      To check if Oracle support is enabled, the output of the phpinfo() php
+      function includes a section titled "oci8". From the command line run `php -i'
 
       To use eZ Publish clustering functionality the PECL version of the php
       oci8 extension (http://pecl.php.net/package/oci8) is required. The version
       of the oci8 extension that is shipped with php4 is not supported as there
       are known bugs with its support for LOB fields.
-      Please note that the Oci8 page on the PHP manual states that only Oracle
-      version 9 and higher is supported for the client side with the new oci8
-      version.
 
    o  Oracle user with correct privileges:
 
@@ -58,10 +60,10 @@ You can download a version of eZ Publish from ez.no, you will find the
 various versions at:
 http://ez.no/download/ez_publish/ez_publish_3_stable_releases
 
-NOTE: You will require eZ Publish 3.5 or higher
+NOTE: You will require eZ Publish [EXTENSION_PUBLISH_VERSION] or higher (3.10.x)
 
 Information on the installation of eZ Publish can be found at:
-http://ez.no/ez_publish/documentation/installation
+http://ez.no/doc/ez_publish/technical_manual/3_10/installation
 
 
 Installing eZ Oracle extension
@@ -70,19 +72,23 @@ Installing eZ Oracle extension
 1. Copy or untar the package into the `extension' directory in the root of your
    eZ Publish installation.
 
-2. Unpack the files in the distribution. The command necessary is depends on the
-   file you downloaded.
+2. Unpack the files in the distribution. The command necessary depends on the
+   type of file you downloaded.
+
    [tar.gz]:
    $ tar -zxvf ezoracle-extension-[ExtensionVersion].tar.gz
+
    [bz2]:
    $ tar -jxvf ezoracle-extension-[ExtensionVersion].bz2
+
    [zip]:
    $ unzip ezoracle-extension-[ExtensionVersion].zip
 
 
-3. We must now enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the 
-   folder root_of_ezpublish/settings. If this file does not exist; create it. Locate (or add)
-   the block [ExtensionSettings] and add the line:
+3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the 
+   folder root_of_ezpublish/settings/override. If this file does not exist, create it.
+   Locate (or add) the block [ExtensionSettings] and add the line:
+
    ActiveExtensions[]=ezoracle
 
    If you run several sites using only one distribution and only some of the sites should use
@@ -104,8 +110,8 @@ Initializing Oracle database
 
    $ ./extension/ezoracle/scripts/ora-initialize.sh
 
-   The script will check your system against your requirements. If something
-   is not as it should be it will give you information on this.
+   The script will check your system against the requirements. If something
+   is not as it should be it will give you information on the problem.
    The script will ask for some information in some steps, the steps are:
 
    o  Testing connection to Oracle server
@@ -164,7 +170,7 @@ Initializing Oracle database
 
    o  Environment variables
 
-      Set all the needed environment variables by running `oraenv'.
+      Set all the needed environment variables by eg. running `oraenv'.
 
       $ . oraenv
 
@@ -276,8 +282,8 @@ Database=<instance>
 Restarting Apache
 =================
 
-   Finally you must restart the Apache webserver to make sure PHP is loaded
-   with Oracle support and the some enviroment variable are used.
+   Possibly you will have to restart the Apache webserver to make sure PHP is
+   loaded with Oracle support and the needed enviroment variable are used.
 
    $ . oraenv
    $ apachectl restart
@@ -285,7 +291,7 @@ Restarting Apache
    NOTE: Each time you restart the webserver you must run the `oraenv'
          command, if not the Oracle extension in PHP will not work properly.
          The extension requires the ORACLE_HOME enviroment variable to be
-         available to php.
+         available to php (unless the Oracle Instant Client is used).
 
 
 Troubleshooting
@@ -302,4 +308,4 @@ Troubleshooting
 
    If you have find any problems not handled by this document or the FAQ you
    can contact eZ system trough the support system:
-   http://ez.no/services/support
+   http://ez.no/support
