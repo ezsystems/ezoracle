@@ -445,7 +445,7 @@ class eZDBFileHandlerMysqlBackend
             $expectedOffset = $row[1];
             if ( $expectedOffset != $offset )
             {
-                $this->_error( "The fetched offset value '$expectedOffset' does not match the computed one for the file '$filePath', aborting fetch.", $fname );
+                $this->_error( "The fetched offset value '$expectedOffset' does not match the computed one for the file '$filePath', aborting fetch." );
                 fclose( $fp );
                 @unlink( $filePath );
                 return false;
@@ -455,7 +455,7 @@ class eZDBFileHandlerMysqlBackend
         }
         if ( $offset != $contentLength )
         {
-            $this->_error( "The size of the fetched data '$offset' does not match the expected size '$contentLength' for the file '$filePath', aborting fetch.", $fname );
+            $this->_error( "The size of the fetched data '$offset' does not match the expected size '$contentLength' for the file '$filePath', aborting fetch." );
             fclose( $fp );
             @unlink( $filePath );
             return false;
@@ -914,7 +914,7 @@ class eZDBFileHandlerMysqlBackend
      \param $fname The function name that started the query, should contain relevant arguments in the text.
      \param $error Sent to _error() in case of errors
      \param $debug If true it will display the fetched row in addition to the SQL.
-     \param $fetchCall The callback to fetch the row.
+     \param $resultType The definition of the type of retrieval to be done: associative, nuleric, etc....
      */
     function _selectOne( $query, $fname, $error = false, $debug = false, $resultType = MYSQL_BOTH )
     {
