@@ -888,7 +888,7 @@ class eZDBFileHandlerMysqlBackend
      */
     function _selectOneRow( $query, $fname, $error = false, $debug = false )
     {
-        return $this->_selectOne( $query, $fname, $error, $debug, "mysql_fetch_row" );
+        return $this->_selectOne( $query, $fname, $error, $debug, MYSQL_NUM );
     }
 
     /*!
@@ -903,7 +903,7 @@ class eZDBFileHandlerMysqlBackend
      */
     function _selectOneAssoc( $query, $fname, $error = false, $debug = false )
     {
-        return $this->_selectOne( $query, $fname, $error, $debug, "mysql_fetch_assoc" );
+        return $this->_selectOne( $query, $fname, $error, $debug, MYSQL_ASSOC );
     }
 
     /*!
@@ -916,7 +916,7 @@ class eZDBFileHandlerMysqlBackend
      \param $debug If true it will display the fetched row in addition to the SQL.
      \param $fetchCall The callback to fetch the row.
      */
-    function _selectOne( $query, $fname, $error = false, $debug = false, $fetchCall )
+    function _selectOne( $query, $fname, $error = false, $debug = false, $resultType = MYSQL_BOTH )
     {
         eZDebug::accumulatorStart( 'mysql_cluster_query', 'mysql_cluster_total', 'Mysql_cluster_queries' );
         $time = microtime( true );
@@ -937,15 +937,15 @@ class eZDBFileHandlerMysqlBackend
             // For PHP 5 throw an exception.
         }
 
-        $row = $fetchCall( $res );
+        $row = mysql_fetch_array( $res, $resultType );
         mysql_free_result( $res );
-        if ( $debug )
-            $query = "SQL for _selectOneAssoc:\n" . $query . "\n\nRESULT:\n" . var_export( $row, true );
+        //if ( $debug )
+        //    $query = "SQL for _selectOne:\n" . $query . "\n\nRESULT:\n" . var_export( $row, true );
 
         $time = microtime( true ) - $time;
         eZDebug::accumulatorStop( 'mysql_cluster_query' );
 
-        $this->_report( $query, $fname, $time );
+        $this->_report( $query, $fname, $time, 1, $debug ? $row : false );
         return $row;
     }
 
@@ -1085,24 +1085,11 @@ class eZDBFileHandlerMysqlBackend
     function _verifyExclusiveLock( $filePath, $expiry, $curtime, $ttl, $fname = false )
     {
         if ( eZDBFileHandlerMysqlBackend::$backendVerify === null )
-
-
-
-
-
-
-
-
         {
             $backendclass = get_class( $this );
             $backendclass = new $backendclass();
             eZDBFileHandlerMysqlBackend::$backendVerify = $backendclass;
             $backendclass->_connect( true );
-
-
-
-
-
         }
         $metaData = eZDBFileHandlerMysqlBackend::$backendVerify->_fetchMetadata( $fname );
         if ( $metaData !== false )
@@ -1342,7 +1329,7 @@ class eZDBFileHandlerMysqlBackend
      \param $timeTaken Number of seconds the query + related operations took (as float).
      \param $numRows Number of affected rows.
      */
-    function _report( $query, $fname, $timeTaken, $numRows = false )
+    function _report( $query, $fname, $timeTaken, $numRows = false, $rows = false )
     {
         if ( !$this->dbparams['sql_output'] )
             return;
@@ -1350,6 +1337,8 @@ class eZDBFileHandlerMysqlBackend
         $rowText = '';
         if ( $numRows !== false )
             $rowText = "$numRows rows, ";
+        if ( $rows !== false )
+            $query .= "\nRESULT:\n" . var_export( $rows, true );
         static $numQueries = 0;
         if ( strlen( $fname ) == 0 )
             $fname = "_query";
