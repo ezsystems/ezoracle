@@ -5,7 +5,7 @@
 // Created on: <03-May-2006 11:28:15 vs>
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
-//// SOFTWARE NAME: eZ Oracle
+// SOFTWARE NAME: eZ Oracle
 // SOFTWARE RELEASE: 1.6.x
 // COPYRIGHT NOTICE: Copyright (C) 1999-2006 eZ systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
