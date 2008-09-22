@@ -96,7 +96,8 @@ $columnsWithDefaultNullVal = array(
     'ezmedia.filename',
     'ezmedia.original_filename',
     'ezmedia.mime_type',
-    'ezrss_import.import_description'
+    'ezrss_import.import_description',
+    'ezisbn_registrant_range.registrant_from'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
