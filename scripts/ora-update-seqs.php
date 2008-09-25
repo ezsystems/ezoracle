@@ -31,7 +31,7 @@
 #
 # You might need to run this script after bulk data loads.
 #
-# Usage: ora-update-seqs <login_string>
+# Usage: ora-update-seqs [--exact] <login_string>
 # For example,
 #        ora-update-seqs scott/tiger@orcl
 ##############################################################################
@@ -64,7 +64,7 @@ function oraParseLoginString( $loginString, &$oraUser, &$oraPass, &$oraInst )
 function oraFetchTriggersInfo( $oraDB )
 {
     $triggers = array();
-    $query = "SELECT table_name,trigger_body FROM user_triggers WHERE table_name NOT LIKE 'BIN$%'";
+    $query = "SELECT trigger_name,table_name,trigger_body FROM user_triggers WHERE table_name NOT LIKE 'BIN$%'";
     $statement = OCIParse( $oraDB, $query );
     OCIExecute( $statement );
     while ( OCIFetchInto( $statement, $row,
@@ -72,7 +72,8 @@ function oraFetchTriggersInfo( $oraDB )
     {
         $triggers[] = array(
             'table_name'   => $row['TABLE_NAME'],
-            'trigger_body' => $row['TRIGGER_BODY']
+            'trigger_body' => $row['TRIGGER_BODY'],
+            'trigger_name' => $row['TRIGGER_NAME'],
        );
     }
     OCIFreeStatement( $statement );
@@ -85,7 +86,7 @@ function getSequences( $triggers )
     $seqs = array();
     foreach ( $triggers as $triggerParams )
     {
-        $tableName   = $triggerParams['table_name'];
+        //$tableName   = $triggerParams['table_name'];
         $triggerBody = $triggerParams['trigger_body'];
         //echo "$tableName - $triggerBody\n";
         if ( preg_match( TRIGGER_REGEXP_1, $triggerBody, $matches ) ||
@@ -96,7 +97,7 @@ function getSequences( $triggers )
         }
         else
             continue;
-        $seqs[$sequenceName] = array( $tableName, $tableCol );
+        $seqs[$sequenceName] = array( $triggerParams['table_name'], $tableCol, $triggerParams['trigger_name'] );
     }
     ksort($seqs);
     return $seqs;
@@ -118,7 +119,7 @@ function oraSelectOneVar( $oraDB, $query )
     }
 
     OCIFreeStatement( $statement );
-    return $val === null ? 0 : $val;
+    return $val;
 
 }
 
@@ -133,25 +134,35 @@ function oraDoQuery( $oraDB, $query )
 }
 
 ##############################################################################
-function oraUpdateSeqence( $oraDB, $seq, $table, $col )
+function oraUpdateSeqence( $oraDB, $seq, $table, $col, $trig = '', $exact = false )
 {
-    $curColVal = (int)oraSelectOneVar( $oraDB, "SELECT MAX($col) FROM \"$table\"" );
+    $curColVal = oraSelectOneVar( $oraDB, "SELECT MAX($col) FROM \"$table\"" );
+    // nb: fetching CURRVAL will not work if the sequence was never used before (ora error)
+    // this means that for empty tables we must first fetch the first value (1) of the sequence,
+    // then reset it back to 0 - unless we skip resetting the sequence altogether
+    if ( $curColVal === null && !$exact ) // empty table: no need to increment sequence
+        return;
+    $curColVal = (int)$curColVal;
     $curSeqVal = oraSelectOneVar( $oraDB, "SELECT $seq.nextval FROM DUAL" );
     $inc = $curColVal - $curSeqVal;
 
-    if( !$inc ) // no need to increment
+    if( (!$exact && $inc <= 0) || ($exact && $inc === 0) ) // no need to increment: sequence is above table or at same level
         return;
 
-    oraDoQuery( $oraDB, "ALTER SEQUENCE $seq MINVALUE 0" );
-    oraDoQuery( $oraDB, "ALTER SEQUENCE $seq INCREMENT BY $inc" );
-    $finalSeqVal = oraSelectOneVar( $oraDB, "SELECT $seq.nextval FROM DUAL" );
-    oraDoQuery( $oraDB, "ALTER SEQUENCE $seq INCREMENT BY 1" );
-    $rslt = ( $finalSeqVal == $curColVal ) ? 'ok' : '**FAILED**';
+    // work around a php 5.2.5 segfault with oci instant client 10.1.0.4 connected to oracle xe 10.2.0.1:
+    // sequences cannot be altered in any meaningful way
+    oraDoQuery( $oraDB, "DROP sequence $seq" );
+    $rslt = oraDoQuery( $oraDB, "CREATE SEQUENCE $seq MINVALUE ".($curColVal+1) );
+    if ( $rslt && $trig != '' )
+    {
+        $rslt = oraDoQuery( $oraDB, "ALTER TRIGGER $trig COMPILE" );
+    }
+    $rslt = $rslt ? "ok" : "**FAILED**";
     printf( "updating %30s: %10s\n", $seq, $rslt );
 }
 
 ##############################################################################
-function oraUpdateSequences( $oraDB, $seqs )
+function oraUpdateSequences( $oraDB, $seqs, $exact )
 {
     if ( count($seqs) == 0 )
     {
@@ -160,25 +171,59 @@ function oraUpdateSequences( $oraDB, $seqs )
     }
     foreach( $seqs as $seq => $tableData )
     {
-        list( $table, $col ) = $tableData;
-        oraUpdateSeqence( $oraDB, $seq, $table, $col );
+        list( $table, $col, $trig ) = $tableData;
+        oraUpdateSeqence( $oraDB, $seq, $table, $col, $trig, $exact );
     }
+}
+
+##############################################################################
+/*!
+ Shows command line arguments syntax and terminates script.
+ */
+function showUsage( $argv )
+{
+    echo "\n";
+    echo "Usage: $argv[0] [options] <login_string>\n";
+    echo "Options:\n";
+    echo "\t--exact: lower the next value of sequences that are above table max value, too\n";
+    echo "\n";
+    exit( 1 );
 }
 
 ##############################################################################
 error_reporting( E_ALL );
 
+$loginString = '';
+$optExact    = false;
+
 if ( $argc < 2 )
+    showUsage( $argv );
+
+// parse command line options
+foreach ( array_slice( $argv, 1 ) as $arg )
 {
-    echo "Usage: $argv[0] <login_string>\n";
-    exit( 1 );
+    if ( preg_match ( '/^--(.*)$/', $arg, $matches ) ) // an option
+    {
+        $option = $matches[1];
+        switch ( $option )
+        {
+            case 'exact':
+                $optExact = true;
+                break;
+            default:
+                echo "Unknown option: $option.\n";
+                showUsage( $argv );
+        }
+    }
+    elseif ( !$loginString )
+            $loginString = $arg;
 }
 
 $oraUser = '';
 $oraPass = '';
 $oraInst = ''; // oracle instance
 
-if ( !oraParseLoginString( $argv[1], $oraUser, $oraPass, $oraInst ) )
+if ( !oraParseLoginString( $loginString, $oraUser, $oraPass, $oraInst ) )
     die( "Malformed login string: $argv[1]\n" );
 
 if( !( $oraDB = OCILogon( $oraUser, $oraPass, $oraInst ) ) )
@@ -186,7 +231,7 @@ if( !( $oraDB = OCILogon( $oraUser, $oraPass, $oraInst ) ) )
 
 $triggers = oraFetchTriggersInfo( $oraDB );
 $seqs     = getSequences( $triggers );
-oraUpdateSequences( $oraDB, $seqs );
+oraUpdateSequences( $oraDB, $seqs, $optExact );
 
 OCILogOff( $oraDB );
 
