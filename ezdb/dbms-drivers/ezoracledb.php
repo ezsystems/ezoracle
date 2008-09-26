@@ -916,7 +916,6 @@ class eZOracleDB extends eZDBInterface
         $this->query( $dropTableQuery, $server );
     }
 
-
     /*!
      Sets Oracle sequence values to the maximum values used in the corresponding columns.
     */
@@ -925,17 +924,18 @@ class eZOracleDB extends eZDBInterface
         if ( $this->isConnected() )
         {
             $triggers = array();
-            $rows = $this->arrayQuery( "SELECT table_name, trigger_body FROM user_triggers WHERE table_name NOT LIKE 'BIN$%'" );
+            $rows = $this->arrayQuery( "SELECT trigger_name, table_name, trigger_body FROM user_triggers WHERE table_name NOT LIKE 'BIN$%'" );
             foreach ( $rows as $row )
             {
-                $triggers[] = array( 'table_name'   => $row['table_name'],
+                $triggers[] = array( 'trigger_name' => $row['trigger_name'],
+                                     'table_name'   => $row['table_name'],
                                      'trigger_body' => $row['trigger_body'] );
             }
 
             $seqs = array();
             foreach ( $triggers as $triggerParams )
             {
-                $tableName   = $triggerParams['table_name'];
+                //$tableName   = $triggerParams['table_name'];
                 $triggerBody = $triggerParams['trigger_body'];
 
                 if ( preg_match( "/BEGIN\n" .
@@ -954,12 +954,12 @@ class eZOracleDB extends eZDBInterface
                 {
                     continue;
                 }
-                $seqs[$sequenceName] = array( $tableName, $tableCol );
+                $seqs[$sequenceName] = array( $triggerParams['table_name'], $tableCol, $triggerParams['trigger_name'] );
             }
 
             foreach ( $seqs as $seq => $tableData )
             {
-                list( $table, $col ) = $tableData;
+                list( $table, $col, $trig ) = $tableData;
 
                 $rows = $this->arrayQuery( "SELECT MAX($col) AS max FROM $table" );
                 $curColVal = (int)$rows[0]['max'];
@@ -967,29 +967,24 @@ class eZOracleDB extends eZDBInterface
                 $curSeqVal = (int)$rows[0]['nextval'];
                 $inc = $curColVal - $curSeqVal;
 
-                if ( !$inc ) // no need to increment
+                if ( $inc == 0 ) // no need to increment
                 {
                     continue;
                 }
 
-                if ( !$this->query( "ALTER SEQUENCE $seq MINVALUE 0" ) )
+                if ( !$this->query( "DROP SEQUENCE $seq" ) )
                 {
+                    eZDebug::writeError( "Failed dropping sequence $seq for update, final sequence value '$curSeqVal' is different than max value '$curColVal'" );
                     return false;
                 }
-                if ( !$this->query( "ALTER SEQUENCE $seq INCREMENT BY $inc" ) )
+                if ( !$this->query( "CREATE SEQUENCE $seq MINVALUE ".($curColVal+1) ) )
                 {
+                    eZDebug::writeError( "Failed recreating sequence $seq for update. Trigger $trig left in invalid state" );
                     return false;
                 }
-                $rows = $this->arrayQuery( "SELECT $seq.nextval AS nextval FROM DUAL" );
-                $finalSeqVal = (int)$rows[0]['nextval'];
-                if ( !$this->query( "ALTER SEQUENCE $seq INCREMENT BY 1" ) )
+                if ( !$this->query( "ALTER TRIGGER $trig COMPILE" ) )
                 {
-                    return false;
-                }
-
-                if ( $finalSeqVal != $curColVal )
-                {
-                    eZDebug::writeError( "Failed updating sequence $seq, final sequence value '$finalSeqVal' is different than max value '$curColVal'" );
+                    eZDebug::writeError( "Failed compiling trigger $trig after update of sequence $seq" );
                     return false;
                 }
             }
@@ -1020,7 +1015,6 @@ class eZOracleDB extends eZDBInterface
 
         return $tableName;
     }
-
 
     /*!
       Checks if the requested character set matches the one used in the database.
@@ -1280,7 +1274,7 @@ class eZOracleDB extends eZDBInterface
     var $Mode;
     var $BindVariableArray = array();
 
-    // @todo move this to a static var, and we should shave off a littlke ram...
+    // @todo move this to a static var, and we should shave off a little ram...
     var $CharsetsMap = array(
         'big5' => 'ZHT16BIG5',
         'euc-jp' => 'JA16EUC',
