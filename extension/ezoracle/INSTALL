@@ -34,7 +34,7 @@ Introduction
       Please note that the Oci8 page on the PHP manual at www.php.net states
       that only Oracle version 9 and higher is supported for the client side.
 
-   o  PHP with Oracle support:
+   o  PHP with Oracle support (oci8 extension):
 
       Make sure your PHP installation has compiled in support for Oracle. To
       compile this you will need the Oracle client libraries and headers.
@@ -59,6 +59,22 @@ NOTE: You will require eZ Publish [EXTENSION_PUBLISH_VERSION] or higher
 
 Information on the installation of eZ Publish can be found at:
 http://ez.no/doc/ez_publish/technical_manual
+
+
+Restarting Apache
+=================
+
+   Detailed instructions on the installation and configuration of the oci8
+   extension are available at http://www.php.net/manual/en/oci8.setup.php.
+
+   Possibly you will have to restart the Apache webserver to make sure PHP is
+   loaded with Oracle support and the needed enviroment variable are in effect.
+
+   $ . oraenv
+   $ apachectl restart
+
+   NOTE: Each time you restart the webserver you might need to run the `oraenv'
+         command, if not the Oracle extension in PHP will not work properly.
 
 
 Installing eZ Oracle extension
@@ -272,21 +288,6 @@ Database=<instance>
 
    You must replace `<user>' `<password>' and `<instance>' with the user and
    instance you use to connect to Oracle.
-
-
-Restarting Apache
-=================
-
-   Possibly you will have to restart the Apache webserver to make sure PHP is
-   loaded with Oracle support and the needed enviroment variable are used.
-
-   $ . oraenv
-   $ apachectl restart
-
-   NOTE: Each time you restart the webserver you must run the `oraenv'
-         command, if not the Oracle extension in PHP will not work properly.
-         The extension requires the ORACLE_HOME enviroment variable to be
-         available to php (unless the Oracle Instant Client is used).
 
 
 Troubleshooting
