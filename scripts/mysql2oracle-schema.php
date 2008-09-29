@@ -268,7 +268,7 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
     $colDef  = trim( $colname ) . ' '. $colOraType;
 
     $isStringColumn = stristr( $colOraType, 'CHAR' );
-    $isLOBColumn = stristr( $colOraType, 'LOB' );;
+    $isLOBColumn = stristr( $colOraType, 'LOB' );
     $colHasNoDefaultValOverride = myColHasNoDefaultValOverride( $table, $colname ) ? 1 : 0;
     $colHasNotNullOverride = myColHasNotNullOverride( $table, $colname ) ? 1 : 0;
 
@@ -276,8 +276,9 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
 
     if ( $isStringColumn || $isLOBColumn )
     {
-        // CLOBs cannot have a default value
-        if ( $isStringColumn && $col['Default'] !== null && !$colHasNoDefaultValOverride )
+        // CLOBs cannot have a default value in Oracle
+        // LONGTEXTS have no default value in MySQL
+        if ( $isStringColumn && $col['Default'] !== null && !$colHasNoDefaultValOverride && $col['Type'] != 'longtext' )
             $colDef .= " DEFAULT '". $col['Default'] . "'";
 
         if ( $col['Null'] !== 'YES' &&
