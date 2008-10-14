@@ -33,6 +33,8 @@ Introduction
       Make sure you have Oracle 8 or higher (client and server).
       Please note that the Oci8 page on the PHP manual at www.php.net states
       that only Oracle version 9 and higher is supported for the client side.
+      The Oracle "Easy Connect Naming Method" is not supported at this time to
+      specify the database server to connect to.
 
    o  PHP with Oracle support (oci8 extension):
 
@@ -218,6 +220,10 @@ EOF
 
       You will see "ORA-01920: user name 'SCOTT' conflicts with another user
       or role name" if user scott already exists.
+      If the Oracle server is version 10g or later, new users might be created
+      with a default tablespace which is not SYSTEM; you should alter the above sql
+      command accordingly to grant unlimited quota on the correct tablespace
+      (and possibly specify a customised default tablespace for the user)
 
    o  Create md5_digest and bitor functions
 
@@ -263,7 +269,7 @@ EOF
         Run each script without arguments to see its usage.
         Here is a sample scenario:
 
-        $ cd ezoracle/scripts/
+        $ cd extension/ezoracle/scripts/
         $ ./mysql2oracle-schema.php corporate_34:root/@heaven:3400 \
             > corporate_34.sql
         $ sqlplus scott/tiger@orcl < corporate_34.sql
