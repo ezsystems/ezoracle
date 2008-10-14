@@ -39,6 +39,8 @@ o  Oracle version:
    Make sure you have Oracle 8 or higher (client and server).
    Please note that the Oci8 page on the PHP manual at www.php.net states
    that only Oracle version 9 and higher is supported for the client side.
+   The Oracle "Easy Connect Naming Method" is not supported at this time to
+   specify the database server to connect to.
 
 o  PHP with Oracle support:
 
