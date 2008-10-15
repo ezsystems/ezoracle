@@ -26,7 +26,7 @@
 
 class ezoracleInfo
 {
-    function info()
+    static function info()
     {
         return array( 'Name' => "eZ Oracle",
                       'Version' => "2.0",
