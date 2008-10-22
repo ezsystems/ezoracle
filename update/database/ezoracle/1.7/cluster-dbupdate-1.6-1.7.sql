@@ -12,6 +12,8 @@ ALTER TABLE ezdbfile ADD ( expired CHAR(1) DEFAULT '0' NOT NULL );
 
 ALTER TABLE ezdbfile DROP COLUMN id;
 
+ALTER TABLE ezdbfile DROP UNIQUE ( name );
+
 ALTER TABLE ezdbfile DROP UNIQUE ( name_hash );
 
 ALTER TABLE ezdbfile ADD CONSTRAINT pk_ezdbfile PRIMARY KEY ( name_hash );
@@ -19,6 +21,8 @@ ALTER TABLE ezdbfile ADD CONSTRAINT pk_ezdbfile PRIMARY KEY ( name_hash );
 CREATE INDEX ezdbfile_mtime ON ezdbfile ( mtime );
 
 ALTER TABLE  EZDBFILE MODIFY ( NAME VARCHAR2(4000) );
+
+CREATE INDEX ezdbfile_name ON ezdbfile ( name );
 
 --CREATE UNIQUE INDEX ezdbfile_expired_name ON ezdbfile ( expired, name );
 
