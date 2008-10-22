@@ -46,7 +46,7 @@ Known differences from the mysql cluster file handler backend:
 
 /*
 CREATE TABLE ezdbfile (
-  name      VARCHAR2(4000) NOT NULL UNIQUE,
+  name      VARCHAR2(4000) NOT NULL,
   name_hash VARCHAR2(34)  PRIMARY KEY,
   datatype  VARCHAR2(60)  DEFAULT 'application/octet-stream' NOT NULL,
   scope     VARCHAR2(20)  DEFAULT 'UNKNOWN' NOT NULL,
@@ -55,6 +55,7 @@ CREATE TABLE ezdbfile (
   lob       BLOB,
   expired   CHAR(1)       DEFAULT '0' NOT NULL
 );
+CREATE INDEX ezdbfile_name ON ezdbfile ( name );
 CREATE INDEX ezdbfile_mtime ON ezdbfile ( mtime );
 --CREATE UNIQUE INDEX ezdbfile_expired_name ON ezdbfile ( expired, name );
 
