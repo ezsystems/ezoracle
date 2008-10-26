@@ -123,15 +123,15 @@ $indexNameTransTable = array(
     'ezwaituntildatevalue.ezwaituntildateevalue_wf_ev_id_wf_ver' => 'ezwaituntdateval_wfeid_wfever'
     );
 
-/*!
+/**
  Parses given MySQL login string of the following form:
  <dbname>:<user>/<pass>@<host>[:<port>]
- \param $loginString (in) login string to parse
- \param &$dbname (out) db name
- \param &$user (out) db user
- \param &$pass (out) db password
- \param &$host (out) host mysql is running on
- \return true if the string was parsed successfully, false otherwise
+ @param string $loginString (in) login string to parse
+ @param string &$dbname (out) db name
+ @param string &$user (out) db user
+ @param string &$pass (out) db password
+ @param string &$host (out) host mysql is running on
+ @return bool true if the string was parsed successfully, false otherwise
 */
 function parseMysqlLoginString( $loginString, &$dbname, &$user, &$pass, &$host )
 {
@@ -144,8 +144,8 @@ function parseMysqlLoginString( $loginString, &$dbname, &$user, &$pass, &$host )
     return true;
 }
 
-/*!
- \return alias for the given table column if one was
+/**
+ @return string alias for the given table column if one was
          specified in the column name translation table
 */
 function getColumnAlias( $table, $col )
@@ -156,8 +156,8 @@ function getColumnAlias( $table, $col )
     return $col;
 }
 
-/*!
- \return alias for the given index if one was
+/**
+ @return string alias for the given index if one was
          specified in the index name translation table
 */
 function getIndexAlias( $table, $idx )
@@ -168,8 +168,8 @@ function getIndexAlias( $table, $idx )
     return $idx;
 }
 
-/*!
- \return datatype override for the given table column if one was
+/**
+ @return string|null datatype override for the given table column if one was
          specified in the type translation table
 */
 function getColumnTypeOverride( $table, $col )
@@ -180,8 +180,8 @@ function getColumnTypeOverride( $table, $col )
     return null;
 }
 
-/*!
- \return list of tables in the given MySQL database
+/**
+ @return array list of tables in the given MySQL database
 */
 function myFetchTablesList( $mydb )
 {
@@ -210,11 +210,11 @@ function myColHasNotNullOverride( $tableName, $columnName )
 }
 
 
-/*!
+/**
  Fetches columns info for the given table.
- \param mydb MySQL DB handle to work with
- \param table table name to fetch columns for
- \return columns info
+ @param resource mydb MySQL DB handle to work with
+ @param string table table name to fetch columns for
+ @return array columns info
 */
 function myGetColumnsList( $mydb, $table )
 {
@@ -227,8 +227,8 @@ function myGetColumnsList( $mydb, $table )
     return $columns;
 }
 
-/*!
- \return Oracle datatype for the given MySQL table column
+/**
+ @return string Oracle datatype for the given MySQL table column
 */
 function getOracleType( $table, /*const*/ &$col )
 {
@@ -245,9 +245,10 @@ function getOracleType( $table, /*const*/ &$col )
     return $rslt;
 }
 
-/*!
+/**
  Cuts given identifier to the specified length providing uniqueness of all
  shortened identifiers.
+ @return string
 */
 function shorten( $identifier, $length = 30 )
 {
@@ -257,9 +258,9 @@ function shorten( $identifier, $length = 30 )
     return substr( $identifier, 0, $length-5 ) . sprintf( "%05d", $cnt++ );
 }
 
-/*!
- \return string like "<col_name> <col_type> [options]" that will be a part of
-  DDL query for table creation
+/**
+ @return string like "<col_name> <col_type> [options]" that will be a part of
+         DDL query for table creation
 */
 function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
 {
@@ -302,11 +303,11 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
     return $colDef;
 }
 
-/*!
+/**
  Fetches indexes info for the given table
- \param $mydb handle of MySQL DB to work with
- \param $table (in) table to fetch indexes info for
- \param &$indexes (out) array containing indexes information
+ @param resource $mydb handle of MySQL DB to work with
+ @param string $table (in) table to fetch indexes info for
+ @param array &$indexes (out) array containing indexes information
         for all the DB tables.
         Index info for $table will be appended to it.
 */
@@ -327,17 +328,17 @@ function appendTableIndexes( $mydb, $table, &$indexes )
     mysql_free_result($rsltCols);
 }
 
-/*!
-  Dumps SQL query for creating table
-  \param $mydb  MySQL database handle to work with
-  \param $table table name
-  \param $autoIncrementColumns info about auto_increment columns is stored here
-                               (used later to create sequences and triggers)
-  \param $indexes info about what indexes should be created on a table
-                  is stored here
-  \param $drop    If it's true we dump DROP TABLE clause before CREATE TABLE
+/**
+ Dumps SQL query for creating table
+ @param resource $mydb MySQL database handle to work with
+ @param string $table table name
+ @param array &$autoIncrementColumns (out) info about auto_increment columns is stored here
+                              (used later to create sequences and triggers)
+ @param array &$indexes (out) info about what indexes should be created on a table
+                       is stored here
+ @param $drop    If it's true we dump DROP TABLE clause before CREATE TABLE
 
- \return DDL query for creating table
+ @return string DDL query for creating table
 */
 function dumpTableSchema( $mydb, $table, &$autoIncrementColumns, &$indexes, $drop )
 {
@@ -377,16 +378,15 @@ function dumpTableSchema( $mydb, $table, &$autoIncrementColumns, &$indexes, $dro
     return $create;
 }
 
-/*!
+/**
  For given auto-increment columns list dumps queries for creating
  Oracle sequences and triggers implementing auto-increment feature.
- \param $autoIncrementColumns (in) list of AI columns
- \param $seqs                 (out) queries for creating sequences
+ @param array $autoIncrementColumns (in) list of AI columns
+ @param array &$seqs           (out) queries for creating sequences
                                     are stored here
- \param $triggers             (out) queries for creating triggers
- \param $drop                 (in)  if it's true we dump DROP SEQUENCE
+ @param array &$triggers       (out) queries for creating triggers
+ @param bool $drop                  if it's true we dump DROP SEQUENCE
                                     before CREATE SEQUENCE
-
 */
 function dumpAutoIcrements( &$autoIncrementColumns, &$seqs, &$triggers, $drop )
 {
@@ -429,9 +429,9 @@ END;
     }
 }
 
-/*!
- \param $indexes indexes info
- \return SQL queries for creating indexes
+/**
+ @param array $indexes indexes info
+ @return string SQL queries for creating indexes
  */
 function dumpIndexes( &$indexes )
 {
@@ -465,12 +465,12 @@ function dumpIndexes( &$indexes )
     return $rslt;
 }
 
-/*!
+/**
     Fetches schema from the given Mysql DB and dumps it in a format
     understandable by Oracle.
-    \param  $mydb   MySQL database handle
-    \param  $drop   If it's true we drop sequences and trigger before creating them
-    \return string containing set of generated SQL queries
+    @param resource $mydb MySQL database handle
+    @param bool $drop     If it's true we drop sequences and trigger before creating them
+    @return string        string containing set of generated SQL queries
 */
 function dumpOracleSchema( $mydb, $drop )
 {
@@ -503,7 +503,7 @@ function dumpOracleSchema( $mydb, $drop )
     return $schema;
 }
 
-/*!
+/**
  Shows command line arguments syntax and terminates script.
  */
 function showUsage( $argv )

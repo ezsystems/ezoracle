@@ -25,19 +25,19 @@
 // ## END COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 //
 
-/*!
+/**
  Drops all objects (of types used by eZ Publish) in the current schema.
  Keeps user and associated tablespaces.
  Purges user's recycle bin.
 */
 
-/*!
+/**
  Parses given Oracle login string of the following form:
  <user>/<pass>@<db>
- \param $loginString (in) login string to parse
- \param $oraUser (out) db user
- \param $oraPass (out) db password
- \param $oraInst (out) Oracle instance
+ @param string $loginString (in) login string to parse
+ @param string &$oraUser (out) db user
+ @param string &$oraPass (out) db password
+ @param string &$oraInst (out) Oracle instance
 */
 function parseOracleLoginString( $loginString, &$oraUser, &$oraPass, &$oraInst )
 {
@@ -48,7 +48,7 @@ function parseOracleLoginString( $loginString, &$oraUser, &$oraPass, &$oraInst )
     return true;
 }
 
-/*!
+/**
  Shows command line arguments syntax and terminates script.
  */
 function showUsage( $argv )

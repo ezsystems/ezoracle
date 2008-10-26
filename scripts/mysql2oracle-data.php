@@ -28,7 +28,7 @@
 # Transfers all data from a given MySQL DB to an Oracle DB.
 # Run the script without arguments to see its usage.
 
-/*!
+/**
  Columns aliases table
 */
 $columnNameTransTable = array(
@@ -37,15 +37,15 @@ $columnNameTransTable = array(
         'ezdbfile'          => array( 'size' => 'filesize' )
     );
 
-/*!
+/**
  Parses given MySQL login string of the following form:
  <dbname>:<user>/<pass>@<host>[:<port>]
- \param $loginString (in) login string to parse
- \param &$dbname (out) db name
- \param &$user (out) db user
- \param &$pass (out) db password
- \param &$host (out) host mysql is running on
- \return true if the string was parsed successfully, false otherwise
+ @param string $loginString (in) login string to parse
+ @param string &$dbname (out) db name
+ @param string &$user (out) db user
+ @param string &$pass (out) db password
+ @param string &$host (out) host mysql is running on
+ @return bool true if the string was parsed successfully, false otherwise
 */
 function parseMysqlLoginString( $loginString, &$dbname, &$user, &$pass, &$host )
 {
@@ -58,13 +58,14 @@ function parseMysqlLoginString( $loginString, &$dbname, &$user, &$pass, &$host )
     return true;
 }
 
-/*!
+/**
  Parses given Oracle login string of the following form:
  <user>/<pass>@<db>
- \param $loginString (in) login string to parse
- \param $oraUser (out) db user
- \param $oraPass (out) db password
- \param $oraInst (out) Oracle instance
+ @param string $loginString (in) login string to parse
+ @param string &$oraUser (out) db user
+ @param string &$oraPass (out) db password
+ @param string &$oraInst (out) Oracle instance
+ @return bool true if the string was parsed successfully, false otherwise
 */
 function parseOracleLoginString( $loginString, &$oraUser, &$oraPass, &$oraInst )
 {
@@ -76,9 +77,9 @@ function parseOracleLoginString( $loginString, &$oraUser, &$oraPass, &$oraInst )
 }
 
 
-/*!
+/**
  Fetch single value using given query.
- \return fetched value
+ @return mixed fetched value
 */
 function mySelectOneVar( $mydb, $query )
 {
@@ -89,8 +90,8 @@ function mySelectOneVar( $mydb, $query )
     return $val;
 }
 
-/*!
- \return alias (if specified) for a given table column.
+/**
+ @return string alias (if specified) for a given table column.
 */
 function getColumnAlias( $table, $col )
 {
@@ -98,8 +99,8 @@ function getColumnAlias( $table, $col )
     return isset( $columnNameTransTable[$table][$col] ) ? $columnNameTransTable[$table][$col] : $col;
 }
 
-/*!
- \return list of all tables in a given MySQL database
+/**
+ @return array list of all tables in a given MySQL database
 */
 function myGetTablesList( $mydb )
 {
@@ -117,7 +118,7 @@ function myGetTablesList( $mydb )
     return $tables;
 }
 
-/*!
+/**
  Deletes all data from a given table in an Oracle DB.
 */
 function oraDeleteTableData( $oradb, $table )
@@ -130,8 +131,8 @@ function oraDeleteTableData( $oradb, $table )
     OCIFreeStatement( $deleteStmt );
 }
 
-/*!
- \return columns information for a given MySQL table
+/**
+ @return array columns information for a given MySQL table
 */
 function myGetTableColumnsList( $mydb, $table )
 {
@@ -147,11 +148,11 @@ function myGetTableColumnsList( $mydb, $table )
     return $columns;
 }
 
-/*!
+/**
  Generates INSERT query into a given Oracle DB table and columns information.
  The query will be used in multiple times with variable binding feature.
- \a $oraColumns is array of column datatypes and column names as keys for Oracle DB.
- \return generated query
+ @param array $oraColumns an array of column datatypes and column names as keys for Oracle DB.
+ @return string generated query
 */
 function createOracleInsertQuery( $tableName, &$columns, $oraColums = array() )
 {
@@ -221,9 +222,9 @@ function createOracleInsertQuery( $tableName, &$columns, $oraColums = array() )
     return $insertQuery;
 }
 
-/*!
+/**
  Copies all data from the given MySQL table to the Oracle one.
- \return true on success, false otherwise
+ @return bool true on success, false otherwise
 */
 function copyData( $mydb, $oradb, $tableName )
 {
