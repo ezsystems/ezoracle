@@ -31,16 +31,23 @@ $argc = count( $argv );
 
 if ( $argc < 3 )
 {
-    print( "Usage: $argv[0] <username> <password>\n" );
+    print( "Usage: $argv[0] <username> <password> [<tablespace>]\n" );
     exit( 1 );
 }
 
 $user = $argv[1];
 $password = $argv[2];
-
+if ( $argc > 3 )
+{
+    $tablespace = $argv[3];
+}
+else
+{
+    $tablespace = 'SYSTEM';
+}
 //$user = "scott";
 //$password = "tiger";
-$sql = "CREATE USER $user IDENTIFIED BY $password QUOTA UNLIMITED ON SYSTEM;
+$sql = "CREATE USER $user IDENTIFIED BY $password DEFAULT TABLESPACE $tablespace QUOTA UNLIMITED ON $tablespace;
 GRANT CREATE    SESSION   TO $user;
 GRANT CREATE    TABLE     TO $user;
 GRANT CREATE    TRIGGER   TO $user;
