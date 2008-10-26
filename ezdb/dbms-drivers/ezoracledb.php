@@ -390,7 +390,7 @@ class eZOracleDB extends eZDBInterface
                 // by default the db driver works in autocommit
                 if ( $this->Mode != OCI_DEFAULT && $this->TransactionCounter == 0)
                 {
-                    oci_commit( $this->DBConnection );
+                    OCICommit( $this->DBConnection );
                 }
             }
 
