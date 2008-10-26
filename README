@@ -1,0 +1,70 @@
+eZ Oracle extension 1.5 README
+
+What is the eZ Oracle extension?
+================================
+
+This extension adds support for the Oracle database to eZ publish by
+plugging into the database framework. After it is installed you can
+connect to any Oracle database that fits the minimum requirements.
+
+
+eZ Oracle version
+=======================
+
+The current version of eZ Oracle is 1.5.
+You can find details about changes for this version in doc/changelogs/CHANGELOG-1.5
+
+
+License
+=======
+
+This software is licensed under the eZ Proprietary license. The complete
+license agreement is included in the LICENSE file. For more information
+or questions please contact info@ez.no
+
+
+Requirements
+============
+
+The following requirements exists for using eZ Oracle extension:
+
+o  eZ publish version:
+
+   Make sure you eZ publish version 3.5 or higher, earlier versions did not
+   take Oracle into account and will not work.
+
+o  Oracle version:
+
+   Make sure you have Oracle 8 or higher (client and server).
+
+o  PHP with Oracle support:
+
+   Make sure your PHP installation has compiled in support for Oracle. To
+   compile this you will need the Oracle client libraries and headers.
+
+o  Oracle user with correct permissions:
+
+   Make sure you have a user on the oracle server that can create the
+   following elements: session, table, trigger, sequence and procedure.
+
+
+Installation
+============
+Please read the INSTALL file for installation instructions.
+
+
+Troubleshooting
+===============
+
+1. Read the FAQ
+   ------------
+
+   Some problems are more common than others. The most common ones are listed
+   in the the FAQ.
+
+2. Support
+   -------
+
+   If you have find any problems not handled by this document or the FAQ you
+   can contact eZ system trough the support system:
+   http://ez.no/services/support
