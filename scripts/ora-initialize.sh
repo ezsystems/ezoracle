@@ -139,13 +139,13 @@ if [ -z "$EZNETADMIN" ] || [ ! -f "$EZNETADMIN/tnsnames.ora" ]; then
         echo "  The environment variables ORACLE_HOME and TNS_ADMIN are not set"
         echo "  so it is impossible to find the tnsnames.ora file"
         ORA_WARNING="1"
-	else
+    else
         if [ ! -f "$EZNETADMIN/tnsnames.ora" ]; then
             echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
             echo "  The file tnsnames.ora is missing from \$ORACLE_HOME"
             echo "  ($EZNETADMIN)"
             ORA_WARNING="2"
-		fi
+        fi
     fi
     echo
     echo "  Oracle usually requires this file to figure out the service and"
@@ -191,6 +191,7 @@ if [ ! -z "$ORA_WARNING" ]; then
         exit
     fi
 fi
+
 # Test if PHP has oracle compiled in
 
 PHP_TEST_SCRIPT="$TMPDIR/.ezoracle_test.php"
@@ -234,20 +235,20 @@ function is_ezpublish_dir
     if [[ -f "$dir/index.php" &&
         -f "$dir/lib/version.php" &&
         -d "$dir/extension" ]]; then
-    	if grep 'EZ_SDK_VERSION_MAJOR' "$dir/lib/version.php" &>/dev/null; then
-        	if grep 'EZ_SDK_VERSION_MINOR' "$dir/lib/version.php" &>/dev/null; then
-        		if ! grep 'EZ_SDK_VERSION_STATE' "$dir/lib/version.php" &>/dev/null; then
+        if grep 'EZ_SDK_VERSION_MAJOR' "$dir/lib/version.php" &>/dev/null; then
+            if grep 'EZ_SDK_VERSION_MINOR' "$dir/lib/version.php" &>/dev/null; then
+                if ! grep 'EZ_SDK_VERSION_STATE' "$dir/lib/version.php" &>/dev/null; then
 #            echo "No EZ_SDK_VERSION_STATE"
-            		return 1
-        		fi
+                    return 1
+                fi
 #        else
 #        echo "No EZ_SDK_VERSION_MINOR"
-        	fi
+            fi
 #    else
 #        echo "No EZ_SDK_VERSION_MAJOR"
-    	fi
+        fi
     else
-    	return 1
+        return 1
     fi
     return 0
 }
@@ -392,13 +393,13 @@ if [ "$DB_TEST" == "1" ]; then
     ### @todo use sed to make sure USER (or at least pwd) does not break php code!!!
 
     if [ -z "$USER" ]; then
-    	USER="$TEST_USER"
+        USER="$TEST_USER"
     fi
     if [ -z "$PASSWORD" ]; then
-    	PASSWORD="$TEST_PASSWORD"
+        PASSWORD="$TEST_PASSWORD"
     fi
     if [ -z "$INSTANCE" ]; then
-    	INSTANCE="$TEST_INSTANCE"
+        INSTANCE="$TEST_INSTANCE"
     fi
     TEST_USER="$USER"
     TEST_PASSWORD="$PASSWORD"
@@ -464,7 +465,7 @@ EOF
     fi
     exit 1
     fi
-	rm "$PHP_TEST_SCRIPT"
+    rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 fi
 
@@ -487,33 +488,33 @@ if [ "$DB_CREATE_USER" == "1" ]; then
     echo -n "Admin Username [$ADMIN_USER]: "
     read AUSER
     if [ -z "$AUSER" ]; then
-    	AUSER="$ADMIN_USER"
+        AUSER="$ADMIN_USER"
     fi
 
     echo -n "Admin Password [$ADMIN_PASSWORD]: "
     read APASSWORD
     if [ -z "$APASSWORD" ]; then
-    	APASSWORD="$ADMIN_PASSWORD"
+        APASSWORD="$ADMIN_PASSWORD"
     fi
 
     echo -n "New Username: "
     read USER
     if [ -z "$USER" ]; then
-    	echo "Need a proper username"
-    	exit 1
+        echo "Need a proper username"
+        exit 1
     fi
 
     echo -n "New Password: "
     read PASSWORD
     if [ -z "$PASSWORD" ]; then
-    	echo "Need a proper password"
-    	exit 1
+        echo "Need a proper password"
+        exit 1
     fi
 
     echo -n "Oracle Instance [$ADMIN_INSTANCE]: "
     read INSTANCE
     if [ -z "$INSTANCE" ]; then
-    	INSTANCE="$ADMIN_INSTANCE"
+        INSTANCE="$ADMIN_INSTANCE"
     fi
 
     echo -n "New User Tablespace: (leave empty for system default) "
@@ -567,14 +568,14 @@ oci_free_statement( \$statement );
 EOF
         ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
         if [ $? -ne 0 ]; then
-		    #rm "$PHP_TEST_SCRIPT"
+            rm "$PHP_TEST_SCRIPT"
             echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
             echo "Checking for default tablespace failed:"
             echo $ORACLE_ERROR
             echo
             exit 1
         fi
-		rm "$PHP_TEST_SCRIPT"
+        rm "$PHP_TEST_SCRIPT"
         if [ -z "$ORACLE_ERROR" ]; then
             TABLESPACE="SYSTEM"
         else
@@ -602,7 +603,7 @@ GRANT DROP  ANY SEQUENCE  TO $USER;"
     read question
 
     if [ "$question" == "q" ]; then
-    	exit
+        exit
     fi
 
     echo -n "Creating new user in Oracle"
@@ -643,15 +644,15 @@ foreach ( \$sqls as \$sql )
 EOF
     ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
     if [ $? -ne 0 ]; then
-		rm "$PHP_TEST_SCRIPT"
-    	echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-    	echo "Oracle user creation failed:"
-    	echo $ORACLE_ERROR
-    	echo
+        rm "$PHP_TEST_SCRIPT"
+        echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+        echo "Oracle user creation failed:"
+        echo $ORACLE_ERROR
+        echo
 
-    	exit 1
+        exit 1
     fi
-	rm "$PHP_TEST_SCRIPT"
+    rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 fi
 
@@ -668,35 +669,35 @@ if [ "$EZDB_HAS_USER" != "1" ]; then
     echo "We will now need a username and password to connect to the Oracle server"
     echo "This user will be used to initialize and fill the database with data"
     if [ -z "$EZDB_USER" ]; then
-    	echo -n "Username: "
-    	read USER
-    	if [ -z "$USER" ]; then
-    	    echo "Need a proper username"
-    	    exit 1
-    	fi
-    	EZDB_USER="$USER"
+        echo -n "Username: "
+        read USER
+        if [ -z "$USER" ]; then
+            echo "Need a proper username"
+            exit 1
+        fi
+        EZDB_USER="$USER"
     else
-    	echo -n "Username [$EZDB_USER]: "
-    	read USER
-    	if [ -n "$USER" ]; then
-        	EZDB_USER="$USER"
-    	fi
+        echo -n "Username [$EZDB_USER]: "
+        read USER
+        if [ -n "$USER" ]; then
+            EZDB_USER="$USER"
+        fi
     fi
 
     if [ -z "$EZDB_PASSWORD" ]; then
-    	echo -n "Password: "
-    	read PASSWORD
-    	if [ -z "$PASSWORD" ]; then
-    	    echo "Need a proper password"
-    	    exit 1
-    	fi
-    	EZDB_PASSWORD="$PASSWORD"
+        echo -n "Password: "
+        read PASSWORD
+        if [ -z "$PASSWORD" ]; then
+            echo "Need a proper password"
+            exit 1
+        fi
+        EZDB_PASSWORD="$PASSWORD"
     else
-    	echo -n "Password [$EZDB_PASSWORD]: "
-    	read PASSWORD
-    	if [ -n "$PASSWORD" ]; then
-        	EZDB_PASSWORD="$PASSWORD"
-    	fi
+        echo -n "Password [$EZDB_PASSWORD]: "
+        read PASSWORD
+        if [ -n "$PASSWORD" ]; then
+            EZDB_PASSWORD="$PASSWORD"
+        fi
     fi
 fi
 
@@ -707,21 +708,21 @@ if [[ "$EZDB_HAS_USER" != "1" ||
     echo
     echo "We will now need an instance to connect to the Oracle server"
     if [ -z "$EZDB_INSTANCE" ]; then
-    	echo -n "Oracle Instance: "
-    	read INSTANCE
+        echo -n "Oracle Instance: "
+        read INSTANCE
 
-    	if [ -z "$INSTANCE" ]; then
-        	echo "Need a proper Oracle instance"
-        	exit 1
-    	fi
-    	EZDB_INSTANCE="$INSTANCE"
+        if [ -z "$INSTANCE" ]; then
+            echo "Need a proper Oracle instance"
+            exit 1
+        fi
+        EZDB_INSTANCE="$INSTANCE"
     else
-    	echo -n "Oracle Instance [$EZDB_INSTANCE]: "
-    	read INSTANCE
+        echo -n "Oracle Instance [$EZDB_INSTANCE]: "
+        read INSTANCE
 
-    	if [ -n "$INSTANCE" ]; then
-        	EZDB_INSTANCE="$INSTANCE"
-    	fi
+        if [ -n "$INSTANCE" ]; then
+            EZDB_INSTANCE="$INSTANCE"
+        fi
     fi
 fi
 
