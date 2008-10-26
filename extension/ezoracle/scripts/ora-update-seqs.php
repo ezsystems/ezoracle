@@ -177,7 +177,7 @@ function oraUpdateSequences( $oraDB, $seqs, $exact )
 }
 
 ##############################################################################
-/*!
+/**
  Shows command line arguments syntax and terminates script.
  */
 function showUsage( $argv )
