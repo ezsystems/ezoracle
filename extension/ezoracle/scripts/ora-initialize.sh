@@ -38,11 +38,11 @@ POSITION_RESTORE="echo -en \\033[u"
 
 TEST_USER="scott"
 TEST_PASSWORD="tiger"
-TEST_INSTANCE="oracl"
+TEST_INSTANCE="orcl"
 
 ADMIN_USER="system"
 ADMIN_PASSWORD="manager"
-ADMIN_INSTANCE="oracl"
+ADMIN_INSTANCE="orcl"
 
 EZDB_HAS_USER=""
 EZDB_USER=""
@@ -106,54 +106,89 @@ echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 # Oracle variables should be correctly setup before we can continue
 
-echo -n "Testing Oracle installation"
-if [ -z "$ORACLE_HOME" ]; then
-    if [ -z "$LD_LIBRARY_PATH" ]; then
+echo "Testing Oracle installation"
+ORA_WARNING=""
+
+echo -n "  NLS LANG environment variable:"
+if [ ! -z "$NLS_LANG" ]; then
+    CHARSET=`expr match "$NLS_LANG" '.*\(AL32UTF8\)'`
+    if [ "$CHARSET" != "AL32UTF8" ]; then
         echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
-        echo "The enviroment variable ORACLE_HOME should be set"
-        echo "Oracle is usually found in `$SETCOLOR_DIRECTORY`/usr/oracle`$SETCOLOR_NORMAL`"
-        echo "e.g."
-        echo "export ORACLE_HOME=\"/usr/oracle\""
-        echo
-        echo "If you are using an Oracle Instant Client install, make sure that"
-        echo "the environment variable LD_LIBRARY_PATH is set and that it includes"
-        echo "the directory where the instant client has been installed"
+        echo "  The environment variable NLS_LANG indicates a non-utf8 character set"
+        echo "  in use by the oracle client: $NLS_LANG"
+        echo "  Please make sure that utf8 is used by the oracle client used by php"
+        ORA_WARNING="1"
+    fi
+else
+    echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+fi
+
+echo -n "  tnsnames.ora file:"
+if [ -z "$TNS_ADMIN" ]; then
+    if [ -z "$ORACLE_HOME" ]; then
+        EZNETADMIN=""
     else
-        LIB1OK=`ls $LD_LIBRARY_PATH/libclntsh.so* 2>/dev/null`
-        LIB2OK=`ls $LD_LIBRARY_PATH/libocci.so* 2>/dev/null`
-        if [ ! -z "$LIB1OK" ] && [ ! -z "$LIB2OK" ]; then
+        EZNETADMIN=$ORACLE_HOME/network/admin
+    fi
+else
+    EZNETADMIN=$TNS_ADMIN
+fi
+if [ -z "$EZNETADMIN" ] || [ ! -f "$EZNETADMIN/tnsnames.ora" ]; then
+    if [ -z "$EZNETADMIN" ]; then
+        echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
+        echo "  The environment variables ORACLE_HOME and TNS_ADMIN are not set"
+        echo "  so it is impossible to find the tnsnames.ora file"
+        ORA_WARNING="1"
+    else
+        if [ ! -f "$EZNETADMIN/tnsnames.ora" ]; then
             echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
-            echo "The enviroment variable ORACLE_HOME is not set"
-            echo "but oracle client libraries appear to be installed in \$LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-            echo
-            echo "If you are using an Oracle Instant Client install, make sure that"
-            echo "when you specify a database server to connect to, you use the Easy Connection identifier syntax:"
-            echo "//mymachine.mydomain:port/MYDB"
-            echo
-        else
-            echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
-            echo "The enviroment variable ORACLE_HOME should be set"
-            echo "Oracle is usually found in `$SETCOLOR_DIRECTORY`/usr/oracle`$SETCOLOR_NORMAL`"
-            echo "e.g."
-            echo "export ORACLE_HOME=\"/usr/oracle\""
-            echo
-            echo "If you are using an Oracle Instant Client install, make sure that"
-            echo "the environment variable LD_LIBRARY_PATH is set and that it includes"
-            echo "the directory where the instant client has been installed"
-            echo
+            echo "  The file tnsnames.ora is missing from \$ORACLE_HOME"
+            echo "  ($EZNETADMIN)"
+            ORA_WARNING="2"
         fi
     fi
+    echo
+    echo "  Oracle usually requires this file to figure out the service and"
+    echo "  hostname for the DB server. You should copy this from the DB server"
+    echo "  and do some modifications to it."
+    echo "  Oracle is usually found in `$SETCOLOR_DIRECTORY`/usr/oracle`$SETCOLOR_NORMAL`, e.g."
+    echo "  export ORACLE_HOME=\"/usr/oracle\""
+    echo
     #exit 1
 else
-    if [ ! -f "$ORACLE_HOME/network/admin/tnsnames.ora" ]; then
-        echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
-        echo "The file network/admin/tnsnames.ora is missing from \$ORACLE_HOME"
-        echo "Oracle usually requires this file to figure out the service and hostname for the DB server"
-        echo "You should copy this from the DB server and do some modifications to it"
-        echo
-        #exit 1
-    else
-        echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    echo "  The file tnsnames.ora has been found in $EZNETADMIN"
+fi
+
+echo -n "  LD_LIBRARY_PATH environment variable:"
+### @todo we could actually check to see if oci libs are to be found inside LD_LIBRARY_PATH (and maybe in . ?)
+if [ -z "$LD_LIBRARY_PATH" ]; then
+    echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
+    echo "  the environment variable LD_LIBRARY_PATH is not set"
+    echo
+    echo "  If you are using an Oracle Instant Client install, make sure that"
+    echo "  the environment variable LD_LIBRARY_PATH is set and that it includes"
+    echo "  the directory where the instant client has been installed"
+    echo
+    ORA_WARNING="3"
+    #exit 1
+else
+    echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    echo "  The environment variable \$LD_LIBRARY_PATH is set to:"
+    echo "  $LD_LIBRARY_PATH"
+    echo
+    echo "  If you are using an Oracle Instant Client install, make sure that"
+    echo "  the environment variable LD_LIBRARY_PATH includes the directory"
+    echo "  where the instant client has been installed"
+    echo
+fi
+
+if [ ! -z "$ORA_WARNING" ]; then
+    echo -n "Press [enter] to continue, [q+enter] to quit: "
+    question=`echo $question | tr [A-Z] [a-z]`
+    read question
+    if [ "$question" == "q" ]; then
+        exit
     fi
 fi
 
@@ -200,20 +235,20 @@ function is_ezpublish_dir
     if [[ -f "$dir/index.php" &&
         -f "$dir/lib/version.php" &&
         -d "$dir/extension" ]]; then
-    if grep 'EZ_SDK_VERSION_MAJOR' "$dir/lib/version.php" &>/dev/null; then
-        if grep 'EZ_SDK_VERSION_MINOR' "$dir/lib/version.php" &>/dev/null; then
-        if ! grep 'EZ_SDK_VERSION_STATE' "$dir/lib/version.php" &>/dev/null; then
+        if grep 'EZ_SDK_VERSION_MAJOR' "$dir/lib/version.php" &>/dev/null; then
+            if grep 'EZ_SDK_VERSION_MINOR' "$dir/lib/version.php" &>/dev/null; then
+                if ! grep 'EZ_SDK_VERSION_STATE' "$dir/lib/version.php" &>/dev/null; then
 #            echo "No EZ_SDK_VERSION_STATE"
-            return 1
-        fi
+                    return 1
+                fi
 #        else
 #        echo "No EZ_SDK_VERSION_MINOR"
-        fi
+            fi
 #    else
 #        echo "No EZ_SDK_VERSION_MAJOR"
-    fi
+        fi
     else
-    return 1
+        return 1
     fi
     return 0
 }
@@ -222,12 +257,11 @@ echo -n "Looking for eZ Publish installation"
 if ! is_ezpublish_dir "$EZP_PATH"; then
     # also check if running from ezoracle script dir
     if ! is_ezpublish_dir "$EZP_PATH/../../.."; then
-	    EZP_PATH=""
-	else
-	    EZP_PATH="$EZP_PATH/../../.."
-		EZORACLE_EXT_PATH="$EZORACLE_EXT_PATH/.."
-	fi
-
+        EZP_PATH=""
+    else
+        EZP_PATH="$EZP_PATH/../../.."
+        EZORACLE_EXT_PATH="$EZORACLE_EXT_PATH/.."
+    fi
 else
     EZORACLE_EXT_PATH="$EZP_PATH/extension/ezoracle"
 fi
@@ -359,25 +393,25 @@ if [ "$DB_TEST" == "1" ]; then
     ### @todo use sed to make sure USER (or at least pwd) does not break php code!!!
 
     if [ -z "$USER" ]; then
-    USER="$TEST_USER"
+        USER="$TEST_USER"
     fi
     if [ -z "$PASSWORD" ]; then
-    PASSWORD="$TEST_PASSWORD"
+        PASSWORD="$TEST_PASSWORD"
     fi
     if [ -z "$INSTANCE" ]; then
-    INSTANCE="$TEST_INSTANCE"
+        INSTANCE="$TEST_INSTANCE"
     fi
     TEST_USER="$USER"
     TEST_PASSWORD="$PASSWORD"
     TEST_INSTANCE="$INSTANCE"
 
-    echo -n "Testing Oracle availability"
+    echo -n "Testing Oracle availability (this might take a while...)"
     cat <<EOF >"$PHP_TEST_SCRIPT"
 <?php
-\$db = @OCILogon( "$USER", "$PASSWORD", "$INSTANCE" );
+\$db = @oci_connect( "$USER", "$PASSWORD", "$INSTANCE" );
 if ( !\$db )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "Connection error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -398,35 +432,35 @@ EOF
         echo "The username or password is incorrect."
         echo "Review your input and try again."
     elif echo $ORACLE_ERROR | grep "ORA-12154" &>/dev/null; then
-        echo "The instance that is used is not correctly configured on the server/client."
-        echo "You should examine these files:"
+        echo "The instance that is used is not correctly configured on the server"
+        echo "or client. You should examine these files in the oracle home directory:"
         echo "  network/admin/tnsnames.ora, network/admin/sqlnet.ora and"
-        echo "  network/admin/listener.ora (only on server)"
-        echo "  in the oracle home directory (\$ORACLE_HOME)"
+        echo "  network/admin/listener.ora (the last one only on the server)"
+        echo
         echo "For more info you can also run the following command: tnsping $INSTANCE"
         echo
-        echo "Another source of this error is that there is no listener active on the DB server"
-        echo "Log into the DB server as the Oracle user then try to run:"
-        echo "lsnrctl status"
+        echo "Another cause of this error is that there is no listener active on the"
+        echo "DB server. Log into the DB server as the Oracle user then try to run:"
+        echo "  lsnrctl status"
         echo "If no active database server is listed, try to run:"
-        echo "lsnrctl start"
+        echo "  lsnrctl start"
         echo "The listener(s) should then be started"
     else
         echo "Unknown error, reasons for this can be:"
         echo "- The user or password incorrect."
         echo "  Review your input and try again."
-        echo "- The instance that is used is not correctly configured on the server/client."
-        echo "  You should examine these files:"
+        echo "- The instance that is used is not correctly configured on the server"
+        echo "  or client. You should examine these files in the oracle home directory:"
         echo "    network/admin/tnsnames.ora, network/admin/sqlnet.ora and"
-        echo "    network/admin/listener.ora (only on server)"
-        echo "    in the oracle home directory (\$ORACLE_HOME)"
+        echo "    network/admin/listener.ora (the last one  only on server)"
+        echo
         echo "  For more info you can also run the following command: tnsping $INSTANCE"
         echo
-        echo "Another source of this error is that there is no listener active on the DB server"
-        echo "Log into the DB server as the Oracle user then try to run:"
-        echo "lsnrctl status"
+        echo "Another source of this error is that there is no listener active on the"
+        echo "DB server. Log into the DB server as the Oracle user then try to run:"
+        echo "  lsnrctl status"
         echo "If no active database server is listed, try to run:"
-        echo "lsnrctl start"
+        echo "  lsnrctl start"
         echo "The listener(s) should then be started"
     fi
     exit 1
@@ -454,41 +488,103 @@ if [ "$DB_CREATE_USER" == "1" ]; then
     echo -n "Admin Username [$ADMIN_USER]: "
     read AUSER
     if [ -z "$AUSER" ]; then
-    AUSER="$ADMIN_USER"
+        AUSER="$ADMIN_USER"
     fi
 
     echo -n "Admin Password [$ADMIN_PASSWORD]: "
     read APASSWORD
     if [ -z "$APASSWORD" ]; then
-    APASSWORD="$ADMIN_PASSWORD"
+        APASSWORD="$ADMIN_PASSWORD"
     fi
 
     echo -n "New Username: "
     read USER
     if [ -z "$USER" ]; then
-    echo "Need a proper username"
-    exit 1
+        echo "Need a proper username"
+        exit 1
     fi
 
     echo -n "New Password: "
     read PASSWORD
     if [ -z "$PASSWORD" ]; then
-    echo "Need a proper password"
-    exit 1
+        echo "Need a proper password"
+        exit 1
     fi
 
     echo -n "Oracle Instance [$ADMIN_INSTANCE]: "
     read INSTANCE
     if [ -z "$INSTANCE" ]; then
-    INSTANCE="$ADMIN_INSTANCE"
+        INSTANCE="$ADMIN_INSTANCE"
     fi
+
+    echo -n "New User Tablespace: (leave empty for system default) "
+    read TABLESPACE
 
     EZDB_HAS_USER="1"
     EZDB_USER="$USER"
     EZDB_PASSWORD="$PASSWORD"
     EZDB_INSTANCE="$INSTANCE"
 
-    SQL="CREATE USER $USER IDENTIFIED BY $PASSWORD QUOTA UNLIMITED ON SYSTEM;
+    if [ -z "$TABLESPACE" ]; then
+        echo -n "Checking for default tablespace for new users"
+        cat <<EOF >"$PHP_TEST_SCRIPT"
+<?php
+\$db = @oci_connect( "$AUSER", "$APASSWORD", "$INSTANCE" );
+if ( !\$db )
+{
+    \$error = oci_error();
+    if ( \$error['code'] != 0 )
+    {
+        print( "Connection error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
+    }
+    exit( 1 );
+}
+\$sql = "SELECT PROPERTY_VALUE
+FROM DATABASE_PROPERTIES
+WHERE PROPERTY_NAME = 'DEFAULT_PERMANENT_TABLESPACE'";
+\$statement = oci_parse( \$db, \$sql );
+\$tablespace = 'SYSTEM';
+if ( !oci_execute( \$statement, OCI_DEFAULT ) )
+{
+    \$error = oci_error();
+    if ( \$error['code'] != 0 )
+    {
+        print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
+        print( "SQL was:\n" . \$sql );
+        oci_free_statement( \$statement );
+        exit( 1 );
+    }
+}
+else
+{
+    \$row = oci_fetch_array( \$statement );
+    if ( \$row !== false )
+    {
+        echo \$row['PROPERTY_VALUE'];
+    }
+}
+oci_free_statement( \$statement );
+?>
+EOF
+        ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
+        if [ $? -ne 0 ]; then
+            rm "$PHP_TEST_SCRIPT"
+            echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+            echo "Checking for default tablespace failed:"
+            echo $ORACLE_ERROR
+            echo
+            exit 1
+        fi
+        rm "$PHP_TEST_SCRIPT"
+        if [ -z "$ORACLE_ERROR" ]; then
+            TABLESPACE="SYSTEM"
+        else
+            TABLESPACE=$ORACLE_ERROR
+        fi
+        echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    fi
+
+    SQL="CREATE USER $USER IDENTIFIED BY $PASSWORD DEFAULT TABLESPACE $TABLESPACE QUOTA UNLIMITED ON $TABLESPACE;
 GRANT CREATE    SESSION   TO $USER;
 GRANT CREATE    TABLE     TO $USER;
 GRANT CREATE    TRIGGER   TO $USER;
@@ -507,16 +603,16 @@ GRANT DROP  ANY SEQUENCE  TO $USER;"
     read question
 
     if [ "$question" == "q" ]; then
-    exit
+        exit
     fi
 
     echo -n "Creating new user in Oracle"
     cat <<EOF >"$PHP_TEST_SCRIPT"
 <?php
-\$db = @OCILogon( "$AUSER", "$APASSWORD", "$INSTANCE" );
+\$db = @oci_connect( "$AUSER", "$APASSWORD", "$INSTANCE" );
 if ( !\$db )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "Connection error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -528,33 +624,33 @@ foreach ( \$sqls as \$sql )
 {
     if ( trim( \$sql ) == '' )
         continue;
-    \$statement = OCIParse( \$db, \$sql );
-    if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
+    \$statement = oci_parse( \$db, \$sql );
+    if ( !oci_execute( \$statement, OCI_DEFAULT ) )
     {
-        \$error = OCIError();
+        \$error = oci_error();
         if ( \$error['code'] != 0 )
         {
             print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
             print( "SQL was:\n" . \$sql );
-            OCIFreeStatement( \$statement );
+            oci_free_statement( \$statement );
             if ( \$error["code"] == "01920" )
                 exit( 2 );
         }
         exit( 1 );
     }
-    OCIFreeStatement( \$statement );
+    oci_free_statement( \$statement );
 }
 ?>
 EOF
     ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
     if [ $? -ne 0 ]; then
-    rm "$PHP_TEST_SCRIPT"
-    echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-    echo "Oracle user creation failed:"
-    echo $ORACLE_ERROR
-    echo
+        rm "$PHP_TEST_SCRIPT"
+        echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+        echo "Oracle user creation failed:"
+        echo $ORACLE_ERROR
+        echo
 
-    exit 1
+        exit 1
     fi
     rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
@@ -573,35 +669,35 @@ if [ "$EZDB_HAS_USER" != "1" ]; then
     echo "We will now need a username and password to connect to the Oracle server"
     echo "This user will be used to initialize and fill the database with data"
     if [ -z "$EZDB_USER" ]; then
-    echo -n "Username: "
-    read USER
-    if [ -z "$USER" ]; then
-        echo "Need a proper username"
-        exit 1
-    fi
-    EZDB_USER="$USER"
-    else
-    echo -n "Username [$EZDB_USER]: "
-    read USER
-    if [ -n "$USER" ]; then
+        echo -n "Username: "
+        read USER
+        if [ -z "$USER" ]; then
+            echo "Need a proper username"
+            exit 1
+        fi
         EZDB_USER="$USER"
-    fi
+    else
+        echo -n "Username [$EZDB_USER]: "
+        read USER
+        if [ -n "$USER" ]; then
+            EZDB_USER="$USER"
+        fi
     fi
 
     if [ -z "$EZDB_PASSWORD" ]; then
-    echo -n "Password: "
-    read PASSWORD
-    if [ -z "$PASSWORD" ]; then
-        echo "Need a proper password"
-        exit 1
-    fi
-    EZDB_PASSWORD="$PASSWORD"
-    else
-    echo -n "Password [$EZDB_PASSWORD]: "
-    read PASSWORD
-    if [ -n "$PASSWORD" ]; then
+        echo -n "Password: "
+        read PASSWORD
+        if [ -z "$PASSWORD" ]; then
+            echo "Need a proper password"
+            exit 1
+        fi
         EZDB_PASSWORD="$PASSWORD"
-    fi
+    else
+        echo -n "Password [$EZDB_PASSWORD]: "
+        read PASSWORD
+        if [ -n "$PASSWORD" ]; then
+            EZDB_PASSWORD="$PASSWORD"
+        fi
     fi
 fi
 
@@ -612,31 +708,31 @@ if [[ "$EZDB_HAS_USER" != "1" ||
     echo
     echo "We will now need an instance to connect to the Oracle server"
     if [ -z "$EZDB_INSTANCE" ]; then
-    echo -n "Oracle Instance: "
-    read INSTANCE
+        echo -n "Oracle Instance: "
+        read INSTANCE
 
-    if [ -z "$INSTANCE" ]; then
-        echo "Need a proper Oracle instance"
-        exit 1
-    fi
-    EZDB_INSTANCE="$INSTANCE"
-    else
-    echo -n "Oracle Instance [$EZDB_INSTANCE]: "
-    read INSTANCE
-
-    if [ -n "$INSTANCE" ]; then
+        if [ -z "$INSTANCE" ]; then
+            echo "Need a proper Oracle instance"
+            exit 1
+        fi
         EZDB_INSTANCE="$INSTANCE"
-    fi
+    else
+        echo -n "Oracle Instance [$EZDB_INSTANCE]: "
+        read INSTANCE
+
+        if [ -n "$INSTANCE" ]; then
+            EZDB_INSTANCE="$INSTANCE"
+        fi
     fi
 fi
 
 echo -n "Testing user info with Oracle"
 cat <<EOF >"$PHP_TEST_SCRIPT"
 <?php
-\$db = @OCILogon( "$EZDB_USER", "$EZDB_PASSWORD", "$EZDB_INSTANCE" );
+\$db = @oci_connect( "$EZDB_USER", "$EZDB_PASSWORD", "$EZDB_INSTANCE" );
 if ( !\$db )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "Connection error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -679,51 +775,40 @@ fi
 rm "$PHP_TEST_SCRIPT"
 echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
-
 echo -n "Creating md5_digest function in Oracle"
 cat <<EOF >"$PHP_TEST_SCRIPT"
 <?php
-\$db = @OCILogon( "$EZDB_USER", "$EZDB_PASSWORD", "$EZDB_INSTANCE" );
+\$db = @oci_connect( "$EZDB_USER", "$EZDB_PASSWORD", "$EZDB_INSTANCE" );
 if ( !\$db )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "Connection error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
     }
     exit( 1 );
 }
-\$statement = OCIParse( \$db, 'CREATE OR REPLACE FUNCTION md5_digest (vin_string IN VARCHAR2)
-RETURN VARCHAR2 IS
---
--- Return an MD5 hash of the input string.
---
-BEGIN
-RETURN
-    lower(dbms_obfuscation_toolkit.md5(input =>
-                                       utl_raw.cast_to_raw(vin_string)));
-END md5_digest;
-' );
-if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
+\$statement = oci_parse( \$db, preg_replace( array( '#\r#', '#^[ \n]+#', '#[ \n]*/[ \n]*\$#' ), array( '', '', '' ), file_get_contents( '$EZORACLE_EXT_PATH/sql/md5_digest.sql' ) ) );
+if ( !oci_execute( \$statement, OCI_DEFAULT ) )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
-        OCIFreeStatement( \$statement );
+        oci_free_statement( \$statement );
         if ( \$error["code"] == "01920" )
             exit( 2 );
     }
     exit( 1 );
 }
-OCIFreeStatement( \$statement );
+oci_free_statement( \$statement );
 
 ?>
 EOF
 ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
 if [ $? -ne 0 -o -n "$ORACLE_ERROR" ]; then
-#    rm "$PHP_TEST_SCRIPT"
+    rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
     echo "Failed to create md5_digest function:"
     echo $ORACLE_ERROR
@@ -736,39 +821,31 @@ echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 echo -n "Creating bitor function in Oracle"
 cat <<EOF >"$PHP_TEST_SCRIPT"
 <?php
-\$db = @OCILogon( "$EZDB_USER", "$EZDB_PASSWORD", "$EZDB_INSTANCE" );
+\$db = @oci_connect( "$EZDB_USER", "$EZDB_PASSWORD", "$EZDB_INSTANCE" );
 if ( !\$db )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "Connection error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
     }
     exit( 1 );
 }
-\$statement = OCIParse( \$db, 'CREATE OR replace FUNCTION bitor( x IN NUMBER, y IN NUMBER )
-RETURN NUMBER  AS
---
--- Return an bitwise or value of the input arguments.
---
-BEGIN
-    RETURN x + y - bitand(x,y);
-END bitor;
-' );
-if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
+\$statement = oci_parse( \$db, preg_replace( array( '#\r#', '#^[ \n]+#', '#[ \n]*/[ \n]*\$#' ), array( '', '', '' ), file_get_contents( '$EZORACLE_EXT_PATH/sql/bitor.sql' ) ) );
+if ( !oci_execute( \$statement, OCI_DEFAULT ) )
 {
-    \$error = OCIError();
+    \$error = oci_error();
     if ( \$error['code'] != 0 )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
-        OCIFreeStatement( \$statement );
+        oci_free_statement( \$statement );
         if ( \$error["code"] == "01920" )
             exit( 2 );
     }
     exit( 1 );
 }
-OCIFreeStatement( \$statement );
+oci_free_statement( \$statement );
 
 ?>
 EOF
@@ -1026,11 +1103,12 @@ if ( !\$dbSchema->insertSchema( array( 'schema' => false,
 EOF
 ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT" -dall &>/dev/stdout`
 if [ $? -ne 0 ]; then
-#    rm "$PHP_TEST_SCRIPT"
+    rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
     echo "$ORACLE_ERROR"
     exit 1
 fi
-echo "$ORACLE_ERROR" > .txt
 rm "$PHP_TEST_SCRIPT"
+#echo "$ORACLE_ERROR" > .txt
+
 echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
