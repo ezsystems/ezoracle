@@ -1262,7 +1262,7 @@ class eZOracleDB extends eZDBInterface
      \return A string with the correct IN statement like for example
              "columnName IN ( element1, element2 )"
      */
-    function generateSQLINStatement( $elements, $columnName, $not = false, $unique = true, $type = false  )
+    function generateSQLINStatement( $elements, $columnName, $not = false, /*$unique = true,*/ $type = false  )
     {
         $connector = ' OR ';
         $result    = '';
@@ -1276,13 +1276,13 @@ class eZOracleDB extends eZDBInterface
         {
             $elements = array( $elements );
         }
-        else
+        /*else
         {
             if ( $unique )
             {
                 $elements = array_unique( $elements );
             }
-        }
+        }*/
         $amountElements = count( $elements );
         $length = 1000;
         if ( $amountElements > $length )
