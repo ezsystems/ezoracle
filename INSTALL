@@ -39,7 +39,8 @@ Introduction
 
       If the Oracle server version is less than 9.2, setting the environment
       variable NLS_LANG is mandatory to indicate that php expects to receive
-      data from the database in the UTF8 character set.
+      data from the database in the character set specified in the
+      [DatabaseSettings]-Charset setting in the site.ini configuration file.
 
    o  PHP with Oracle support (oci8 extension):
 
