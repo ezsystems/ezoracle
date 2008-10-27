@@ -1,11 +1,12 @@
 Changes from 1.5 to 1.6
 
 *General:
+- Support for Oracle 1Og
 - Added update sql scripts up to 3.9.5
 - Implemented request #011595: allow oracle db connector to honor persistent, numretries settings for connecting to db
 - Implemented request #011767: Added query analysis support
 - Improved oracle cluster handler (uses less queries, bind parameters)
-- Improved oracle cluster handler index_image.php file
+- Improved oracle cluster handler index_image_oracle.php file
 - Better time measuring
 - More correct time accumulators
 - Improved script ora-initialize.sh
@@ -15,6 +16,7 @@ Changes from 1.5 to 1.6
 - Added function databaseServerVersion() to database driver
 - Improved error reporting and shutdown when a query fails inside a transaction
 - Improved execution time and memory usage for fetching results from the database
+- Implemented request #013821: oracle: allow user to specify tablespace when creating ezpublish user
 
 *Bugfixes:
 - Fixed bugs #009802 and #009807: errors in ora-initialise.sh
