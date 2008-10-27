@@ -544,11 +544,15 @@ FROM DATABASE_PROPERTIES
 WHERE PROPERTY_NAME = 'DEFAULT_PERMANENT_TABLESPACE'";
 \$statement = oci_parse( \$db, \$sql );
 \$tablespace = 'SYSTEM';
-if ( !oci_execute( \$statement, OCI_DEFAULT ) )
+if ( !@oci_execute( \$statement, OCI_DEFAULT ) ) // view might not exist
 {
-    \$error = oci_error();
+    \$error = oci_error( \$statement );
     if ( \$error['code'] != 0 )
     {
+        if ( \$error['code'] == 942 ) // view does not exist
+        {
+            exit;
+        }
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
         oci_free_statement( \$statement );
@@ -621,7 +625,7 @@ foreach ( \$sqls as \$sql )
     \$statement = oci_parse( \$db, \$sql );
     if ( !oci_execute( \$statement, OCI_DEFAULT ) )
     {
-        \$error = oci_error();
+        \$error = oci_error( \$statement );
         if ( \$error['code'] != 0 )
         {
             print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -785,7 +789,7 @@ if ( !\$db )
 \$statement = oci_parse( \$db, preg_replace( array( '#\r#', '#^[ \n]+#', '#[ \n]*/[ \n]*\$#' ), array( '', '', '' ), file_get_contents( '$EZORACLE_EXT_PATH/sql/md5_digest.sql' ) ) );
 if ( !oci_execute( \$statement, OCI_DEFAULT ) )
 {
-    \$error = oci_error();
+    \$error = oci_error( \$statement );
     if ( \$error['code'] != 0 )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -828,7 +832,7 @@ if ( !\$db )
 \$statement = oci_parse( \$db, preg_replace( array( '#\r#', '#^[ \n]+#', '#[ \n]*/[ \n]*\$#' ), array( '', '', '' ), file_get_contents( '$EZORACLE_EXT_PATH/sql/bitor.sql' ) ) );
 if ( !oci_execute( \$statement, OCI_DEFAULT ) )
 {
-    \$error = oci_error();
+    \$error = oci_error( \$statement );
     if ( \$error['code'] != 0 )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
