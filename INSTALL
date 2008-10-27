@@ -38,7 +38,7 @@ Introduction
       specify the database server to connect to.
 
    If the Oracle server version is less than 9.2, setting the environment
-   variable NLS_LANG is mandatory to indicate that php expects to receive
+   variable NLS_LANG is recommended to indicate that php expects to receive
    data from the database in the character set specified in the
    [DatabaseSettings]-Charset setting in the site.ini configuration file.
 
