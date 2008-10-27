@@ -98,7 +98,7 @@ fi
 PHPVERSION=`$PHP --version|grep 'PHP 4'`
 if [ -z "$PHPVERSION" ]; then
         echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-        echo "PHP executable is not the correct version. This version of the ezoracle extension only supports PHP 5"
+        echo "PHP executable is not the correct version. This version of the ezoracle extension only supports PHP 4"
         exit 1
 fi
 
@@ -545,11 +545,15 @@ FROM DATABASE_PROPERTIES
 WHERE PROPERTY_NAME = 'DEFAULT_PERMANENT_TABLESPACE'";
 \$statement = OCIParse( \$db, \$sql );
 \$tablespace = 'SYSTEM';
-if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
+if ( !@OCIExecute( \$statement, OCI_DEFAULT ) ) // view might not exist
 {
-    \$error = OCIError();
+    \$error = OCIError( \$statement );
     if ( \$error['code'] != 0 )
     {
+        if ( \$error['code'] == 942 ) // view does not exist
+        {
+            exit;
+        }
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
         OCIFreeStatement( \$statement );
@@ -627,7 +631,7 @@ foreach ( \$sqls as \$sql )
     \$statement = OCIParse( \$db, \$sql );
     if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
     {
-        \$error = OCIError();
+        \$error = OCIError( \$statement );
         if ( \$error['code'] != 0 )
         {
             print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -801,7 +805,7 @@ END md5_digest;
 ' );
 if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
 {
-    \$error = OCIError();
+    \$error = OCIError( \$statement );
     if ( \$error['code'] != 0 )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
@@ -852,7 +856,7 @@ END bitor;
 ' );
 if ( !OCIExecute( \$statement, OCI_DEFAULT ) )
 {
-    \$error = OCIError();
+    \$error = OCIError( \$statement );
     if ( \$error['code'] != 0 )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
