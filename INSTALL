@@ -207,14 +207,6 @@ GRANT CREATE    TABLE     TO scott;
 GRANT CREATE    TRIGGER   TO scott;
 GRANT CREATE    SEQUENCE  TO scott;
 GRANT CREATE    PROCEDURE TO scott;
-GRANT ALTER ANY TABLE     TO scott;
-GRANT ALTER ANY TRIGGER   TO scott;
-GRANT ALTER ANY SEQUENCE  TO scott;
-GRANT ALTER ANY PROCEDURE TO scott;
-GRANT DROP  ANY TABLE     TO scott;
-GRANT DROP  ANY TRIGGER   TO scott;
-GRANT DROP  ANY SEQUENCE  TO scott;
-GRANT DROP  ANY PROCEDURE TO scott;
 EOF
 #################################################################
 
