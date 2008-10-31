@@ -443,8 +443,13 @@ class eZDBFileHandlerOracleBackend
         }
         $sql .= " RETURNING lob INTO :lob";
 
-        $statement = oci_parse( $this->db, $sql );
         $lob = oci_new_descriptor( $this->db, OCI_D_LOB );
+        if ( $lob === false )
+        {
+            $this->_error( $statement, 'oci_new_descriptor for ' . $sql );
+            return false;
+        }
+        $statement = oci_parse( $this->db, $sql );
         oci_bind_by_name( $statement, ":lob", $lob, -1, OCI_B_BLOB );
         if ( !@oci_execute( $statement, OCI_DEFAULT ) )
         {
@@ -516,8 +521,13 @@ class eZDBFileHandlerOracleBackend
         }
         $sql .= " RETURNING lob INTO :lob";
 
-        $statement = oci_parse( $this->db, $sql );
         $lob = oci_new_descriptor( $this->db, OCI_D_LOB );
+        if ( $lob === false )
+        {
+            $this->_error( $statement, 'oci_new_descriptor for '.$sql );
+            return false;
+        }
+        $statement = oci_parse( $this->db, $sql );
         oci_bind_by_name( $statement, ":lob", $lob, -1, OCI_B_BLOB );
         if ( !@oci_execute( $statement, OCI_DEFAULT ) )
         {
