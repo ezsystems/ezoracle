@@ -30,9 +30,7 @@ Introduction
 
    o  Oracle version:
 
-      Make sure you have Oracle 8 or higher (client and server).
-      Please note that the Oci8 page on the PHP manual at www.php.net states
-      that only Oracle version 9 and higher is supported for the client side.
+      Make sure you have Oracle 9, 10 or 11 (client and server).
 
       If the Oracle server version is less than 9.2, setting the environment
       variable NLS_LANG is mandatory to indicate that php expects to receive
