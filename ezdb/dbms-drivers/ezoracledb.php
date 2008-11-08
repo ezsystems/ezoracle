@@ -917,7 +917,6 @@ class eZOracleDB extends eZDBInterface
         $this->query( $dropTableQuery, $server );
     }
 
-
     /*!
      Sets Oracle sequence values to the maximum values used in the corresponding columns.
     */
@@ -1022,7 +1021,6 @@ class eZOracleDB extends eZDBInterface
 
         return $tableName;
     }
-
 
     /*!
       Checks if the requested character set matches the one used in the database.
@@ -1256,7 +1254,7 @@ class eZOracleDB extends eZDBInterface
     }
 
     /**
-    * Used with array_map to change charset encoding in mono dimensional arrays
+    * Used with array_walk to change charset encoding in mono dimensional arrays
     */
     static function arrayConvertStrings(&$value, $key, $codec )
     {
@@ -1264,14 +1262,14 @@ class eZOracleDB extends eZDBInterface
     }
 
     /**
-    * Used with array_map to change array keys to lower case in bi-dimensional arrays.
+    * Used with array_walk to change array keys to lower case in bi-dimensional arrays.
     * Optionally does charset conversion.
     */
     static function arrayChangeKeys(&$value, $key, $params )
     {
         if ( $params[0] )
         {
-            array_map( array( 'eZOracleDB', 'arrayConvertStrings' ), $value, $params[0] );
+            array_walk( $value, array( 'eZOracleDB', 'arrayConvertStrings' ), $params[0] );
         }
         $value = array_combine( $params[1], $value );
     }
@@ -1282,7 +1280,7 @@ class eZOracleDB extends eZDBInterface
     var $Mode;
     var $BindVariableArray = array();
 
-    // @todo move this to a static var, and we should shave off a littlke ram...
+    // @todo move this to a static var, and we should shave off a little ram...
     var $CharsetsMap = array(
         'big5' => 'ZHT16BIG5',
         'euc-jp' => 'JA16EUC',
