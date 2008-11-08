@@ -1248,7 +1248,7 @@ class eZOracleDB extends eZDBInterface
     }
 
     /**
-    * Used with array_map to change charset encoding in mono dimensional arrays
+    * Used with array_walk to change charset encoding in mono dimensional arrays
     */
     static function arrayConvertStrings(&$value, $key, $codec )
     {
@@ -1256,14 +1256,14 @@ class eZOracleDB extends eZDBInterface
     }
 
     /**
-    * Used with array_map to change array keys to lower case in bi-dimensional arrays.
+    * Used with array_walk to change array keys to lower case in bi-dimensional arrays.
     * Optionally does charset conversion.
     */
     static function arrayChangeKeys(&$value, $key, $params )
     {
         if ( $params[0] )
         {
-            array_map( array( 'eZOracleDB', 'arrayConvertStrings' ), $value, $params[0] );
+            array_walk( $value, array( 'eZOracleDB', 'arrayConvertStrings' ), $params[0] );
         }
         $value = array_combine( $params[1], $value );
     }
