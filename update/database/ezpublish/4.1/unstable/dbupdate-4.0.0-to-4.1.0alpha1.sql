@@ -31,6 +31,9 @@ CREATE TABLE ezcobj_state (
     language_mask integer DEFAULT 0 NOT NULL,
     priority integer DEFAULT 0 NOT NULL
 );
+CREATE UNIQUE INDEX ezcobj_state_identifier ON ezcobj_state (group_id, identifier);
+CREATE INDEX ezcobj_state_lmask ON ezcobj_state (language_mask);
+CREATE INDEX ezcobj_state_priority ON ezcobj_state (priority);
 
 CREATE TABLE ezcobj_state_group (
     default_language_id integer DEFAULT 0 NOT NULL,
@@ -38,6 +41,8 @@ CREATE TABLE ezcobj_state_group (
     identifier varchar2(45) DEFAULT '' NOT NULL,
     language_mask integer DEFAULT 0 NOT NULL
 );
+CREATE UNIQUE INDEX ezcobj_state_group_identifier ON ezcobj_state_group (identifier);
+CREATE INDEX ezcobj_state_group_lmask ON ezcobj_state_group (language_mask);
 
 CREATE TABLE ezcobj_state_group_language (
     contentobject_state_group_id integer DEFAULT 0 NOT NULL,
@@ -48,7 +53,6 @@ CREATE TABLE ezcobj_state_group_language (
 
 CREATE TABLE ezcobj_state_language (
     contentobject_state_id integer DEFAULT 0 NOT NULL,
-    "default" integer,
     description clob NOT NULL,
     language_id integer DEFAULT 0 NOT NULL,
     name varchar2(45) DEFAULT '' NOT NULL
@@ -59,10 +63,6 @@ CREATE TABLE ezcobj_state_link (
     contentobject_state_id integer DEFAULT 0 NOT NULL
 );
 
-CREATE UNIQUE INDEX ezcobj_state_identifier ON ezcobj_state (group_id, identifier);
-
-CREATE UNIQUE INDEX ezcobj_state_group_identifier ON ezcobj_state_group (identifier);
-
 ALTER TABLE ezcobj_state
     ADD PRIMARY KEY (id);
 
@@ -70,7 +70,7 @@ ALTER TABLE ezcobj_state_group
     ADD PRIMARY KEY (id);
 
 ALTER TABLE ezcobj_state_group_language
-    ADD PRIMARY KEY (language_id, contentobject_state_group_id);
+    ADD PRIMARY KEY (contentobject_state_group_id, language_id);
 
 ALTER TABLE ezcobj_state_language
     ADD PRIMARY KEY (contentobject_state_id, language_id);
