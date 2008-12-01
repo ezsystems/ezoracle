@@ -194,7 +194,7 @@ class eZOracleDB extends eZDBInterface
         return ':' . $fieldDef['name'];
     }
 
-    function analizeQuery( $sql, $server = false )
+    function analyseQuery( $sql, $server = false )
     {
         $analysisText = false;
         // If query analysis is enable we need to run the query
@@ -325,7 +325,7 @@ class eZOracleDB extends eZDBInterface
             $this->startTimer();
         }
 
-        $analysisText = $this->analizeQuery( $sql, $server );
+        $analysisText = $this->analyseQuery( $sql, $server );
 
         $statement = oci_parse( $this->DBConnection, $sql );
 
@@ -439,7 +439,7 @@ class eZOracleDB extends eZDBInterface
             eZDebug::accumulatorStop( 'oracle_conversion' );
         }
 
-        $analysisText = $this->analizeQuery( $sql, $server );
+        $analysisText = $this->analyseQuery( $sql, $server );
 
         if ( $this->OutputSQL )
         {
