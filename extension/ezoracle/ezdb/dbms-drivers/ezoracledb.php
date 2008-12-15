@@ -1157,7 +1157,7 @@ class eZOracleDB extends eZDBInterface
             {
                 if ( $type !== false )
                 {
-                    $parts[] = $statement . ' ( ' . $this->implodeWithTypeCast( ', ', array_slice( $elements, $offset, $length ) ) . ' )';
+                    $parts[] = $statement . ' ( ' . $this->implodeWithTypeCast( ', ', array_slice( $elements, $offset, $length ), $type ) . ' )';
                 }
                 else
                 {
@@ -1171,7 +1171,7 @@ class eZOracleDB extends eZDBInterface
         {
             if ( $type !== false )
             {
-                $result = $columnName . $statement . ' ( ' . $this->implodeWithTypeCast( ', ', $elements ) . ' )';
+                $result = $columnName . $statement . ' ( ' . $this->implodeWithTypeCast( ', ', $elements, $type ) . ' )';
             }
             else
             {
