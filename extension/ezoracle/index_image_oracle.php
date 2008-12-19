@@ -40,7 +40,7 @@ if ( !function_exists( 'oci_connect' ) )
 if ( !( $db = @oci_connect( STORAGE_USER, STORAGE_PASS, STORAGE_DB ) ) )
     _die( "Unable to connect to storage server.\n" );
 
-$filename = ltrim( $_SERVER['SCRIPT_URL'], "/");
+$filename = ltrim( $_SERVER['REQUEST_URI'], "/");
 
 $query = "SELECT * FROM " . TABLE_METADATA . " WHERE name_hash = :name_hash";
 if ( !$statement = oci_parse( $db, $query ) )
