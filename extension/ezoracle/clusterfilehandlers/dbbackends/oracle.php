@@ -817,22 +817,19 @@ class eZDBFileHandlerOracleBackend
         return true;
     }
 
-    /// @fixme: on other calls, we leave to the caller to decide the name of
-    ///         the scope, while here we use definite ones... bad practice
-    function _getFileList( $skipBinaryFiles, $skipImages )
+    function _getFileList( $scopes = false, $excludeScopes = false )
     {
         $query = 'SELECT name FROM ' . eZDBFileHandlerOracleBackend::TABLE_METADATA;
 
-        // omit some file types if needed
-        $filters = array();
-        if ( $skipBinaryFiles )
-            $filters[] = "'binaryfile'";
-        if ( $skipImages )
-            $filters[] = "'image'";
-        if ( $filters )
-            $query .= ' WHERE scope NOT IN (' . join( ', ', $filters ) . ')';
+        if ( is_array( $scopes ) && count( $scopes ) > 0 )
+        {
+            $query .= ' WHERE scope ';
+            if ( $excludeScopes )
+                $query .= 'NOT ';
+            $query .= "IN ('" . implode( "', '", $scopes ) . "')";
+        }
 
-        $rows = $this->_query( $query, "_getFileList($skipBinaryFiles, $skipImages)", true, array(), eZDBFileHandlerOracleBackend::RETURN_DATA );
+        $rows = $this->_query( $query, "_getFileList( array( " . implode( ', ', $scopes ) . " ), $excludeScopes )", true, array(), eZDBFileHandlerOracleBackend::RETURN_DATA );
         if ( $rows === false )
         {
             return false;
@@ -867,7 +864,7 @@ class eZDBFileHandlerOracleBackend
         {
             bt();
         }*/
-        die( $msg );
+        //die( $msg );
     }
 
     /**
