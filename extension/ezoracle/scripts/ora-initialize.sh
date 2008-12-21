@@ -109,20 +109,6 @@ echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 echo "Testing Oracle installation"
 ORA_WARNING=""
 
-echo -n "  NLS LANG environment variable:"
-if [ ! -z "$NLS_LANG" ]; then
-    CHARSET=`expr match "$NLS_LANG" '.*\(AL32UTF8\)'`
-    if [ "$CHARSET" != "AL32UTF8" ]; then
-        echo "`$MOVE_TO_COL``$SETCOLOR_WARNING`[ Warning ]`$SETCOLOR_NORMAL`"
-        echo "  The environment variable NLS_LANG indicates a non-utf8 character set"
-        echo "  in use by the oracle client: $NLS_LANG"
-        echo "  Please make sure that utf8 is used by the oracle client used by php"
-        ORA_WARNING="1"
-    fi
-else
-    echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
-fi
-
 echo -n "  tnsnames.ora file:"
 if [ -z "$TNS_ADMIN" ]; then
     if [ -z "$ORACLE_HOME" ]; then
@@ -150,10 +136,10 @@ if [ -z "$EZNETADMIN" ] || [ ! -f "$EZNETADMIN/tnsnames.ora" ]; then
     echo
     echo "  Oracle usually requires this file to figure out the service and"
     echo "  hostname for the DB server. You should copy this from the DB server"
-    echo "  and do some modifications to it."
+    echo "  and do some modifications to it, or use Oracle Easy Naming connections"
+    echo
     echo "  Oracle is usually found in `$SETCOLOR_DIRECTORY`/usr/oracle`$SETCOLOR_NORMAL`, e.g."
     echo "  export ORACLE_HOME=\"/usr/oracle\""
-    echo
     #exit 1
 else
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
@@ -208,15 +194,11 @@ $PHP "$PHP_TEST_SCRIPT" &>/dev/null
 if [ $? -ne 0 ]; then
     rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
-    echo "Your PHP installation does not have support for Oracle (OCI8) compiled in"
+    echo "Your PHP installation does not have support for Oracle (OCI8)"
+    echo "compiled in and enabled."
     echo "You will need to do that before this script can continue"
     echo
-    echo "You will need to have a full Oracle installation "
-    echo "or the header and library files from an Oracle installation*"
-    echo "to properly compile PHP"
-    echo "Pass --with-oci8 to PHPs configure to enable this"
-    echo
-    echo "* Copy rdmbs, bin and lib from an Oracle install"
+    echo "You can find more information on installing the OCI8 extension on www.php.net"
     exit 1
 fi
 rm "$PHP_TEST_SCRIPT"
@@ -555,7 +537,6 @@ if ( !@oci_execute( \$statement, OCI_DEFAULT ) ) // view might not exist
         }
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
-        oci_free_statement( \$statement );
         exit( 1 );
     }
 }
@@ -567,7 +548,6 @@ else
         echo \$row['PROPERTY_VALUE'];
     }
 }
-oci_free_statement( \$statement );
 ?>
 EOF
         ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
@@ -630,7 +610,6 @@ foreach ( \$sqls as \$sql )
         {
             print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
             print( "SQL was:\n" . \$sql );
-            oci_free_statement( \$statement );
             if ( \$error["code"] == "01920" )
                 exit( 2 );
         }
@@ -737,6 +716,28 @@ if ( !\$db )
     }
     exit( 1 );
 }
+else
+{
+    \$statement = oci_parse( \$db, "select VALUE from NLS_DATABASE_PARAMETERS where PARAMETER='NLS_CHARACTERSET'" );
+    if ( !oci_execute( \$statement, OCI_DEFAULT ) )
+    {
+        \$error = oci_error( \$statement );
+        if ( \$error['code'] != 0 )
+        {
+            print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
+            print( "SQL was:\n" . \$sql );
+        }
+        exit( 2 );
+    }
+    else
+    {
+        \$row = oci_fetch_array( \$statement );
+        if ( \$row !== false )
+        {
+            echo \$row['VALUE'];
+        }
+    }
+}
 ?>
 EOF
 ORACLE_ERROR=`$PHP "$PHP_TEST_SCRIPT"`
@@ -769,9 +770,37 @@ if [ $? -ne 0 ]; then
     echo "The listener(s) should then be started"
     fi
     exit 1
+else
+    rm "$PHP_TEST_SCRIPT"
+    echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    echo -n "Testing Oracle database character set"
+    if [ "$ORACLE_ERROR" = "AL32UTF8" ]; then
+        echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    else
+        echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+        echo "The internal character set used by the database is $ORACLE_ERROR."
+        echo "For best performances, it is recommended to set it to AL32UTF8."
+        echo "You should at least make sure that the character set $ORACLE_ERROR is a"
+        echo "superset of the charcter sets that will be used for the contents of this"
+        echo "eZ Publish installation. E.g. WE8ISO889P1 is fine if you only plan to"
+        echo "have content in european languages."
+        echo "If in doubt, please alter your database configuration before continuing."
+        if [ -z "$NLS_LANG" ]; then
+            echo
+            echo "Also note that, since the NLS_LANG environment variable appears"
+            echo "not to be set, if the database server is at version 9.1 or lower,"
+            echo "php might not be able to connect using the correct character set."
+            echo "This configuration is not supported"
+        fi
+        echo
+        echo -n "Press [enter] to continue, [q+enter] to quit: "
+        question=`echo $question | tr [A-Z] [a-z]`
+        read question
+        if [ "$question" == "q" ]; then
+            exit
+        fi    
+    fi
 fi
-rm "$PHP_TEST_SCRIPT"
-echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 echo -n "Creating md5_digest function in Oracle"
 cat <<EOF >"$PHP_TEST_SCRIPT"
@@ -794,13 +823,11 @@ if ( !oci_execute( \$statement, OCI_DEFAULT ) )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
-        oci_free_statement( \$statement );
         if ( \$error["code"] == "01920" )
             exit( 2 );
     }
     exit( 1 );
 }
-oci_free_statement( \$statement );
 
 ?>
 EOF
@@ -837,13 +864,11 @@ if ( !oci_execute( \$statement, OCI_DEFAULT ) )
     {
         print( "SQL error(" . \$error["code"] . "):\n" . \$error["message"] .  "\n" );
         print( "SQL was:\n" . \$sql );
-        oci_free_statement( \$statement );
         if ( \$error["code"] == "01920" )
             exit( 2 );
     }
     exit( 1 );
 }
-oci_free_statement( \$statement );
 
 ?>
 EOF
