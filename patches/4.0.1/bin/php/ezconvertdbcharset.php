@@ -74,7 +74,7 @@ define( 'EZ_DROP_CONTENTCLASS_ATTRIBUTE_TMP_TABLE_SQL',
 ***************************************************************/
 function showError( $message, $addEOL = true, $bailOut = true )
 {
-    global $cli, $script,$eZDir;
+    global $cli, $script, $eZDir;
 
     $cli->output( $cli->stylize( 'error', "Error: " .  $message ), $addEOL );
 
@@ -1259,8 +1259,8 @@ EXIT;
     showMessage3( "  taking the db dump, tmp storage is '$dumpPath1', '$dumpPath2'" );
     eZDir::mkdir( $dumpDir, false, true );
     chdir( $oracleHome . '/bin' );
-//    eZExecuteShellCommand( $expdb1, "failed to dump db schema. tried command '$expdb1'", true, true );
-//    eZExecuteShellCommand( $expdb2, "failed to dump db data. tried command '$expdb2'", true, true );
+    eZExecuteShellCommand( $expdb1, "failed to dump db schema. tried command '$expdb1'", true, true );
+    eZExecuteShellCommand( $expdb2, "failed to dump db data. tried command '$expdb2'", true, true );
     chdir( $eZDir );
 
     // verify that dump files exist
