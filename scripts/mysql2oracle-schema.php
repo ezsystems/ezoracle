@@ -554,6 +554,9 @@ if ( !parseMysqlLoginString( $loginString,
                             $myDBName, $myUser, $myPass, $myHost ) )
     die( "Malformed login string\n" );
 
+if ( !function_exists( 'mysql_connect' )  )
+    die( "MySQL extension not activated, cannot execute\n" );
+
 if ( !( $mydb = @mysql_connect( $myHost, $myUser, $myPass ) ) )
     die( "cannot connect to MySQL: " . mysql_error() . "\n" );
 
