@@ -226,6 +226,9 @@ $oraInst = ''; // oracle instance
 if ( !oraParseLoginString( $loginString, $oraUser, $oraPass, $oraInst ) )
     die( "Malformed login string: $argv[1]\n" );
 
+if ( !function_exists( 'OCILogon' )  )
+    die( "Oci8 extension not activated, cannot execute\n" );
+
 if( !( $oraDB = OCILogon( $oraUser, $oraPass, $oraInst ) ) )
     die( "cannot connect to Oracle\n" );
 
