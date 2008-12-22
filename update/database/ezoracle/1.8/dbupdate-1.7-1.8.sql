@@ -1,0 +1,1 @@
+ALTER TABLE ezsession MODIFY (data NULL);
