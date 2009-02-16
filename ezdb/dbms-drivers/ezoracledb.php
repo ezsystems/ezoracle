@@ -222,7 +222,7 @@ class eZOracleDB extends eZDBInterface
                 {
                     $rows = array();
                     $numRows = oci_fetch_all( $analysisStmt, $rows, 0, -1, OCI_ASSOC + OCI_FETCHSTATEMENT_BY_ROW );
-                    if ( $this->InputTextCodec )
+                    if ( $this->OutputTextCodec )
                     {
                         for ( $i = 0; $i < $numRows; ++$i )
                         {
@@ -509,12 +509,12 @@ class eZOracleDB extends eZDBInterface
             // optimize to our best the special case: 1 row
 			if ( $rowCount == 1 )
 			{
-				$resultArray[$offset] = $this->InputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
+				$resultArray[$offset] = $this->OutputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
 			}
 			else if ( $rowCount > 0 )
             {
                 $results = $results[$column];
-                if ( $this->InputTextCodec )
+                if ( $this->OutputTextCodec )
                 {
                     array_walk( $results, array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
                 }
@@ -527,7 +527,7 @@ class eZOracleDB extends eZDBInterface
             // optimize to our best the special case: 1 row
 			if ( $rowCount == 1 )
 			{
-                if ( $this->InputTextCodec )
+                if ( $this->OutputTextCodec )
                 {
                     array_walk( $results[0], array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
                 }
