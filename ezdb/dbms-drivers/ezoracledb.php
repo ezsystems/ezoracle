@@ -1247,6 +1247,11 @@ class eZOracleDB extends eZDBInterface
                       'values' => $versionArray );
     }
 
+    function supportsDefaultValuesInsertion()
+    {
+        return false;
+    }
+
     /**
     * Used with array_walk to change charset encoding in mono dimensional arrays
     */
