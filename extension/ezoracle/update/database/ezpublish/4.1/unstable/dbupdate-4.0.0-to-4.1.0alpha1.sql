@@ -101,3 +101,15 @@ CREATE INDEX ezuservisit_co_visit_count ON  ezuservisit ( current_visit_timestam
 CREATE INDEX ezforgot_password_user ON ezforgot_password (user_id);
 
 ALTER TABLE ezorder_item modify ( vat_value number default 0 );
+
+CREATE TABLE ezurlalias_ml_incr (
+    id integer NOT NULL;
+);
+
+CREATE SEQUENCE s_ezurlalias_ml_incr;
+CREATE OR REPLACE TRIGGER ezurlalias_ml_incr_tr
+BEFORE INSERT ON ezurlalias_ml_incr FOR EACH ROW WHEN (new.id IS NULL)
+BEGIN
+  SELECT s_ezurlalias_ml_incr.nextval INTO :new.id FROM dual;
+END;
+/
