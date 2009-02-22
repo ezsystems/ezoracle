@@ -469,7 +469,7 @@ class eZDBFileHandlerOracleBackend
 
         if ( !( $fp = fopen( $tmpFilePath, 'wb' ) ) )
         {
-            eZDebug::writeError( "Cannot write to '$tmpFilePath' while fetching file." );
+            eZDebug::writeError( "Cannot write to '$tmpFilePath' while fetching file.", __METHOD__ );
             $lob->free();
             return false;
         }
@@ -482,9 +482,10 @@ class eZDBFileHandlerOracleBackend
 
         // Make sure all data is written correctly
         clearstatcache();
-        if ( filesize( $tmpFilePath ) != $metaData['filesize'] )
+        $tmpSize = filesize( $tmpFilePath );
+        if ( $tmpSize != $metaData['filesize'] )
         {
-            eZDebug::writeError( "Size (" . filesize( $tmpFilePath ) . ") of written data for file '$tmpFilePath' does not match expected size " . $metaData['size'] );
+            eZDebug::writeError( "Size ($tmpSize) of written data for file '$tmpFilePath' does not match expected size " . $metaData['size'], __METHOD__ );
             $lob->free();
             return false;
         }
@@ -633,7 +634,7 @@ class eZDBFileHandlerOracleBackend
     {
         if ( !is_readable( $filePath ) )
         {
-            eZDebug::writeError( "Unable to store file '$filePath' since it is not readable.", 'eZDBFileHandlerMysqlBackend' );
+            eZDebug::writeError( "Unable to store file '$filePath' since it is not readable.", __METHOD__ );
             return;
         }
         if ( $fname )
@@ -659,7 +660,7 @@ class eZDBFileHandlerOracleBackend
 
         if ( !$fp = @fopen( $filePath, 'rb' ) )
         {
-            eZDebug::writeError( "Cannot read '$filePath'.", 'ezdbfilehandleroraclebackend' );
+            eZDebug::writeError( "Cannot read '$filePath'.", __METHOD__ );
             return false;
         }
 
@@ -708,7 +709,7 @@ class eZDBFileHandlerOracleBackend
 
             if ( $lob->write( $chunk ) === false )
             {
-                eZDebug::writeNotice( "Failed to write data chunk while storing file: " . $sql );
+                eZDebug::writeNotice( "Failed to write data chunk while storing file: " . $sql, __METHOD__ );
                 fclose( $fp );
                 $lob->free();
                 //oci_rollback( $this->db );
@@ -803,7 +804,7 @@ class eZDBFileHandlerOracleBackend
             $chunk = substr( $contents, $pos, $chunkSize );
             if ( $lob->write( $chunk ) === false )
             {
-                eZDebug::writeNotice( "Failed to write data chunk while storing file contents: " . $sql );
+                eZDebug::writeNotice( "Failed to write data chunk while storing file contents: " . $sql, __METHOD__ );
                 $lob->free();
                 //oci_rollback( $this->db );
                 return;
@@ -867,7 +868,7 @@ class eZDBFileHandlerOracleBackend
         {
             bt();
         }*/
-        die( $msg );
+        //die( $msg );
     }
 
     /**
