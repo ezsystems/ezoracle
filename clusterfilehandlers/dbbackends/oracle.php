@@ -418,7 +418,7 @@ class eZDBFileHandlerOracleBackend
         $result = true;
         $currentDir = $dirElements[0];
 
-        if ( $currentDir != '' && !file_exists( $currentDir ) && !mkdir( $currentDir, '0777' ))
+        if ( $currentDir != '' && !file_exists( $currentDir ) && !eZDir::mkdir( $currentDir, false ) )
             return false;
 
         for ( $i = 1; $i < count( $dirElements ); ++$i )
@@ -429,7 +429,7 @@ class eZDBFileHandlerOracleBackend
 
             $currentDir .= '/' . $dirElement;
 
-            if ( !file_exists( $currentDir ) && !mkdir( $currentDir, 0777 ) )
+            if ( !file_exists( $currentDir ) && !eZDir::mkdir( $currentDir, false ) )
                 return false;
 
             $result = true;
