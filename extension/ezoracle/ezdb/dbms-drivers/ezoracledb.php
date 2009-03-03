@@ -536,7 +536,14 @@ class eZOracleDB extends eZDBInterface
             else if ( $rowCount > 0 )
             {
                 $keys = array_keys( array_change_key_case( $results[0] ) );
-                array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
+                // this would be slightly faster, but we have to work around a php bug
+                // with recursive array_walk present in 5.1 (eg. on red hat 5.2)
+                //array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
+                $arr = array( $this->OutputTextCodec, $keys );
+                foreach( $results as  $key => &$val )
+                {
+                    self::arrayChangeKeys( $val, $key, $arr );
+                }
                 $resultArray = $offset == 0 ? $results : array_combine( range( $offset, $offset + $rowCount - 1 ), $results );
             }
         }
