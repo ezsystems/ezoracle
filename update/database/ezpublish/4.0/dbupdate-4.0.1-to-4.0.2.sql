@@ -12,6 +12,6 @@ CREATE SEQUENCE s_urlalias_ml_incr;
 CREATE OR REPLACE TRIGGER ezurlalias_ml_incr_id_tr
 BEFORE INSERT ON ezurlalias_ml_incr FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
-  SELECT s_ezurlalias_ml_incr.nextval INTO :new.id FROM dual;
+  SELECT s_urlalias_ml_incr.nextval INTO :new.id FROM dual;
 END;
 /
