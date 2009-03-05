@@ -1,4 +1,4 @@
 <?php /*
 [DatabaseSettings]
-ImplementationAlias[oracle]=ezoracle
+ImplementationAlias[ezoracle]=eZOracleDB
 */ ?>
