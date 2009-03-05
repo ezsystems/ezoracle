@@ -1,4 +1,0 @@
-<?php /*
-[ClusteringSettings]
-ExtensionDirectories[]=ezoracle
-*/ ?>
