@@ -423,9 +423,9 @@ class eZOracleDB extends eZDBInterface
             {
                 $offset = $params["offset"];
             }
-            if ( isset( $params["column"] ) and is_numeric( $params["column"] ) )
+            if ( isset( $params["column"] ) and ( is_numeric( $params["column"] ) or is_string( $params["column"]) ) )
             {
-                $column = $params["column"];
+                $column = strtoupper( $params["column"] );
             }
         }
         eZDebug::accumulatorStart( 'oracle_query', 'oracle_total', 'Oracle_queries' );
@@ -505,13 +505,21 @@ class eZOracleDB extends eZDBInterface
 
         if ( $column !== false )
         {
-            $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
+            if ( is_numeric( $column ) )
+            {
+               $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
+            }
+            else
+            {
+                $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_ASSOC );
+            }
+
             // optimize to our best the special case: 1 row
-			if ( $rowCount == 1 )
-			{
-				$resultArray[$offset] = $this->OutputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
-			}
-			else if ( $rowCount > 0 )
+            if ( $rowCount == 1 )
+            {
+                $resultArray[$offset] = $this->OutputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
+            }
+            else if ( $rowCount > 0 )
             {
                 $results = $results[$column];
                 if ( $this->OutputTextCodec )
@@ -525,14 +533,14 @@ class eZOracleDB extends eZDBInterface
         {
             $rowCount = oci_fetch_all( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC );
             // optimize to our best the special case: 1 row
-			if ( $rowCount == 1 )
-			{
+            if ( $rowCount == 1 )
+            {
                 if ( $this->OutputTextCodec )
                 {
                     array_walk( $results[0], array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
                 }
-				$resultArray[$offset] = array_change_key_case( $results[0] );
-			}
+                $resultArray[$offset] = array_change_key_case( $results[0] );
+            }
             else if ( $rowCount > 0 )
             {
                 $keys = array_keys( array_change_key_case( $results[0] ) );

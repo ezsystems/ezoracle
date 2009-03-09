@@ -27,7 +27,7 @@ $db = eZDB::instance();
 
 $maxIDs = $db->arrayQuery( 'SELECT MAX( id ) AS max_id FROM ezurlalias_ml', array( 'column' => 'max_id' ) );
 
-$maxID = (int)$maxIDs[0]['max_id'];
+$maxID = (int)$maxIDs[0];
 $cli->output( "highest ID in ezurlalias_ml table: $maxID" );
 
 $autoInc = $maxID + 1;
@@ -43,8 +43,8 @@ if ( $db instanceof eZMySQLDB || $db instanceof eZMySQLiDB )
 }
 else if ( $db instanceof eZOracleDB )
 {
-	$db->query( "DROP SEQUENCE s_urlalias_ml_incr" );
-	$db->query( "CREATE SEQUENCE s_urlalias_ml_incr MINVALUE $autoInc" );
+    $db->query( "DROP SEQUENCE s_urlalias_ml_incr" );
+    $db->query( "CREATE SEQUENCE s_urlalias_ml_incr MINVALUE $autoInc" );
 }
 else
 {

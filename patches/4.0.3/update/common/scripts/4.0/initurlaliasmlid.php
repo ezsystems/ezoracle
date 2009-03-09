@@ -43,8 +43,8 @@ if ( $db instanceof eZMySQLDB || $db instanceof eZMySQLiDB )
 }
 else if ( $db instanceof eZOracleDB )
 {
-	$db->query( "DROP SEQUENCE s_urlalias_ml_incr" );
-	$db->query( "CREATE SEQUENCE s_urlalias_ml_incr MINVALUE $autoInc" );
+    $db->query( "DROP SEQUENCE s_urlalias_ml_incr" );
+    $db->query( "CREATE SEQUENCE s_urlalias_ml_incr MINVALUE $autoInc" );
 }
 else
 {
