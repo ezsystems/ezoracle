@@ -384,12 +384,14 @@ if ( !( $mydb = mysql_connect ( $myHost, $myUser, $myPass ) ) )
 if( !mysql_select_db( $myDBName, $mydb ) )
     die( "Could not select database: " . mysql_error() . "\n" );
 
+mysql_query("SET NAMES utf8", $mydb);
+
 // connect to oracle
 
 if ( !function_exists( 'OCILogon' )  )
     die( "Oci8 extension not activated, cannot execute\n" );
 
-if ( !( $oradb = OCILogon( $oraUser, $oraPass, $oraInst ) ) )
+if ( !( $oradb = OCILogon( $oraUser, $oraPass, $oraInst, 'AL32UTF8' ) ) )
     die( "cannot connect to Oracle\n" );
 
 $mysqlTables = myGetTablesList( $mydb );
