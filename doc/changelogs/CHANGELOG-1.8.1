@@ -2,6 +2,8 @@ Changes from 1.8 to 1.8.1
 
 *General:
 - added support for eZ Publish 4.0.2 and 4.0.3 (fixed bug #14474)
+- improved debug messages for cluster file handler
+- do not halt anymore the php script upon fatal cluster file handler errors (as the mysql driver does)
 
 *Bugfixes:
 - Fixed bug #13271: File permissions on shared environments
