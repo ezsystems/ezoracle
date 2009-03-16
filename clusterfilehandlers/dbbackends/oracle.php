@@ -123,6 +123,8 @@ class eZDBFileHandlerOracleBackend
 
             $params['sql_output'] = $siteINI->variable( "DatabaseSettings", "SQLOutput" ) == "enabled";
 
+            $params['cache_generation_timeout'] = $siteINI->variable( "ContentSettings", "CacheGenerationTimeout" );
+
             $GLOBALS['eZDBFileHandlerOracleBackend_dbparams'] = $params;
         }
         else
@@ -390,7 +392,7 @@ class eZDBFileHandlerOracleBackend
         return $result;
     }
 
-    function _exists( $filePath, $fname = false )
+    function _exists( $filePath, $fname = false, $ignoreExpiredFiles = true )
     {
         if ( $fname )
             $fname .= "::_exists($filePath)";
@@ -438,8 +440,17 @@ class eZDBFileHandlerOracleBackend
         return $result;
     }
 
-    // looks like when uniqueName is set to true, we are not using atomic writing,
-    // and a corruption might occur... so we make sure we have server ip+pid+timestamp
+    /**
+    * Fetches the file $filePath from the database, saving it locally with its
+    * original name, or $uniqueName if given
+    *
+    * looks like when uniqueName is set to true, we are not using atomic writing,
+    * and a corruption might occur... so we make sure we have server ip+pid+timestamp
+    *
+    * @param string $filePath
+    * @param string $uniqueName
+    * @return the file physical path, or false if fetch failed
+    **/
     function _fetch( $filePath, $uniqueName = false, $fname = false )
     {
         // NOTE: useless check, since _fetchlob does it anyway. Spare some cycles
@@ -1317,6 +1328,56 @@ class eZDBFileHandlerOracleBackend
             $fname = "_query";
         $backgroundClass = ($this->transactionCount > 0  ? "debugtransaction transactionlevel-$this->transactionCount" : "");
         eZDebug::writeNotice( "$query", "cluster::oracle::{$fname}[{$rowText}" . number_format( $timeTaken, 3 ) . " ms] query number per page:" . $numQueries++, $backgroundClass );
+    }
+
+    /**
+    * Attempts to begin cache generation by creating a new file named as the
+    * given filepath, suffixed with .generating. If the file already exists,
+    * insertion is not performed and false is returned (means that the file
+    * is already being generated)
+    * @param string $filePath
+    * @return array array with 2 indexes: 'result', containing either ok or ko,
+    *         and another index that depends on the result:
+    *         - if result == 'ok', the 'mtime' index contains the generating
+    *           file's mtime
+    *         - if result == 'ko', the 'remaining' index contains the remaining
+    *           generation time (time until timeout) in seconds
+    **/
+    function _startCacheGeneration( $filePath, $generatingFilePath )
+    {
+    }
+
+    /**
+    * Ends the cache generation for the current file: moves the (meta)data for
+    * the .generating file to the actual file, and removed the .generating
+    * @param string $filePath
+    * @return bool
+    **/
+    function _endCacheGeneration( $filePath, $generatingFilePath )
+    {
+    }
+
+    /**
+    * Checks if generation has timed out by looking for the .generating file
+    * and comparing its timestamp to the one assigned when the file was created
+    *
+    * @param string $generatingFilePath
+    * @param int    $generatingFileMtime
+    *
+    * @return bool true if the file didn't timeout, false otherwise
+    **/
+    function _checkCacheGenerationTimeout( $generatingFilePath, $generatingFileMtime )
+    {
+    }
+
+    /**
+    * Aborts the cache generation process by removing the .generating file
+    * @param string $filePath Real cache file path
+    * @param string $generatingFilePath .generating cache file path
+    * @return void
+    **/
+    function _abortCacheGeneration( $generatingFilePath )
+    {
     }
 
     public $db = null;
