@@ -109,7 +109,7 @@ class eZOracleDB extends eZDBInterface
             }
             else
             {
-                eZDebugSetting::writeDebug( 'oracle-db-oracle', "using real connection",  "using real connection" );
+                eZDebugSetting::writeDebug( 'kernel-db-oracle', "using real connection",  "using real connection" );
                 $this->DBConnection = oci_connect( $user, $password, $db, $oraCharset );
                 while ( $this->DBConnection == false and $numAttempts <= $maxAttempts )
                 {
@@ -150,6 +150,8 @@ class eZOracleDB extends eZDBInterface
                     $this->ErrorNumber = $error['code'];
                     eZDebug::writeError( "Connection error(" . $error["code"] . "):\n". $error["message"] .  " ", "eZOracleDB" );
                 }
+
+                throw new eZDBNoConnectionException( $db );
             }
         }
         else
