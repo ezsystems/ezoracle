@@ -375,14 +375,24 @@ if ( !parseOracleLoginString( $argv[2], $oraUser, $oraPass, $oraInst ) )
     die( "Malformed Oracle login string.\n" );
 
 // connect to mysql
+
+if ( !function_exists( 'mysql_connect' )  )
+    die( "MySQL extension not activated, cannot execute\n" );
+
 if ( !( $mydb = mysql_connect ( $myHost, $myUser, $myPass ) ) )
     die( "cannot connect to MySQL\n" );
 
 if( !mysql_select_db( $myDBName, $mydb ) )
     die( "Could not select database: " . mysql_error() . "\n" );
 
+mysql_query("SET NAMES utf8", $mydb);
+
 // connect to oracle
-if ( !( $oradb = OCILogon( $oraUser, $oraPass, $oraInst ) ) )
+
+if ( !function_exists( 'OCILogon' )  )
+    die( "Oci8 extension not activated, cannot execute\n" );
+
+if ( !( $oradb = OCILogon( $oraUser, $oraPass, $oraInst, 'AL32UTF8' ) ) )
     die( "cannot connect to Oracle\n" );
 
 $mysqlTables = myGetTablesList( $mydb );
