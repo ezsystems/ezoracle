@@ -9,3 +9,4 @@ Changes from 1.8.1 to 2.0
 
 *Bugfixes:
 - Fixed bug #011051: ezoracle sql updates out of date
+- Fixed bug #014608: oracle driver: error when rolling back transactions if an arrayquery() has been executed after trans start
