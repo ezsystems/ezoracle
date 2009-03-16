@@ -35,7 +35,7 @@
 //
 
 //!
-/*!
+/**
   \class eZOracleDB ezoracledb.php
   \ingroup eZDB
   \brief Provides Oracle database functions for eZDB subsystem
@@ -48,9 +48,9 @@
 
 class eZOracleDB extends eZDBInterface
 {
-    /*!
-      Creates a new eZOracleDB object and connects to the database.
-    */
+    /**
+     * Creates a new eZOracleDB object and connects to the database.
+     */
     function eZOracleDB( $parameters )
     {
         $this->eZDBInterface( $parameters );
@@ -165,25 +165,16 @@ class eZOracleDB extends eZDBInterface
         eZDebug::createAccumulatorGroup( 'oracle_total', 'Oracle Total' );
     }
 
-    /*!
-      \reimp
-    */
     function databaseName()
     {
         return 'oracle';
     }
 
-    /*!
-      \reimp
-    */
     function bindingType( )
     {
         return eZDBInterface::BINDING_NAME;
     }
 
-    /*!
-      \reimp
-    */
     function bindVariable( $value, $fieldDef = false )
     {
         if ( $this->InputTextCodec )
@@ -296,9 +287,6 @@ class eZOracleDB extends eZDBInterface
         return $analysisText;
     }
 
-    /*!
-      \reimp
-    */
     function query( $sql, $server = false )
     {
         // note: the other database drivers do not reset the error message here...
@@ -402,9 +390,6 @@ class eZOracleDB extends eZDBInterface
         return $result;
     }
 
-    /*!
-      \reimp
-    */
     function arrayQuery( $sql, $params = false, $server = false )
     {
         $resultArray = array();
@@ -567,9 +552,9 @@ class eZOracleDB extends eZDBInterface
         return $resultArray;
     }
 
-    /*!
-     \private
-    */
+    /**
+     * @access private
+     */
     function subString( $string, $from, $len = null )
     {
         if ( $len == null )
@@ -582,13 +567,12 @@ class eZOracleDB extends eZDBInterface
         }
     }
 
-    /*!
-      \reimp
-      Note: since we autocommit every statement that is not within a transaction,
-      when we rollback we allways rollback everything that has not yet been
-      committed. This means there is little use in setting a SAVEPOINT here
-      (also because oracle does not support committing up to a savepoint...)
-    */
+    /**
+     * Note: since we autocommit every statement that is not within a transaction,
+     * when we rollback we allways rollback everything that has not yet been
+     * committed. This means there is little use in setting a SAVEPOINT here
+     * (also because oracle does not support committing up to a savepoint...)
+     */
     function beginQuery()
     {
         $this->Mode = OCI_DEFAULT;
@@ -599,19 +583,15 @@ class eZOracleDB extends eZDBInterface
         return true;
     }
 
-    /*!
-      \reimp
-    */
     function useShortNames()
     {
         return true;
     }
 
-    /*!
-      We trust the eZDBInterface to count nested transactions and only call
-      this method when trans counter reaches 0
-      \reimp
-    */
+    /**
+     * We trust the eZDBInterface to count nested transactions and only call
+     * this method when trans counter reaches 0
+     */
     function commitQuery()
     {
         $result = oci_commit( $this->DBConnection );
@@ -623,9 +603,6 @@ class eZOracleDB extends eZDBInterface
         return $result;
     }
 
-    /*!
-      \reimp
-    */
     function rollbackQuery()
     {
         $result = oci_rollback( $this->DBConnection );
@@ -637,10 +614,9 @@ class eZOracleDB extends eZDBInterface
         return $result;
     }
 
-    /*!
-      \reimp
-      @todo return false on error instead of executing invalid sql?
-    */
+    /**
+     * @todo return false on error instead of executing invalid sql?
+     */
     function lastSerialID( $table = false, $column = false )
     {
         $id = null;
@@ -655,9 +631,6 @@ class eZOracleDB extends eZDBInterface
         return $id;
     }
 
-    /*!
-      \reimp
-    */
     function escapeString( $str )
     {
         $str = str_replace ( "'", "''", $str );
@@ -665,42 +638,27 @@ class eZOracleDB extends eZDBInterface
         return $str;
     }
 
-    /*!
-      \reimp
-    */
     function concatString( $strings = array() )
     {
         $str = implode( " || " , $strings );
         return "  $str   ";
     }
 
-    /*!
-      \reimp
-    */
     function md5( $str )
     {
         return " md5_digest( $str ) ";
     }
 
-    /*!
-      \reimp
-    */
     function bitAnd( $arg1, $arg2 )
     {
         return " bitand( $arg1, $arg2 ) ";
     }
 
-    /*!
-      \reimp
-    */
     function bitOr( $arg1, $arg2 )
     {
         return " bitor( $arg1, $arg2 ) ";
     }
 
-    /*!
-     \reimp
-    */
     function supportedRelationTypeMask()
     {
         return ( eZDBInterface::RELATION_TABLE_BIT |
@@ -710,9 +668,6 @@ class eZOracleDB extends eZDBInterface
                  eZDBInterface::RELATION_INDEX_BIT );
     }
 
-    /*!
-     \reimp
-    */
     function supportedRelationTypes()
     {
         return array( eZDBInterface::RELATION_TABLE,
@@ -722,17 +677,17 @@ class eZOracleDB extends eZDBInterface
                       eZDBInterface::RELATION_INDEX );
     }
 
-    /*!
-     \private
-     \return Detailed information regarding a relation type.
-             It will return an associative array containing:
-             - table - The table which contains information on the relation type
-             - field - The field that contains the name of the relation types
-             - ignore_name - If the field starts with this (case-insensitive) string
-                             the relation must be ignored. (optional)
-             \c false is returned if it is an unknown relation type.
-     \param $relationType One of the relation types defined in eZDBInterface
-    */
+    /**
+     * @ access private
+     * @return array Detailed information regarding a relation type.
+     *         It will return an associative array containing:
+     *         - table - The table which contains information on the relation type
+     *         - field - The field that contains the name of the relation types
+     *         - ignore_name - If the field starts with this (case-insensitive) string
+     *                         the relation must be ignored. (optional)
+     *         false is returned if it is an unknown relation type.
+     * @param string $relationType One of the relation types defined in eZDBInterface
+     */
     function relationInfo( $relationType )
     {
         $kind = array( eZDBInterface::RELATION_TABLE => array( 'table' => 'user_tables',
@@ -753,9 +708,6 @@ class eZOracleDB extends eZDBInterface
         return $kind[$relationType];
     }
 
-    /*!
-     \reimp
-    */
     function relationCounts( $relationMask )
     {
         $relationTypes = $this->supportedRelationTypes();
@@ -803,9 +755,6 @@ class eZOracleDB extends eZDBInterface
         return $count;
     }
 
-    /*!
-      \reimp
-    */
     function relationCount( $relationType = eZDBInterface::RELATION_TABLE )
     {
         $count = false;
@@ -836,9 +785,6 @@ class eZOracleDB extends eZDBInterface
         return $count;
     }
 
-    /*!
-      \reimp
-    */
     function relationList( $relationType = eZDBInterface::RELATION_TABLE )
     {
         $count = false;
@@ -869,9 +815,6 @@ class eZOracleDB extends eZDBInterface
         return $array;
     }
 
-    /*!
-     \reimp
-    */
     function eZTableList( $server = self::SERVER_MASTER )
     {
         $array = array();
@@ -901,9 +844,6 @@ class eZOracleDB extends eZDBInterface
         return $array;
     }
 
-    /*!
-     \reimp
-    */
     function relationMatchRegexp( $relationType )
     {
         if ( $relationType == eZDBInterface::RELATION_SEQUENCE )
@@ -912,9 +852,6 @@ class eZOracleDB extends eZDBInterface
             return "#^ez#";
     }
 
-    /*!
-      \reimp
-    */
     function removeRelation( $relationName, $relationType )
     {
         $relationTypeName = $this->relationName( $relationType );
@@ -932,9 +869,6 @@ class eZOracleDB extends eZDBInterface
         return false;
     }
 
-    /*!
-      \reimp
-    */
     function createTempTable( $createTableQuery = '', $server = self::SERVER_SLAVE )
     {
         $createTableQuery = preg_replace( '#CREATE\s+TEMPORARY\s+TABLE#', 'CREATE GLOBAL TEMPORARY TABLE', $createTableQuery );
@@ -942,10 +876,9 @@ class eZOracleDB extends eZDBInterface
         $this->query( $createTableQuery, $server );
     }
 
-    /*!
-      \reimp
-      NB: this code should at least log a warning if the regexp does not match
-    */
+    /**
+     * NB: this code should at least log a warning if the regexp does not match
+     */
     function dropTempTable( $dropTableQuery = '', $server = self::SERVER_SLAVE )
     {
         if( preg_match( '#DROP\s+TABLE\s+(\S+)#', $dropTableQuery, $matches ) )
@@ -956,9 +889,9 @@ class eZOracleDB extends eZDBInterface
         $this->query( $dropTableQuery, $server );
     }
 
-    /*!
-     Sets Oracle sequence values to the maximum values used in the corresponding columns.
-    */
+    /**
+     * Sets Oracle sequence values to the maximum values used in the corresponding columns.
+     */
     function correctSequenceValues()
     {
         if ( $this->isConnected() )
@@ -1034,13 +967,12 @@ class eZOracleDB extends eZDBInterface
         return false;
     }
 
-    /*!
-     \reimp
-     This reimplementation differs a bit from the base version:
-      a - it ignores the randomizeindex
-      b - it has a finite number of retries
-      A is most likely done to make sure that every temp table is used by only one php session, never many ones (advantages in dropping)
-      B could be possibly removed. Especially considering that in such a case the returned temp table name is duplicate...
+    /**
+     * This reimplementation differs a bit from the base version:
+     *  a - it ignores the randomizeindex
+     *  b - it has a finite number of retries
+     *  A is most likely done to make sure that every temp table is used by only one php session, never many ones (advantages in dropping)
+     *  B could be possibly removed. Especially considering that in such a case the returned temp table name is duplicate...
      */
     function generateUniqueTempTableName( $pattern, $randomizeIndex = false, $server = self::SERVER_SLAVE )
     {
@@ -1061,15 +993,13 @@ class eZOracleDB extends eZDBInterface
         return $tableName;
     }
 
-    /*!
-      Checks if the requested character set matches the one used in the database.
-
-      \return \c true if it matches or \c false if it differs.
-      \param[out] $currentCharset The charset that the database uses.
-                                  will only be set if the match fails.
-                                  Note: This will be specific to the database.
-
-    */
+    /**
+     * Checks if the requested character set matches the one used in the database.
+     * @return bool true if it matches or false if it differs.
+     * @param string $currentCharset [out] The charset that the database uses.
+     *                               will only be set if the match fails.
+     *                               Note: This will be specific to the database.
+     */
     function checkCharset( $charset, &$currentCharset )
     {
         // If we don't have a database yet we shouldn't check it
@@ -1095,9 +1025,9 @@ class eZOracleDB extends eZDBInterface
         return $this->checkCharsetPriv( $realCharset, $currentCharset );
     }
 
-    /*!
-     \private
-    */
+    /**
+     * @access private
+     */
     function checkCharsetPriv( $charset, &$currentCharset )
     {
         $query = "SELECT VALUE FROM NLS_DATABASE_PARAMETERS WHERE PARAMETER = 'NLS_CHARACTERSET'";
@@ -1124,9 +1054,6 @@ class eZOracleDB extends eZDBInterface
         return false;
     }
 
-    /*!
-      \reimp
-    */
     function close()
     {
         if ( $this->DBConnection !== false )
@@ -1137,8 +1064,8 @@ class eZOracleDB extends eZDBInterface
         $this->IsConnected  = false;
     }
 
-    /*!
-     \static
+    /**
+     @static
 
      This function can be used to create a SQL IN statement to be used in a WHERE clause
      according to the description that can be found in the \c eZDBInterface class for the
@@ -1220,11 +1147,11 @@ class eZOracleDB extends eZDBInterface
         return $result;
     }
 
-    /*!
-      Works slightly differently from other databases, both beacuse of the way
-      oci-error calls work and because we retain backward compatibility (ie.
-      the code that calls this expects it to print ezdebugs too)
-    */
+    /**
+     * Works slightly differently from other databases, both beacuse of the way
+     * oci-error calls work and because we retain backward compatibility (ie.
+     * the code that calls this expects it to print ezdebugs too)
+     */
     function setError( $statement=null, $functionName='' )
     {
         if ( $statement !== null )
@@ -1298,17 +1225,17 @@ class eZOracleDB extends eZDBInterface
     }
 
     /**
-    * Used with array_walk to change charset encoding in mono dimensional arrays
-    */
+     * Used with array_walk to change charset encoding in mono dimensional arrays
+     */
     static function arrayConvertStrings(&$value, $key, $codec )
     {
         $value = $codec->convertString( $value );
     }
 
     /**
-    * Used with array_walk to change array keys to lower case in bi-dimensional arrays.
-    * Optionally does charset conversion.
-    */
+     * Used with array_walk to change array keys to lower case in bi-dimensional arrays.
+     * Optionally does charset conversion.
+     */
     static function arrayChangeKeys(&$value, $key, $params )
     {
         if ( $params[0] )

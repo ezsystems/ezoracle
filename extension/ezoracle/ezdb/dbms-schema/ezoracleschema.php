@@ -38,20 +38,11 @@
 class eZOracleSchema extends eZDBSchemaInterface
 {
 
-    /*!
-     \reimp
-     Constructor
-
-     \param db instance
-    */
     function eZOracleSchema( $params )
     {
         $this->eZDBSchemaInterface( $params );
     }
 
-    /*!
-     \reimp
-    */
     function schema( $params = array() )
     {
         $params = array_merge( array( 'meta_data' => false,
@@ -92,10 +83,9 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $schema;
     }
 
-    /*!
-     \private
-
-     \param table name
+    /**
+     * @access private
+     * @param string $table name
      */
     function fetchTableFields( $table, $autoIncrementColumns )
     {
@@ -202,8 +192,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $fields;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function fetchTableIndexes( $table )
     {
@@ -238,8 +228,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $indexes;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function detectAutoIncrements()
     {
@@ -260,8 +250,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $autoIncColumns;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function parseType( $type, $length = '' )
     {
@@ -287,8 +277,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return 'unknown';
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function parseLength( $oraType, $oraLength, $oraPrecision = '', $oraScale = '' )
     {
@@ -310,8 +300,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $oraLength;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function generateAddIndexSql( $table_name, $index_name, $def, $params, $withClosure = true )
     {
@@ -344,8 +334,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $sql . ( $withClosure ? ";\n" : '' );
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function generateDropIndexSql( $table_name, $index_name, $def )
     {
@@ -362,9 +352,9 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $sql . ";\n";
     }
 
-    /*!
-    \return Oracle datatype matching the given MySQL type
-    */
+    /**
+     * @return string Oracle datatype matching the given MySQL type
+     */
     function getOracleType( $mysqlType )
     {
         $rslt = $mysqlType;
@@ -378,8 +368,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $rslt;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function generateFieldDef( $field_name, $def, $optionsToDump = array( 'default', 'not_null' ) )
     {
@@ -422,8 +412,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $sql_def;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function generateAddFieldSql( $table_name, $field_name, $def, $params )
     {
@@ -433,8 +423,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         return $sql . ";\n";
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function generateAlterFieldSql( $table_name, $field_name, $def, $params )
     {
@@ -446,12 +436,12 @@ class eZOracleSchema extends eZDBSchemaInterface
     }
 
 
-    /*!
-    * \private
-    *
-    * Cuts given identifier to the specified length providing uniqueness of all
-    * shortened identifiers.
-    */
+    /**
+     * @access private
+     *
+     * Cuts given identifier to the specified length providing uniqueness of all
+     * shortened identifiers.
+     */
     function shorten( $identifier, $length = 30 )
     {
         static $cnt = 1;
@@ -460,15 +450,14 @@ class eZOracleSchema extends eZDBSchemaInterface
         return substr( $identifier, 0, $length-5 ) . sprintf( "%05d", $cnt++ );
     }
 
-    /*!
-     \private
-     \return An array with trigger and sequence for auto increment field
-
-     \code
-     array( 'sequences' => array( 'CREATE SEQUENCE...' ),
-            'triggers' => array( 'CREATE OR REPLACE TRIGGER...' ) );
-     \encode
-    */
+    /**
+     * @access private
+     * @return array An array with trigger and sequence for auto increment field
+     * <code>
+     * array( 'sequences' => array( 'CREATE SEQUENCE...' ),
+     *        'triggers' => array( 'CREATE OR REPLACE TRIGGER...' ) );
+     * </code>
+     */
     function generateAutoIncrement( $table_name, $field_name, $field_def, $params, $withClosure = true )
     {
         $seqName  = preg_replace( '/^ez/', 's_', $table_name );
@@ -494,9 +483,6 @@ BEGIN\n".
                       'triggers' => array( $sqlTrig ) );
     }
 
-    /*!
-     \reimp
-    */
     function generateTableSchema( $tableName, $table_def, $params )
     {
         $arrays = $this->generateTableSQL( $tableName, $table_def, $params, true );
@@ -507,9 +493,6 @@ BEGIN\n".
                  join( "\n\n", $arrays['constraints'] ) . "\n" );
     }
 
-    /*!
-     \reimp
-    */
     function generateTableSQLList( $tableName, $table, $params, $separateTypes )
     {
         $arrays = $this->generateTableSQL( $tableName, $table, $params, false );
@@ -523,9 +506,9 @@ BEGIN\n".
                             $arrays['indexes'],
                             $arrays['constraints'] );
     }
-    /*!
-     \private
-    */
+    /**
+     * @access private
+     */
     function generateTableSQL( $table, $table_def, $params, $withClosure = true )
     {
         $sql_fields = array();
@@ -572,18 +555,14 @@ BEGIN\n".
         return $sqlList;
     }
 
-    /*!
-     * \private
+    /**
+     * @access private
      */
     function generateDropTable( $table )
     {
         return "DROP TABLE $table;\n";
     }
 
-
-    /*!
-    \reimp
-    */
     function transformSchema( &$schema, /* bool */ $toLocal )
     {
         if ( !eZDBSchemaInterface::transformSchema( $schema, $toLocal ) )
@@ -647,25 +626,16 @@ BEGIN\n".
         return true;
     }
 
-    /*!
-     \reimp
-    */
     function escapeSQLString( $value )
     {
         return str_replace( "'", "''", $value );
     }
 
-    /*!
-     \reimp
-    */
     function schemaType()
     {
         return 'oracle';
     }
 
-    /*!
-     \reimp
-    */
     function schemaName()
     {
         return 'Oracle';
