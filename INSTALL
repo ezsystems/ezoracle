@@ -98,19 +98,23 @@ Installing eZ Oracle extension
    $ unzip ezoracle-extension-[ExtensionVersion].zip
 
 
-3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the 
+3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the
    folder root_of_ezpublish/settings/override. If this file does not exist, create it.
    Locate (or add) the block [ExtensionSettings] and add the line:
 
    ActiveExtensions[]=ezoracle
 
    If you run several sites using only one distribution and only some of the sites should use
-   the extension, make the changes in the override file of that siteaccess. 
+   the extension, make the changes in the override file of that siteaccess.
    E.g root_of_ezpublish/settings/siteaccess/news/site.ini.append(.php)
    But instead of using ActiveExtensions you must add these lines instead:
 
    [ExtensionSettings]
    ActiveAccessExtensions[]=ezoracle
+
+   Regenerate the extension autoload file, either via GUI (in case the  eZ Publish
+   site is already installed ) in the Admin interface, "Setup" tab, "Extensions" page,
+   or by executing the ezpgenerateautoloads.php file.
 
 
 Initializing Oracle database
