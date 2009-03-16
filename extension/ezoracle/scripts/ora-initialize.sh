@@ -449,6 +449,7 @@ EOF
     fi
     rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    ADMIN_INSTANCE="$TEST_INSTANCE"
 fi
 
 echo -n "Do you wish to create a new user in the Oracle system? [y|N] "
