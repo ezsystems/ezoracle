@@ -588,6 +588,7 @@ class eZOracleDB extends eZDBInterface
     */
     function beginQuery()
     {
+        $this->reportQuery( 'eZOracleDB', 'begin transaction (disable autocommit)', false, 0 );
         return true;
     }
 
@@ -604,6 +605,7 @@ class eZOracleDB extends eZDBInterface
     */
     function commitQuery()
     {
+        $this->reportQuery( 'eZOracleDB', 'commit transaction', false, 0 );
         return oci_commit( $this->DBConnection );
     }
 
@@ -612,6 +614,7 @@ class eZOracleDB extends eZDBInterface
     */
     function rollbackQuery()
     {
+        $this->reportQuery( 'eZOracleDB', 'rollback transaction', false, 0 );
         return oci_rollback( $this->DBConnection );
     }
 
