@@ -59,6 +59,21 @@ Installation
 Please read the INSTALL file for installation instructions.
 
 
+Upgrading
+=========
+Please read the online documentation at
+http://ez.no/doc/extensions/database/2_0/upgrading
+for detailed upgrade instructions from previous versions.
+
+
+Clustering
+==========
+Please read the online documentation at
+http://ez.no/doc/extensions/database/2_0/clustering
+for detailed information on setting up an eZ Publish clustering configuration
+using an Oracle database.
+
+
 Troubleshooting
 ===============
 
