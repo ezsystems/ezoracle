@@ -85,16 +85,8 @@ Installing eZ Oracle extension
 1. Copy or untar the package into the `extension' directory in the root of your
    eZ Publish installation.
 
-2. Unpack the files in the distribution. The command necessary depends on the
-   type of file you downloaded.
+2. Unpack the files in the distribution.
 
-   [tar.gz]:
-   $ tar -zxvf ezoracle-extension-[ExtensionVersion].tar.gz
-
-   [bz2]:
-   $ tar -jxvf ezoracle-extension-[ExtensionVersion].bz2
-
-   [zip]:
    $ unzip ezoracle-extension-[ExtensionVersion].zip
 
 
