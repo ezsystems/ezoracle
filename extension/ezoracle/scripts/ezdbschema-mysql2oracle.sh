@@ -24,10 +24,10 @@ ORA_INSTANCE=orcl
 ###############################################################################
 function check_rc()
 {
-	if [ $? != 0 ]; then
-		echo An error occured.
-		exit 1
-	fi
+    if [ $? != 0 ]; then
+        echo An error occured.
+        exit 1
+    fi
 }
 
 function is_ezpublish_dir
@@ -54,21 +54,21 @@ fi
 
 # dump schema
 bin/php/ezsqldumpschema.php -ddebug,warning,error \
-	--output-array --output-types=schema \
-	--type=ezmysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-schema.txt
+    --output-array --output-types=schema \
+    --type=ezmysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-schema.txt
 
 check_rc
 
 # dump data
 bin/php/ezsqldumpschema.php -ddebug,warning,error \
-	--output-array --output-types=data \
-	--type=ezmysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-data.txt
+    --output-array --output-types=data \
+    --type=ezmysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-data.txt
 
 check_rc
 
 # insert schema
 bin/php/ezsqlinsertschema.php -ddebug,warning,error \
-	--clean-existing --insert-types=schema \
+    --clean-existing --insert-types=schema \
     --type=oracle --user=$ORA_USER --password=$ORA_PASS \
     $MY_DB-schema.txt $ORA_INSTANCE
 
@@ -76,8 +76,8 @@ check_rc
 
 # insert data
 bin/php/ezsqlinsertschema.php -ddebug,warning,error \
-	--insert-types=data \
-	--type=oracle --user=$ORA_USER --password=$ORA_PASS \
+    --insert-types=data \
+    --type=oracle --user=$ORA_USER --password=$ORA_PASS \
     --schema-file=$MY_DB-schema.txt $MY_DB-data.txt $ORA_INSTANCE
 
 check_rc
