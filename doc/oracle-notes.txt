@@ -227,7 +227,7 @@ The first case is simple and can be solved in a DBMS-portable way like this:
 
     WHERE LENGTH(name) > 0
 or
-	WHERE (name != '' and name IS NOT NULL)
+    WHERE (name != '' and name IS NOT NULL)
 
 (these work at least on Oracle, MySQL, PostgreSQL. Null strings are filtered out together with empty ones)
 
@@ -240,7 +240,7 @@ The second case is more complex. However, you can use the following clause:
 
     WHERE desc || 'x' = 'x'
 or
-	WHERE (desc = '' OR desc IS NULL)
+    WHERE (desc = '' OR desc IS NULL)
 
 (this works on PostgreSQL as well. Null strings are selected together with empty ones)
 
