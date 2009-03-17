@@ -94,7 +94,7 @@ BEGIN
 END;
 /
 
-ALTER TABLE ezuservisit ADD login_count number(11) NOT NULL default 0;
+ALTER TABLE ezuservisit ADD login_count number(11) default 0 NOT NULL;
 
 CREATE INDEX ezuservisit_co_visit_count ON  ezuservisit ( current_visit_timestamp, login_count );
 
@@ -104,7 +104,7 @@ CREATE INDEX ezforgot_password_user ON ezforgot_password (user_id);
 ALTER TABLE ezorder_item modify ( vat_value number default 0 );
 
 CREATE TABLE ezurlalias_ml_incr (
-    id integer NOT NULL;
+    id integer NOT NULL
 );
 
 CREATE SEQUENCE s_ezurlalias_ml_incr;
