@@ -204,7 +204,7 @@ class eZOracleDB extends eZDBInterface
         {
             $stmtid = substr( md5( $sql ), 0, 30);
             $analysisStmt = oci_parse( $this->DBConnection, 'EXPLAIN PLAN SET STATEMENT_ID = \'' . $stmtid . '\' FOR ' . $sql );
-            $analysisResult = oci_execute( $analysisStmt );
+            $analysisResult = oci_execute( $analysisStmt, $this->Mode );
             if ( $analysisResult )
             {
                 // note: we might make the name of the explain plan table an ini variable...
@@ -217,7 +217,7 @@ class eZOracleDB extends eZDBInterface
                                                                   FROM plan_table
                                                                   START WITH id = 0 AND statement_id = '$stmtid'
                                                                   CONNECT BY PRIOR id = parent_id AND statement_id = '$stmtid'" );
-                $analysisResult = oci_execute( $analysisStmt );
+                $analysisResult = oci_execute( $analysisStmt, $this->Mode );
                 if ( $analysisResult )
                 {
                     $rows = array();
@@ -336,8 +336,11 @@ class eZOracleDB extends eZDBInterface
                 oci_bind_by_name( $statement, $bindVar['dbname'], $bindVar['value'], -1 );
             }
 
-            // we do not use $this->Mode here because we might have nested transactions
-            $exec = @oci_execute( $statement, OCI_DEFAULT );
+            // was: we do not use $this->Mode here because we might have nested transactions
+            // change was introduced in 1.8.2: we leave to parent class the handling
+            // of nested transactions, and always use $this->Mode to commit
+            // if needed
+            $exec = @oci_execute( $statement, $this->Mode );
             if ( !$exec )
             {
                 if ( $this->setError( $statement, 'query()' ) )
@@ -345,7 +348,7 @@ class eZOracleDB extends eZDBInterface
                     $result = false;
                 }
             }
-            else
+            /*else
             {
                 // small api change: we do not commit if exec fails and oci_error says no error.
                 // previously we did commit anyway...
@@ -357,7 +360,7 @@ class eZOracleDB extends eZDBInterface
                 {
                     oci_commit( $this->DBConnection );
                 }
-            }
+            }*/
 
             oci_free_statement( $statement );
 
@@ -586,6 +589,7 @@ class eZOracleDB extends eZDBInterface
     */
     function beginQuery()
     {
+        $this->Mode = OCI_DEFAULT;
         return true;
     }
 
@@ -598,11 +602,15 @@ class eZOracleDB extends eZDBInterface
     }
 
     /*!
+      We trust the eZDBInterface to count nested transactions and only call
+      this method when trans counter reaches 0
       \reimp
     */
     function commitQuery()
     {
-        return oci_commit( $this->DBConnection );
+        $result = oci_commit( $this->DBConnection );
+        $this->Mode = OCI_COMMIT_ON_SUCCESS;
+        return $result;
     }
 
     /*!
@@ -610,7 +618,9 @@ class eZOracleDB extends eZDBInterface
     */
     function rollbackQuery()
     {
-        return oci_rollback( $this->DBConnection );
+        $result = oci_rollback( $this->DBConnection );
+        $this->Mode = OCI_COMMIT_ON_SUCCESS;
+        return $result;
     }
 
     /*!
