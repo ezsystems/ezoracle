@@ -43,16 +43,16 @@ Upgrades to the development format will not be supported.</warning>
     </entry>
   </changelog>
   <version xmlns:ezversion="http://ez.no/ezpackage">
-    <number>2.0</number>
-    <release>beta1</release>
+    <number>2.0.1</number>
+    <release>stable</release>
   </version>
   <licence>eZ Propritary license.</licence>
-  <state>beta</state>
+  <state>stable</state>
   <dependencies xmlns:ezdependency="http://ez.no/ezpackage">
     <provides>
       <provide type="ezextension"
                name="ezoracle"
-               value="2.0" />
+               value="2.0.1" />
       <provide type="ezdb"
                name="handler"
                value="ezoracle" />
