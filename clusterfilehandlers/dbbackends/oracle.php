@@ -868,7 +868,7 @@ class eZDBFileHandlerOracleBackend
         {
             bt();
         }*/
-        die( $msg );
+        //die( $msg );
     }
 
     /**
