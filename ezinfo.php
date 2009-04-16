@@ -3,7 +3,7 @@
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ 0racle
 // SOFTWARE RELEASE: 1.7.x
-// COPYRIGHT NOTICE: Copyright (C) 1999-2008 eZ Systems AS
+// COPYRIGHT NOTICE: Copyright (C) 1999-2009 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
 //   This program is free software; you can redistribute it and/or
@@ -29,8 +29,8 @@ class ezoracleInfo
     function info()
     {
         return array( 'Name' => "eZ Oracle",
-                      'Version' => "1.7",
-                      'Copyright' => "Copyright (C) 1999-2008 eZ systems AS",
+                      'Version' => "1.7.1",
+                      'Copyright' => "Copyright (C) 1999-2009 eZ systems AS",
                       'License' => "GNU General Public License v2.0"
                      );
     }
