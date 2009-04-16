@@ -453,6 +453,7 @@ EOF
     fi
     rm "$PHP_TEST_SCRIPT"
     echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+    ADMIN_INSTANCE="$TEST_INSTANCE"
 fi
 
 echo -n "Do you wish to create a new user in the Oracle system? [y|N] "
@@ -576,13 +577,7 @@ GRANT CREATE    SESSION   TO $USER;
 GRANT CREATE    TABLE     TO $USER;
 GRANT CREATE    TRIGGER   TO $USER;
 GRANT CREATE    SEQUENCE  TO $USER;
-GRANT CREATE    PROCEDURE TO $USER;
-GRANT ALTER ANY TABLE     TO $USER;
-GRANT ALTER ANY TRIGGER   TO $USER;
-GRANT ALTER ANY SEQUENCE  TO $USER;
-GRANT DROP  ANY TABLE     TO $USER;
-GRANT DROP  ANY TRIGGER   TO $USER;
-GRANT DROP  ANY SEQUENCE  TO $USER;"
+GRANT CREATE    PROCEDURE TO $USER;"
     echo "The user will be created with the following SQLs"
     echo "$SQL"
     echo -n "Press [enter] to continue, [q+enter] to quit: "
