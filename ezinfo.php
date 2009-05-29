@@ -29,7 +29,7 @@ class ezoracleInfo
     static function info()
     {
         return array( 'Name' => "eZ Oracle",
-                      'Version' => "1.8.2",
+                      'Version' => "1.8.3",
                       'Copyright' => "Copyright (C) 1999-2009 eZ Systems AS",
                       'License' => "GNU General Public License v2.0"
                      );
