@@ -101,7 +101,8 @@ $columnsWithDefaultNullVal = array(
     'ezisbn_registrant_range.registrant_to',
     'ezsession.data',
     'ezcobj_state_group_language.description',
-    'ezcobj_state_language.description'
+    'ezcobj_state_language.description',
+    'ezsession.user_hash',
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
