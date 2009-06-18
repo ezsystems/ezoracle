@@ -204,7 +204,7 @@ class eZOracleDB extends eZDBInterface
         {
             $stmtid = substr( md5( $sql ), 0, 30);
             $analysisStmt = OCIParse( $this->DBConnection, 'EXPLAIN PLAN SET STATEMENT_ID = \'' . $stmtid . '\' FOR ' . $sql );
-            $analysisResult = OCIExecute( $analysisStmt );
+            $analysisResult = OCIExecute( $analysisStmt, $this->Mode );
             if ( $analysisResult )
             {
                 // note: we might make the name of the explain plan table an ini variable...
@@ -217,12 +217,12 @@ class eZOracleDB extends eZDBInterface
                                                                   FROM plan_table
                                                                   START WITH id = 0 AND statement_id = '$stmtid'
                                                                   CONNECT BY PRIOR id = parent_id AND statement_id = '$stmtid'" );
-                $analysisResult = OCIExecute( $analysisStmt );
+                $analysisResult = OCIExecute( $analysisStmt, $this->Mode );
                 if ( $analysisResult )
                 {
                     $rows = array();
-                    $numRows = OCIFetchStatement( $analysisStmt, $rows, 0, -1, OCI_ASSOC+OCI_FETCHSTATEMENT_BY_ROW );
-                    if ( $this->InputTextCodec )
+                    $numRows = OCIFetchStatement( $analysisStmt, $rows, 0, -1, OCI_ASSOC + OCI_FETCHSTATEMENT_BY_ROW );
+                    if ( $this->OutputTextCodec )
                     {
                         for ( $i = 0; $i < $numRows; ++$i )
                         {
@@ -336,51 +336,19 @@ class eZOracleDB extends eZDBInterface
                 OCIBindByName( $statement, $bindVar['dbname'], $bindVar['value'], -1 );
             }
 
-            // we do not use $this->Mode here because we might have nested transactions
-            $exec = @OCIExecute( $statement, OCI_DEFAULT );
+            // was: we do not use $this->Mode here because we might have nested transactions
+            // change was introduced in 1.7.1: we leave to parent class the handling
+            // of nested transactions, and always use $this->Mode to commit
+            // if needed
+            $exec = @OCIExecute( $statement, $this->Mode );
             if ( !$exec )
             {
                 if ( $this->setError( $statement, 'query()' ) )
                 {
                     $result = false;
                 }
-
-                /*$error = OCIError( $statement );
-                $hasError = true;
-                if ( !$error['code'] )
-                {
-                    $hasError = false;
-                }
-                if ( $hasError )
-                {
-                    $result = false;
-                    $this->ErrorMessage = $error['message'];
-                    $this->ErrorNumber = $error['code'];
-                    if ( isset( $error['sqltext'] ) )
-                        $sql = $error['sqltext'];
-                    $offset = false;
-                    if ( isset( $error['offset'] ) )
-                        $offset = $error['offset'];
-                    $offsetText = '';
-                    if ( $offset !== false )
-                    {
-                        $offsetText = ' at offset ' . $offset;
-                        $sqlOffsetText = "\n\nStart of error:\n" . substr( $sql, $offset );
-                    }
-                    eZDebug::writeError( "Error (" . $error['code'] . "): " . $error['message'] . "\n" .
-                                         "Failed query$offsetText:\n" .
-                                         $sql .
-                                         $sqlOffsetText, "eZOracleDB" );
-                    OCIFreeStatement( $statement );
-                    if ( $this->OutputSQL )
-                    {
-                        $this->endTimer();
-                    }
-                    eZDebug::accumulatorStop( 'oracle_query' );
-                    return $result;
-                }*/
             }
-            else
+            /*else
             {
                 // small api change: we do not commit if exec fails and ocierror says no error.
                 // previously we did commit anyway...
@@ -392,7 +360,7 @@ class eZOracleDB extends eZDBInterface
                 {
                     OCICommit( $this->DBConnection );
                 }
-            }
+            }*/
 
             OCIFreeStatement( $statement );
 
@@ -403,40 +371,6 @@ class eZOracleDB extends eZDBInterface
             {
                 $result = false;
             }
-            /*eZDebug::accumulatorStop( 'oracle_query' );
-            $error = OCIError( $this->DBConnection );
-            $hasError = true;
-            if ( !$error['code'] )
-            {
-                $hasError = false;
-            }
-            if ( $hasError )
-            {
-                $result = false;
-                $this->ErrorMessage = $error['message'];
-                $this->ErrorNumber = $error['code'];
-                if ( isset( $error['sqltext'] ) )
-                    $sql = $error['sqltext'];
-                $offset = false;
-                if ( isset( $error['offset'] ) )
-                    $offset = $error['offset'];
-                $offsetText = '';
-                if ( $offset !== false )
-                {
-                    $offsetText = ' at offset ' . $offset;
-                    $sqlOffsetText = "\n\nStart of error:\n" . substr( $sql, $offset );
-                }
-                eZDebug::writeError( "Error (" . $error['code'] . "): " . $error['message'] . "\n" .
-                                     "Failed query$offsetText:\n" .
-                                     $sql .
-                                     $sqlOffsetText, "eZOracleDB" );
-                if ( $this->OutputSQL )
-                {
-                    $this->endTimer();
-                }
-                OCIFreeStatement( $statement );
-                return $result;
-            }*/
         }
 
         if ( $this->OutputSQL )
@@ -492,9 +426,9 @@ class eZOracleDB extends eZDBInterface
             {
                 $offset = $params["offset"];
             }
-            if ( isset( $params["column"] ) and is_numeric( $params["column"] ) )
+            if ( isset( $params["column"] ) and ( is_numeric( $params["column"] ) or is_string( $params["column"] ) ) )
             {
-                $column = $params["column"];
+                $column = strtoupper( $params["column"] );
             }
         }
         eZDebug::accumulatorStart( 'oracle_query', 'oracle_total', 'Oracle_queries' );
@@ -574,16 +508,23 @@ class eZOracleDB extends eZDBInterface
 
         if ( $column !== false )
         {
-            $rowCount = OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
+            if ( is_numeric( $column ) )
+            {
+                $rowCount = OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_NUM );
+            }
+            else
+            {
+                $rowCount = OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN + OCI_ASSOC );
+            }
             // optimize to our best the special case: 1 row
 			if ( $rowCount == 1 )
 			{
-				$resultArray[$offset] = $this->InputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
+				$resultArray[$offset] = $this->OutputTextCodec ? $this->OutputTextCodec->convertString( $results[$column][0] ) : $results[$column][0];
 			}
 			else if ( $rowCount > 0 )
             {
                 $results = $results[$column];
-                if ( $this->InputTextCodec )
+                if ( $this->OutputTextCodec )
                 {
                     array_walk( $results, array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
                 }
@@ -596,7 +537,7 @@ class eZOracleDB extends eZDBInterface
             // optimize to our best the special case: 1 row
 			if ( $rowCount == 1 )
 			{
-                if ( $this->InputTextCodec )
+                if ( $this->OutputTextCodec )
                 {
                     array_walk( $results[0], array( 'eZOracleDB', 'arrayConvertStrings' ), $this->OutputTextCodec );
                 }
@@ -605,85 +546,20 @@ class eZOracleDB extends eZDBInterface
             else if ( $rowCount > 0 )
             {
                 $keys = array_keys( array_change_key_case( $results[0] ) );
-                array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
+                // this would be slightly faster, but we have to work around a php bug
+                // with recursive array_walk present up to 5.1 (eg. on red hat 5.2)
+                //array_walk( $results, array( 'eZOracleDB', 'arrayChangeKeys' ), array( $this->OutputTextCodec, $keys ) );
+                $arr = array( $this->OutputTextCodec, $keys );
+                foreach( $results as  $key => &$val )
+                {
+                    self::arrayChangeKeys( $val, $key, $arr );
+                }
                 $resultArray = $offset == 0 ? $results : array_combine( range( $offset, $offset + $rowCount - 1 ), $results );
             }
         }
 
         eZDebug::accumulatorStop( 'looping_oracle_results' );
         OCIFreeStatement( $statement );
-        /*$resultArray = array();
-        $row = array();
-
-        $results = array();
-
-        eZDebug::accumulatorStart( 'looping_oracle_results', 'oracle_total', 'Oracle looping results' );
-        if ( $limit != -1 )
-        {
-            if ( $column !== false )
-            {
-                OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_NUM );
-                $rowCount = count( $results );
-                for ( $i = 0; $i < $rowCount; ++$i )
-                {
-                    $row =& $results[$i];
-                    if ( $this->InputTextCodec )
-                        $resultArray[$i + $offset] = $this->OutputTextCodec->convertString( $row[$column] );
-                    else
-                        $resultArray[$i + $offset] = $row[$column];
-                }
-            }
-            else
-            {
-                OCIFetchStatement( $statement, $results, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC );
-                $rowCount = count( $results );
-                for ( $i = 0; $i < $rowCount; ++$i )
-                {
-                    $row =& $results[$i];
-                    $newRow = array();
-                    foreach ( $row as $key => $value )
-                    {
-                        if ( $this->InputTextCodec )
-                            $newRow[strtolower( $key )] = $this->OutputTextCodec->convertString( $value );
-                        else
-                            $newRow[strtolower( $key )] = $value;
-                    }
-                    $resultArray[$i + $offset] = $newRow;
-                }
-            }
-        }
-        else
-        {
-            if ( $column !== false )
-            {
-                while ( OCIFetchInto( $statement, $row, OCI_NUM + OCI_RETURN_LOBS + OCI_RETURN_NULLS ) )
-                {
-                    if ( $this->InputTextCodec )
-                        $resultArray[] = $this->OutputTextCodec->convertString( $row[$column] );
-                    else
-                        $resultArray[] = $row[$column];
-                }
-            }
-            else
-            {
-                while ( OCIFetchInto( $statement, $row, OCI_ASSOC + OCI_RETURN_LOBS + OCI_RETURN_NULLS ) )
-                {
-                    $newRow = array();
-                    foreach ( $row as $key => $value )
-                    {
-                        if ( $this->InputTextCodec )
-                            $newRow[strtolower( $key )] = $this->OutputTextCodec->convertString( $value );
-                        else
-                            $newRow[strtolower( $key )] = $value;
-                    }
-                    $resultArray[] = $newRow;
-                }
-            }
-        }
-        eZDebug::accumulatorStop( 'looping_oracle_results' );
-        OCIFreeStatement( $statement );
-        unset( $statement );
-        unset( $row );*/
 
         return $resultArray;
     }
@@ -712,6 +588,7 @@ class eZOracleDB extends eZDBInterface
     */
     function beginQuery()
     {
+        $this->Mode = OCI_DEFAULT;
         return true;
     }
 
@@ -724,11 +601,15 @@ class eZOracleDB extends eZDBInterface
     }
 
     /*!
+       We trust the eZDBInterface to count nested transactions and only call
+       this method when trans counter reaches 0
       \reimp
     */
     function commitQuery()
     {
-        return OCICommit( $this->DBConnection );
+        $result = OCICommit( $this->DBConnection );
+        $this->Mode = OCI_COMMIT_ON_SUCCESS;
+        return $result;
     }
 
     /*!
@@ -736,7 +617,9 @@ class eZOracleDB extends eZDBInterface
     */
     function rollbackQuery()
     {
-        return OCIRollback( $this->DBConnection );
+        $result = OCIRollback( $this->DBConnection );
+        $this->Mode = OCI_COMMIT_ON_SUCCESS;
+        return $result;
     }
 
     /*!
@@ -748,6 +631,11 @@ class eZOracleDB extends eZDBInterface
         if ( $this->isConnected() )
         {
             $sequence = eregi_replace( '^ez', 's_', $table );
+            if ( $sequence == $table )
+            {
+                // table name does not start with 'ez': an extension, most likely
+                $sequence = substr( 'se_' . $seqName, 0, 30 );
+            }
             $sql = "SELECT $sequence.currval from DUAL";
             $res =& $this->arrayQuery( $sql );
             $id = $res[0]["currval"];
@@ -1056,7 +944,6 @@ class eZOracleDB extends eZDBInterface
         $this->query( $dropTableQuery, $server );
     }
 
-
     /*!
      Sets Oracle sequence values to the maximum values used in the corresponding columns.
     */
@@ -1156,7 +1043,6 @@ class eZOracleDB extends eZDBInterface
 
         return $tableName;
     }
-
 
     /*!
       Checks if the requested character set matches the one used in the database.
