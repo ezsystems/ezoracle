@@ -636,7 +636,7 @@ class eZOracleDB extends eZDBInterface
             if ( $sequence == $table )
             {
                 // table name does not start with 'ez': an extension, most likely
-                $sequence = substr( 'se_' . $seqName, 0, 30 );
+                $sequence = substr( 'se_' . $sequence, 0, 30 );
             }
             $sql = "SELECT $sequence.currval from DUAL";
             $res = $this->arrayQuery( $sql );
