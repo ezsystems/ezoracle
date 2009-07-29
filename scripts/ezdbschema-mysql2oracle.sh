@@ -38,11 +38,11 @@ function is_ezpublish_dir
 
     if grep -q 'EZ_SDK_VERSION_MAJOR' lib/version.php 2>/dev/null &&
        grep -q 'EZ_SDK_VERSION_MINOR' lib/version.php 2>/dev/null &&
-       grep -q 'EZ_SDK_VERSION_STATE' lib/version.php 2>/dev/null 
+       grep -q 'EZ_SDK_VERSION_STATE' lib/version.php 2>/dev/null
     then
         return 0
     fi
-    
+
     return 1
 }
 ###############################################################################

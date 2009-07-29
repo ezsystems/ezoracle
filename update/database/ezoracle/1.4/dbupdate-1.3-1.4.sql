@@ -3,7 +3,7 @@ ALTER TABLE ezworkflow_event MODIFY (description VARCHAR2(50)  DEFAULT '' NULL);
 ALTER TABLE ezcollab_group   MODIFY (path_string VARCHAR2(255) DEFAULT '' NULL);
 ALTER TABLE ezcollab_profile ADD          (data_text1_tmp CLOB NULL);
 UPDATE      ezcollab_profile SET           data_text1_tmp=data_text1;
-ALTER TABLE ezcollab_profile DROP COLUMN   data_text1;   
+ALTER TABLE ezcollab_profile DROP COLUMN   data_text1;
 ALTER TABLE ezcollab_profile RENAME COLUMN data_text1_tmp TO data_text1;
 ALTER TABLE ezcollab_item    MODIFY (data_text1 NULL);
 ALTER TABLE ezcollab_item    MODIFY (data_text2 NULL);

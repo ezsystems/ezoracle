@@ -802,7 +802,7 @@ else
         read question
         if [ "$question" == "q" ]; then
             exit
-        fi    
+        fi
     fi
 fi
 
