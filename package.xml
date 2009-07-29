@@ -9,7 +9,7 @@ Upgrades to the development format will not be supported.</warning>
   <name>ezoracle</name>
   <summary>eZ Oracle extension</summary>
   <description>This extension adds support for the Oracle database to eZ Publish by plugging into the database framework. After it is installed you can connect to any Oracle database that fits the minimum requirements.</description>
-  <ezpublish xmlns:ezpublish="http://ez.no/ezpublish"> 
+  <ezpublish xmlns:ezpublish="http://ez.no/ezpublish">
     <version>4.1.0</version>
     <named-version>4.1</named-version>
   </ezpublish>
@@ -35,7 +35,7 @@ Upgrades to the development format will not be supported.</warning>
               name="FAQ" />
   </documents>
   <changelog xmlns:ezchangelog="http://ez.no/ezpackage">
-    <entry timestamp="1086168206"  
+    <entry timestamp="1086168206"
            person="eZ Systems"
            email="info@ez.no"
            release="1">

@@ -1,4 +1,4 @@
-  
+
        SOME ORACLE-SPECIFIC NOTES FOR eZ Publish DEVELOPERS
 
 Short Oracle introduction
@@ -173,7 +173,7 @@ ORDER BY name
 
 Oracle SQL syntax does not support limiting number of records returned by a query
 with LIMIT and OFFSET clauses.
-So, if you need this, you can either use eZPersistentObject interface or call 
+So, if you need this, you can either use eZPersistentObject interface or call
 eZDBInterface::arrayQuery() method like this:
 
     $rows = $db->arrayQuery( 'SELECT * FROM ezfoo',
