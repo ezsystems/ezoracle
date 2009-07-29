@@ -191,7 +191,7 @@ Initializing Oracle database
 
 # Here user "system" (DBA) has password "sys".
 #################################################################
-$ cat <<EOF | sqlplus system/sys@orcl 
+$ cat <<EOF | sqlplus system/sys@orcl
 CREATE USER scott IDENTIFIED BY tiger QUOTA UNLIMITED ON SYSTEM;
 GRANT CREATE    SESSION   TO scott;
 GRANT CREATE    TABLE     TO scott;
