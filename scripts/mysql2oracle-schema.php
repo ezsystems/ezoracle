@@ -240,12 +240,12 @@ function getOracleType( $table, /*const*/ &$col )
         return $colTypeOverride;
 
     $rslt = $col['Type'];
-    $rslt = ereg_replace( 'varchar', 'VARCHAR2', $rslt );
-    $rslt = ereg_replace( 'char', 'CHAR', $rslt );
-    $rslt = ereg_replace( '(tiny|small|medium|big)?int(eger)?(\([0-9]+\))?( +unsigned)?', 'INTEGER', $rslt );
-    $rslt = ereg_replace( '^(medium|long)?text$', 'CLOB', $rslt );
-    $rslt = ereg_replace( '^double$', 'DOUBLE PRECISION', $rslt );
-    $rslt = ereg_replace( '^float$', 'FLOAT', $rslt );
+    $rslt = preg_replace( '/varchar/', 'VARCHAR2', $rslt );
+    $rslt = preg_replace( '/char/', 'CHAR', $rslt );
+    $rslt = preg_replace( '/(tiny|small|medium|big)?int(eger)?(\([0-9]+\))?( +unsigned)?/', 'INTEGER', $rslt );
+    $rslt = preg_replace( '/^(medium|long)?text$/', 'CLOB', $rslt );
+    $rslt = preg_replace( '/^double$/', 'DOUBLE PRECISION', $rslt );
+    $rslt = preg_replace( '/^float$/', 'FLOAT', $rslt );
     return $rslt;
 }
 
@@ -406,7 +406,7 @@ function dumpAutoIcrements( &$autoIncrementColumns, &$seqs, &$triggers, $drop )
         /* eZ Publish-specific hack for sequnce name to be always <= 30 characters
            (no longer that table name, at least)
          */
-        $seqname = eregi_replace( '^ez', 's_', $table );
+        $seqname = preg_replace( '/^ez/i', 's_', $table );
         if ( $seqname == $table )
         {
             // table name does not start with 'ez': an extension, most likely

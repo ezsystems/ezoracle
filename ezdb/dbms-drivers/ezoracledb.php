@@ -622,7 +622,7 @@ class eZOracleDB extends eZDBInterface
         $id = null;
         if ( $this->isConnected() )
         {
-            $sequence = eregi_replace( '^ez', 's_', $table );
+            $sequence = preg_replace( '/^ez/i', 's_', $table );
             if ( $sequence == $table )
             {
                 // table name does not start with 'ez': an extension, most likely

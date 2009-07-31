@@ -358,13 +358,13 @@ class eZOracleSchema extends eZDBSchemaInterface
     function getOracleType( $mysqlType )
     {
         $rslt = $mysqlType;
-        $rslt = ereg_replace( 'varchar', 'VARCHAR2', $rslt );
-        $rslt = ereg_replace( 'char', 'CHAR', $rslt );
-        $rslt = ereg_replace( 'int(eger)?(\([0-9]+\))?( +unsigned)?', 'INTEGER', $rslt );
-        $rslt = ereg_replace( '^(medium|long)?text$', 'CLOB', $rslt );
-        $rslt = ereg_replace( '^double$', 'DOUBLE PRECISION', $rslt );
-        $rslt = ereg_replace( '^float$', 'FLOAT', $rslt );
-        $rslt = ereg_replace( 'decimal', 'NUMBER', $rslt );
+        $rslt = preg_replace( '/varchar/', 'VARCHAR2', $rslt );
+        $rslt = preg_replace( '/char/', 'CHAR', $rslt );
+        $rslt = preg_replace( '/int(eger)?(\([0-9]+\))?( +unsigned)?/', 'INTEGER', $rslt );
+        $rslt = preg_replace( '/^(medium|long)?text$/', 'CLOB', $rslt );
+        $rslt = preg_replace( '/^double$/', 'DOUBLE PRECISION', $rslt );
+        $rslt = preg_replace( '/^float$/', 'FLOAT', $rslt );
+        $rslt = preg_replace( '/decimal/', 'NUMBER', $rslt );
         return $rslt;
     }
 
