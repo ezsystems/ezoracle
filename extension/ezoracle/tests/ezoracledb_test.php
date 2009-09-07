@@ -1,8 +1,10 @@
 <?php
 /**
- * @todo test using alphanumeric col name in arrayquer
- * @todo test arrayquery with all combinations of offset, limit
+ * @todo move the relationlist/relationcount tests out of this into a generic db testsuite
+ * @todo test using alphanumeric col name in arrayquery
+ * @todo test arrayquery with all combinations of offset, limit (in generic db testsuite)
  * @todo test arrayquery with and without offset, limit and enabled driver charset conversion
+ * @todo test fix for issue #015436 (in generic db testsuite )
  */
 
 class eZOracleDBTest extends ezpDatabaseTestCase
