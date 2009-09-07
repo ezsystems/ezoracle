@@ -329,7 +329,20 @@ class eZOracleSchema extends eZDBSchemaInterface
             } break;
         }
 
-        $sql .= '( ' . join ( ', ', $def['fields'] ) . ' )';
+        //$sql .= '( ' . join ( ', ', $def['fields'] ) . ' )';
+        $fieldNames = array();
+        foreach ( $def['fields'] as $fieldDef )
+        {
+            if ( is_array( $fieldDef ) )
+            {
+                $fieldNames[] = $fieldDef['name'];
+            }
+            else
+            {
+                $fieldNames[] = $fieldDef;
+            }
+        }
+        $sql .= '( ' . join ( ', ', $fieldNames ) . ' )';
 
         return $sql . ( $withClosure ? ";\n" : '' );
     }
@@ -543,9 +556,15 @@ BEGIN\n".
         foreach ( $table_def['indexes'] as $index_name => $index_def )
         {
             if ( ( $index_def['type'] == 'primary' )  )
-                $sqlFields[] = "  PRIMARY KEY ( " . implode( ',', $index_def['fields'] ) . " )";
+            {
+                //$sqlFields[] = "  PRIMARY KEY ( " . implode( ',', $index_def['fields'] ) . " )";
+                // NB: it might be better to add a param to generateAddIndexSql rather than rely on its output being fixed...
+                $sqlFields[] = str_replace( 'ALTER TABLE  ADD', ' ', eZOracleSchema::generateAddIndexSql( '', $index_def, $index_def, $params, false ) );
+            }
             else
+            {
                 $sqlList['indexes'][] = eZOracleSchema::generateAddIndexSql( $table, $index_name, $index_def, $params, $withClosure );
+            }
         }
 
         // finish dumping table schema
@@ -640,5 +659,129 @@ BEGIN\n".
     {
         return 'Oracle';
     }
+
+    /**
+       An array with keywords that are reserved by Oracle.
+       From: http://oracle.su/appdev.111/b31231/appb.htm
+       @return array
+    */
+    static function reservedKeywordList()
+    {
+        return array(
+            'access ',
+            'else ',
+            'modify ',
+            'start',
+            'add ',
+            'exclusive ',
+            'noaudit ',
+            'select',
+            'all ',
+            'exists ',
+            'nocompress ',
+            'session',
+            'alter ',
+            'file ',
+            'not ',
+            'set',
+            'and ',
+            'float ',
+            'notfound ',
+            'share',
+            'any ',
+            'for ',
+            'nowait ',
+            'size',
+            'arraylen ',
+            'from ',
+            'null ',
+            'smallint',
+            'as ',
+            'grant ',
+            'number ',
+            'sqlbuf',
+            'asc ',
+            'group ',
+            'of ',
+            'successful',
+            'audit ',
+            'having ',
+            'offline ',
+            'synonym',
+            'between ',
+            'identified ',
+            'on ',
+            'sysdate',
+            'by ',
+            'immediate ',
+            'online ',
+            'table',
+            'char ',
+            'in ',
+            'option ',
+            'then',
+            'check ',
+            'increment ',
+            'or ',
+            'to',
+            'cluster ',
+            'index ',
+            'order ',
+            'trigger',
+            'column ',
+            'initial ',
+            'pctfree ',
+            'uid',
+            'comment ',
+            'insert ',
+            'prior ',
+            'union',
+            'compress ',
+            'integer ',
+            'privileges ',
+            'unique',
+            'connect ',
+            'intersect ',
+            'public ',
+            'update',
+            'create ',
+            'into ',
+            'raw ',
+            'user',
+            'current ',
+            'is ',
+            'rename ',
+            'validate',
+            'date ',
+            'level ',
+            'resource ',
+            'values',
+            'decimal ',
+            'like ',
+            'revoke ',
+            'varchar',
+            'default ',
+            'lock ',
+            'row ',
+            'varchar2',
+            'delete ',
+            'long ',
+            'rowid ',
+            'view',
+            'desc ',
+            'maxextents ',
+            'rowlabel ',
+            'whenever',
+            'distinct ',
+            'minus ',
+            'rownum ',
+            'where',
+            'drop ',
+            'mode ',
+            'rows ',
+            'with'
+        );
+    }
+
 }
 ?>
