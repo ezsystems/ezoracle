@@ -339,7 +339,20 @@ class eZOracleSchema extends eZDBSchemaInterface
             } break;
         }
 
-        $sql .= '( ' . join ( ', ', $def['fields'] ) . ' )';
+        //$sql .= '( ' . join ( ', ', $def['fields'] ) . ' )';
+        $fieldNames = array();
+        foreach ( $def['fields'] as $fieldDef )
+        {
+            if ( is_array( $fieldDef ) )
+            {
+                $fieldNames[] = $fieldDef['name'];
+            }
+            else
+            {
+                $fieldNames[] = $fieldDef;
+            }
+        }
+        $sql .= '( ' . join ( ', ', $fieldNames ) . ' )';
 
         return $sql . ( $withClosure ? ";\n" : '' );
     }
@@ -560,9 +573,15 @@ BEGIN\n".
         foreach ( $table_def['indexes'] as $index_name => $index_def )
         {
             if ( ( $index_def['type'] == 'primary' )  )
-                $sqlFields[] = "  PRIMARY KEY ( " . implode( ',', $index_def['fields'] ) . " )";
+            {
+                //$sqlFields[] = "  PRIMARY KEY ( " . implode( ',', $index_def['fields'] ) . " )";
+                // NB: it might be better to add a param to generateAddIndexSql rather than rely on its output being fixed...
+                $sqlFields[] = str_replace( 'ALTER TABLE  ADD', ' ', eZOracleSchema::generateAddIndexSql( '', $index_def, $index_def, $params, false ) );
+            }
             else
+            {
                 $sqlList['indexes'][] = eZOracleSchema::generateAddIndexSql( $table, $index_name, $index_def, $params, $withClosure );
+            }
         }
 
         // finish dumping table schema
@@ -670,5 +689,6 @@ BEGIN\n".
     {
         return 'Oracle';
     }
+
 }
 ?>
