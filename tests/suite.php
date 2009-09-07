@@ -16,7 +16,7 @@ class ezoracleTestSuite extends ezpTestSuite
         parent::__construct();
         $this->setName( "eZ Oracle Extension Test Suite" );
 
-        $this->addTestSuite( 'eZPostgreSQLDBTest' );
+        $this->addTestSuite( 'eZOracleDBTest' );
     }
 
     public static function suite()
