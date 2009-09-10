@@ -284,7 +284,7 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
     }
     else // numeric column
     {
-        if( "$col['Default']" !== "" )
+        if( "{$col['Default']}" !== "" )
             $colDef .= " DEFAULT ". $col['Default'];  // strings should be enclosed in quotes
         if ( $col['Null'] !== 'YES' )
             $colDef .= ' NOT NULL';
