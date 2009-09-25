@@ -1,0 +1,8 @@
+eZ Oracle extension 2.0 cluster README
+
+eZ Publish 4.1 and 4.2 cluster mode is not supported with the current release of the eZ Oracle extension.
+
+It will be be available again in the next version of the extension.
+
+Current users of eZ Publish that run on Oracle+eZ cluster configuration are advised to
+either postpone the upgrade to eZ Publish 4.1 / 4.2 or move to a non-clustered configuration.
