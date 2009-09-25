@@ -43,7 +43,7 @@ Upgrades to the development format will not be supported.</warning>
     </entry>
   </changelog>
   <version xmlns:ezversion="http://ez.no/ezpackage">
-    <number>2.0.1</number>
+    <number>2.0.2</number>
     <release>stable</release>
   </version>
   <licence>eZ Propritary license.</licence>
@@ -52,7 +52,7 @@ Upgrades to the development format will not be supported.</warning>
     <provides>
       <provide type="ezextension"
                name="ezoracle"
-               value="2.0.1" />
+               value="2.0.2" />
       <provide type="ezdb"
                name="handler"
                value="ezoracle" />
