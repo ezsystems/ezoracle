@@ -1,4 +1,4 @@
-eZ Oracle extension [ExtensionVersion] INSTALL
+eZ Oracle extension 2.0.2 INSTALL
 
 Introduction
 ============
@@ -13,7 +13,7 @@ Introduction
 2. License
    -------
 
-   This software is licensed under the [EXTENSION_LICENSE]. The complete
+   This software is licensed under the GNU General Public License v2.0. The complete
    license agreement is included in the LICENSE file. For more information
    or questions please contact info@ez.no
 
@@ -24,7 +24,7 @@ Introduction
 
    o  eZ Publish version:
 
-      Make sure you use eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher, earlier
+      Make sure you use eZ Publish version 4.1 or 4.2, earlier
       versions did not take Oracle properly into account and will not work
       correctly.
 
@@ -57,7 +57,7 @@ You can download a version of eZ Publish from ez.no, you will find the
 various versions at:
 http://ez.no/download/ez_publish/ez_publish_4_stable_releases
 
-NOTE: You will require eZ Publish [EXTENSION_PUBLISH_VERSION] or higher
+NOTE: You will require eZ Publish 4.1 or 4.2
 
 Information on the installation of eZ Publish can be found at:
 http://ez.no/doc/ez_publish/technical_manual
@@ -87,7 +87,7 @@ Installing eZ Oracle extension
 
 2. Unpack the files in the distribution.
 
-   $ unzip ezoracle-extension-[ExtensionVersion].zip
+   $ unzip ezoracle-extension-2.0.2.zip
 
 
 3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the
