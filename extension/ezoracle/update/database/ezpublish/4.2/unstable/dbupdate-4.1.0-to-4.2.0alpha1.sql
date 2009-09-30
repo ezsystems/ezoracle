@@ -19,4 +19,7 @@ ALTER TABLE ezworkflow_event MODIFY (
 -- END: from 4.1.1
 
 -- START: from 4.1.0
+CREATE INDEX policy_id ON ezpolicy_limitation ( policy_id );
+CREATE INDEX wid_version_placement ON ezworkflow_event ( workflow_id, version, placement );
+CREATE INDEX hash_key ON ezuser_accountkey ( hash_key );
 -- END: from 4.1.0
