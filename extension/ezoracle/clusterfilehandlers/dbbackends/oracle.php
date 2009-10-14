@@ -472,9 +472,9 @@ class eZDBFileHandlerOracleBackend
         // Create temporary file.
         /// @todo improve unique name generation: $_SERVER["SERVER_ADDR"] is not avail on cli sapi
         if ( strrpos( $filePath, '.' ) > 0 )
-            $tmpFilePath = substr_replace( $filePath, '.' . $_SERVER["SERVER_ADDR"] . '.' . getmypid() . '.' . microtime(true) . '.tmp', strrpos( $filePath, '.' ), 0  );
+            $tmpFilePath = substr_replace( $filePath, '.' . getmypid() . '.tmp', strrpos( $filePath, '.' ), 0  );
         else
-            $tmpFilePath = $filePath . '.' . $_SERVER["SERVER_ADDR"] . '.' . getmypid(). '.' . microtime(true) . '.tmp';
+            $tmpFilePath = $filePath . '.' . getmypid(). '.tmp';
 //        $tmpFilePath = $filePath.getmypid().'tmp';
         $this->__mkdir_p( dirname( $tmpFilePath ) );
 
