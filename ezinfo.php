@@ -2,7 +2,7 @@
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ 0racle
-// SOFTWARE RELEASE: 2.0.x
+// SOFTWARE RELEASE: 2.1.x
 // COPYRIGHT NOTICE: Copyright (C) 1999-2009 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
@@ -29,7 +29,7 @@ class ezoracleInfo
     static function info()
     {
         return array( 'Name' => "eZ Oracle",
-                      'Version' => "2.0.2",
+                      'Version' => "2.1.0",
                       'Copyright' => "Copyright (C) 1999-2009 eZ Systems AS",
                       'License' => "GNU General Public License v2.0"
                      );
