@@ -10,7 +10,7 @@ Upgrades to the development format will not be supported.</warning>
   <summary>eZ Oracle extension</summary>
   <description>This extension adds support for the Oracle database to eZ Publish by plugging into the database framework. After it is installed you can connect to any Oracle database that fits the minimum requirements.</description>
   <ezpublish xmlns:ezpublish="http://ez.no/ezpublish">
-    <version>4.0.1</version>
+    <version>4.0.2</version>
     <named-version>4.0</named-version>
   </ezpublish>
   <maintainers xmlns:ezmaintainer="http://ez.no/ezpackage">
@@ -43,7 +43,7 @@ Upgrades to the development format will not be supported.</warning>
     </entry>
   </changelog>
   <version xmlns:ezversion="http://ez.no/ezpackage">
-    <number>1.8.2</number>
+    <number>1.8.3</number>
     <release>stable</release>
   </version>
   <licence>eZ Propritary license.</licence>
@@ -52,7 +52,7 @@ Upgrades to the development format will not be supported.</warning>
     <provides>
       <provide type="ezextension"
                name="ezoracle"
-               value="1.8.2" />
+               value="1.8.3" />
       <provide type="ezdb"
                name="handler"
                value="ezoracle" />
@@ -63,7 +63,7 @@ Upgrades to the development format will not be supported.</warning>
     <requires>
       <require type="ezpublish"
                name="version"
-               value="4.0.1" />
+               value="4.0.2" />
     </requires>
     <obsoletes />
     <conflicts />
