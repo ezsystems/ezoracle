@@ -1331,7 +1331,7 @@ class eZDBFileHandlerOracleBackend
             $errno = $this->error['code'];
             if ( $errno != 1 )
             {
-                eZDebug::writeError( "Unexpected error #$errno when trying to start cache generation on $filePath (".mysql_error().")", __METHOD__ );
+                eZDebug::writeError( "Unexpected error #$errno when trying to start cache generation on $filePath ($errno)", __METHOD__ );
                 eZDebug::writeDebug( $query, '$query' );
 
                 // @todo Make this an actual error, maybe an exception
@@ -1354,7 +1354,7 @@ class eZDBFileHandlerOracleBackend
                     $previousMTime = $row[0];
 
                     eZDebugSetting::writeDebug( 'kernel-clustering', "$filePath generation has timedout (timeout={$this->dbparams['cache_generation_timeout']}), taking over", __METHOD__ );
-                    $updateQuery = "UPDATE " . TABLE_METADATA . " SET mtime = {$mtime} WHERE name_hash = {$nameHash} AND mtime = {$previousMTime}";
+                    $updateQuery = "UPDATE " . self::TABLE_METADATA . " SET mtime = {$mtime} WHERE name_hash = {$nameHash} AND mtime = {$previousMTime}";
                     eZDebug::writeDebug( $updateQuery, '$updateQuery' );
 
                     // we run the query manually since the default _query won't
@@ -1369,7 +1369,8 @@ class eZDBFileHandlerOracleBackend
                     else
                     {
                         // @todo This would require an actual error handling
-                        eZDebug::writeError( "An error occured taking over timedout generating cache file $generatingFilePath (".mysql_error().")", __METHOD__ );
+                        $errno = $this->error['code'];
+                        eZDebug::writeError( "An error occured taking over timedout generating cache file $generatingFilePath ($errno)", __METHOD__ );
                         return array( 'result' => 'error' );
                     }
                 }
@@ -1426,19 +1427,19 @@ class eZDBFileHandlerOracleBackend
             }
             //$generatingMetaData = mysql_fetch_assoc( $res );
 
-            $res = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash FOR UPDATE", $fname, false, array(), eZDBFileHandlerOracleBackend::RETURN_COUNT );
-
-            if ( $res === 1 )
+            // we cannot use RETURN COUNT here, as it does not work with selects
+            $res = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath FOR UPDATE", $fname, false, array(), eZDBFileHandlerOracleBackend::RETURN_DATA );
+            if ( $res && count( $res ) === 1 )
             {
                 // the original file exists: we remove it before updating the .generating file
-                if ( !$this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath, WHERE name_hash=$nameHash", $fname, true ) )
+                if ( !$this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath", $fname, true ) )
                 {
                     $this->_rollback( $fname );
                     return false;
                 }
             }
 
-            if ( !$this->_query( "UPDATE " . self::TABLE_METADATA . " SET name = '" . $this->_escapeString( $filePath ) . "', name_hash=$newPath, WHERE name_hash=$nameHash", $fname, true ) )
+            if ( !$this->_query( "UPDATE " . self::TABLE_METADATA . " SET name = '" . $this->_escapeString( $filePath ) . "', name_hash=$newPath WHERE name_hash=$nameHash", $fname, true ) )
             {
                 $this->_rollback( $fname );
                 return false;
@@ -1465,7 +1466,7 @@ class eZDBFileHandlerOracleBackend
         eZDebugSetting::writeDebug( 'kernel-clustering', "Checking for timeout of '$generatingFilePath' with mtime $generatingFileMtime", $fname );
 
         // reporting
-        eZDebug::accumulatorStart( 'mysql_cluster_query', 'mysql_cluster_total', 'Mysql_cluster_queries' );
+        eZDebug::accumulatorStart( 'oracle_cluster_query', 'oracle_cluster_total', 'Oracle_cluster_queries' );
         $time = microtime( true );
 
         $nameHash = $this->_md5( $generatingFilePath );
