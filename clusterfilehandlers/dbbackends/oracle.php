@@ -1239,7 +1239,7 @@ class eZDBFileHandlerOracleBackend
      */
     function _md5( $value )
     {
-        return "md5_digest('" . str_replace ("'", "''", $value ) . "')";
+        return "'" . md5( $value ) . "'";
     }
 
     /**
@@ -1271,7 +1271,7 @@ class eZDBFileHandlerOracleBackend
      */
     function _escapeString( $str )
     {
-        return str_replace ("'", "''", $str );
+        return str_replace ( "'", "''", $str );
     }
 
     /**
@@ -1313,7 +1313,7 @@ class eZDBFileHandlerOracleBackend
     {
         $fname = "_startCacheGeneration( {$filePath} )";
 
-        $nameHash = $this->_md5( $generatingFilePath );
+        $nameHash = "'" . md5( $generatingFilePath ) . "'";
         $mtime = time();
 
         $insertData = array( 'name' => "'" . $this->_escapeString( $generatingFilePath ) . "'",
@@ -1398,7 +1398,7 @@ class eZDBFileHandlerOracleBackend
 
         eZDebugSetting::writeDebug( 'kernel-clustering', $filePath, __METHOD__ );
 
-        $nameHash = $this->_md5( $generatingFilePath );
+        $nameHash = "'" . md5( $generatingFilePath ) . "'";
 
         // if no rename is asked, the .generating file is just removed
         if ( $rename === false )
@@ -1417,7 +1417,7 @@ class eZDBFileHandlerOracleBackend
         {
             $this->_begin( $fname );
 
-            $newPath = self::_md5( $filePath );
+            $newPath = "'" . md5( $filePath ) . "'";
 
             // both files are locked for update
             if ( !$generatingMetaData = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash FOR UPDATE", $fname, true, array(), eZDBFileHandlerOracleBackend::RETURN_DATA ) )
@@ -1469,7 +1469,7 @@ class eZDBFileHandlerOracleBackend
         eZDebug::accumulatorStart( 'oracle_cluster_query', 'oracle_cluster_total', 'Oracle_cluster_queries' );
         $time = microtime( true );
 
-        $nameHash = $this->_md5( $generatingFilePath );
+        $nameHash = "'" . md5( $generatingFilePath ) . "'";
         $newMtime = time();
 
         // The update query will only succeed if the mtime wasn't changed in between
@@ -1501,7 +1501,7 @@ class eZDBFileHandlerOracleBackend
     **/
     function _abortCacheGeneration( $generatingFilePath )
     {
-        $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash = " . $this->_md5( $generatingFilePath );
+        $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash = '" . md5( $generatingFilePath ) . "'";
         $this->_query( $sql, "_abortCacheGeneration( '$generatingFilePath' )" );
     }
 
