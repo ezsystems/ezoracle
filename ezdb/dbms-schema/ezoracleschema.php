@@ -352,15 +352,13 @@ class eZOracleSchema extends eZDBSchemaInterface
      */
     function generateDropIndexSql( $table_name, $index_name, $def )
     {
-        $sql = "ALTER TABLE $table_name DROP ";
-
         if ( $def['type'] == 'primary' )
         {
-            $sql .= 'PRIMARY KEY';
+            $sql = "ALTER TABLE $table_name DROP PRIMARY KEY";
         }
         else
         {
-            $sql .= "INDEX $index_name";
+            $sql = "DROP INDEX $index_name";
         }
         return $sql . ";\n";
     }
