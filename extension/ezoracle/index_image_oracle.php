@@ -42,11 +42,11 @@ if ( !( $db = @oci_connect( STORAGE_USER, STORAGE_PASS, STORAGE_DB ) ) )
 
 $filename = ltrim( $_SERVER['REQUEST_URI'], "/");
 
-$query = "SELECT * FROM " . TABLE_METADATA . " WHERE name_hash = md5_digest(:name_hash)";
+$query = "SELECT * FROM " . TABLE_METADATA . " WHERE name_hash = :name_hash";
 if ( !$statement = oci_parse( $db, $query ) )
     _die( "Error fetching image.\n" );
-
-oci_bind_by_name( $statement, ':name_hash', $filename, -1 );
+$md5 = md5( $filename );
+oci_bind_by_name( $statement, ':name_hash', $md5, -1 );
 if ( !oci_execute( $statement, OCI_DEFAULT ) )
     _die( "Error fetching image.\n" );
 
