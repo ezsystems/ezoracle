@@ -406,6 +406,8 @@ class eZOracleSchema extends eZDBSchemaInterface
             // type
             $sql_def .= $oraType;
             // note: mysql DECIMAL(X,Y) we convert to NUMBER(X,Y) while keeping default val unquoted
+            // NB: the following code is not entirely correct, as it prevents us to generate INTEGER(x),
+            //     but it has always been like this in ezoracle, so we do not change (yet)
             if ( isset( $def['length'] ) && ( !$isNumericField || $oraType == 'NUMBER' ) )
                 $sql_def .= "({$def['length']})";
 
@@ -449,6 +451,15 @@ class eZOracleSchema extends eZDBSchemaInterface
      */
     function generateAlterFieldSql( $table_name, $field_name, $def, $params )
     {
+        // HACK! since ezdbschemachecker is not able to overcome the fact that
+        // in oracle we store every INTEGER with a length of 38 instead of 11
+        // (and we do not want to change that for historical compatibility)
+        // we fix it here: if the field is int and all that is changed is its length
+        // and the new one is shorter than 38, we ignore it...
+        if ( eZOracleSchema::getOracleType( $def['type'] ) == 'INTEGER' && $params['different-options'] == array( 'length' ) && $def['length'] < 38 )
+        {
+            return '';
+        }
         $sql = "ALTER TABLE $table_name MODIFY (";
         $sql .= eZOracleSchema::generateFieldDef ( $field_name, $def, $params['different-options'] );
         $sql .= ")";
