@@ -70,7 +70,6 @@ $columnsWithDefaultNullVal = array(
     'eznode_assignment.parent_remote_id',
     'ezsearch_object_word_link.identifier',
     'ezurlalias.source_url',
-    'ezurl.url',
     'ezurlalias.destination_url',
     'ezurlalias_ml.text',
     'ezurlalias_ml.action',
