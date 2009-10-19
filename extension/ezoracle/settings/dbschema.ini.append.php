@@ -29,7 +29,6 @@ ColumnOptionTranslations[ezcontentobject_attribute.sort_key_string]=null
 ColumnOptionTranslations[eznode_assignment.parent_remote_id]=null
 ColumnOptionTranslations[ezsearch_object_word_link.identifier]=null
 ColumnOptionTranslations[ezurlalias.source_url]=null
-ColumnOptionTranslations[ezurl.url]=null
 ColumnOptionTranslations[ezurlalias.destination_url]=null
 ColumnOptionTranslations[ezurlalias_ml.text]=null
 ColumnOptionTranslations[ezurlalias_ml.action]=null
@@ -81,5 +80,6 @@ IndexNameTranslation[ezsearch_object_word_link.ezsearch_object_word_link_object]
 IndexNameTranslation[ezsearch_object_word_link.ezsearch_object_word_link_word]=ezsearch_object_word_l_word
 IndexNameTranslation[ezsubtree_notification_rule.ezsubtree_notification_rule_user_id]=ezsubtree_notif_rule_user_id
 IndexNameTranslation[ezwaituntildatevalue.ezwaituntildateevalue_wf_ev_id_wf_ver]=ezwaituntdateval_wfeid_wfever
+IndexNameTranslation[ezgeneral_digest_user_settings.ezgeneral_digest_user_settings_address]=ezgen_digest_user_settings_add
 
 */ ?>

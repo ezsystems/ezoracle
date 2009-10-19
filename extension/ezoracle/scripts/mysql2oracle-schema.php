@@ -70,7 +70,6 @@ $columnsWithDefaultNullVal = array(
     'eznode_assignment.parent_remote_id',
     'ezsearch_object_word_link.identifier',
     'ezurlalias.source_url',
-    'ezurl.url',
     'ezurlalias.destination_url',
     'ezurlalias_ml.text',
     'ezurlalias_ml.action',
@@ -124,7 +123,8 @@ $indexNameTransTable = array(
     'ezsearch_object_word_link.ezsearch_object_word_link_object'        => 'ezsearch_object_word_l_object',
     'ezsearch_object_word_link.ezsearch_object_word_link_word'          => 'ezsearch_object_word_l_word',
     'ezsubtree_notification_rule.ezsubtree_notification_rule_user_id' => 'ezsubtree_notif_rule_user_id',
-    'ezwaituntildatevalue.ezwaituntildateevalue_wf_ev_id_wf_ver' => 'ezwaituntdateval_wfeid_wfever'
+    'ezwaituntildatevalue.ezwaituntildateevalue_wf_ev_id_wf_ver' => 'ezwaituntdateval_wfeid_wfever',
+	'ezgeneral_digest_user_settings.ezgeneral_digest_user_settings_address' => 'ezgen_digest_user_settings_add'
     );
 
 /**
@@ -285,9 +285,8 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
         // LONGTEXTS have no default value in MySQL
         if ( $isStringColumn && $col['Default'] !== null && !$colHasNoDefaultValOverride && $col['Type'] != 'longtext' )
             $colDef .= " DEFAULT '". $col['Default'] . "'";
-
         if ( $col['Null'] !== 'YES' &&
-             $col['Default'] !== null &&
+             ( $col['Default'] !== null || $isLOBColumn || $col['Type'] == 'longtext' ) &&
              !$colHasNotNullOverride )
         {
             $colDef .= ' NOT NULL';
