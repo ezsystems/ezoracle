@@ -283,7 +283,7 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
             $colDef .= " DEFAULT '". $col['Default'] . "'";
 
         if ( $col['Null'] !== 'YES' &&
-             $col['Default'] !== null &&
+             ( $col['Default'] !== null || $isLOBColumn || $col['Type'] == 'longtext' ) &&
              !$colHasNotNullOverride )
         {
             $colDef .= ' NOT NULL';
