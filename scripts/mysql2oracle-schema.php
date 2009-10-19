@@ -286,9 +286,8 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
         // LONGTEXTS have no default value in MySQL
         if ( $isStringColumn && $col['Default'] !== null && !$colHasNoDefaultValOverride && $col['Type'] != 'longtext' )
             $colDef .= " DEFAULT '". $col['Default'] . "'";
-
         if ( $col['Null'] !== 'YES' &&
-             $col['Default'] !== null &&
+             ( $col['Default'] !== null || $isLOBColumn || $col['Type'] == 'longtext' ) &&
              !$colHasNotNullOverride )
         {
             $colDef .= ' NOT NULL';
