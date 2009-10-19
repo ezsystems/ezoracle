@@ -29,7 +29,6 @@ ColumnOptionTranslations[ezcontentobject_attribute.sort_key_string]=null
 ColumnOptionTranslations[eznode_assignment.parent_remote_id]=null
 ColumnOptionTranslations[ezsearch_object_word_link.identifier]=null
 ColumnOptionTranslations[ezurlalias.source_url]=null
-ColumnOptionTranslations[ezurl.url]=null
 ColumnOptionTranslations[ezurlalias.destination_url]=null
 ColumnOptionTranslations[ezurlalias_ml.text]=null
 ColumnOptionTranslations[ezurlalias_ml.action]=null
