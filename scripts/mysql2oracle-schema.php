@@ -280,7 +280,7 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
             $colDef .= " DEFAULT '". $col['Default'] . "'";
 
         if ( $col['Null'] !== 'YES' &&
-             $col['Default'] !== null &&
+             ( $col['Default'] !== null || $isLOBColumn || $col['Type'] == 'longtext' ) &&
              !$colHasNotNullOverride )
         {
             $colDef .= ' NOT NULL';
@@ -288,7 +288,7 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
     }
     else // numeric column
     {
-        if( "$col['Default']" !== "" )
+        if( "${col['Default']}" !== "" )
             $colDef .= " DEFAULT ". $col['Default'];  // strings should be enclosed in quotes
         if ( $col['Null'] !== 'YES' )
             $colDef .= ' NOT NULL';
