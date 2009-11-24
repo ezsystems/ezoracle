@@ -11,3 +11,15 @@ BEGIN
     END IF;
 END md5_digest;
 /
+
+-- Follows: fixes for bad triggers/sequences 
+-- need to be run only if the site was upgraded from 3.10 to 4.0 using extension 1.8.0 to 1.8.3
+
+CREATE OR REPLACE TRIGGER ezurlwildcard_id_tr
+BEFORE INSERT ON ezurlwildcard FOR EACH ROW WHEN (new.id IS NULL)
+BEGIN
+  SELECT s_urlwildcard.nextval INTO :new.id FROM dual;
+END;
+/
+
+DROP TRIGGER ezurlwildcard_tr;

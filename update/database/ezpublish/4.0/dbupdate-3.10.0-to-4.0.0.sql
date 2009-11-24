@@ -15,7 +15,7 @@ CREATE TABLE ezurlwildcard (
 );
 
 CREATE SEQUENCE s_urlwildcard;
-CREATE OR REPLACE TRIGGER ezurlwildcard_tr
+CREATE OR REPLACE TRIGGER ezurlwildcard_id_tr
 BEFORE INSERT ON ezurlwildcard FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
   SELECT s_urlwildcard.nextval INTO :new.id FROM dual;
