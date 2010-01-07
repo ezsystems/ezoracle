@@ -84,33 +84,41 @@ $statements = array();
 # select trigger_name from dba_triggers where trigger_name like 'EZ%';
 # select index_name from dba_indexes where index_name like 'EZ%';
 
-$select_tables_stmt = oci_parse( $oradb, "SELECT 'DROP TABLE' || table_name AS statement FROM user_tables" );
+$select_tables_stmt = oci_parse( $oradb, "SELECT 'DROP TABLE ' || table_name AS statement FROM user_tables" );
 if ( !$select_tables_stmt ||
      !oci_execute( $select_tables_stmt ) ||
      !oci_fetch_all( $select_tables_stmt, $res_tables_names ) )
 {
-    die( "Failed to get tables list\n" );
+    echo( "Failed to get tables list\n" );
 }
-$statements = array_merge( $statements, $res_tables_names['STATEMENT'] );
+else
+{
+    $statements = array_merge( $statements, $res_tables_names['STATEMENT'] );
+}
 
-$select_seqs_stmt = oci_parse( $oradb, "SELECT 'DROP SEQUENCE' || sequence_name AS statement FROM user_sequences" );
+$select_seqs_stmt = oci_parse( $oradb, "SELECT 'DROP SEQUENCE ' || sequence_name AS statement FROM user_sequences" );
 if ( !$select_seqs_stmt ||
      !oci_execute( $select_seqs_stmt ) ||
      !oci_fetch_all( $select_seqs_stmt, $res_seqs_names ) )
 {
-    die( "Failed to get sequences list\n" );
+    echo( "Failed to get sequences list\n" );
 }
-$statements = array_merge( $statements, $res_tables_names['STATEMENT'] );
+else
+{
+    $statements = array_merge( $statements, $res_seqs_names['STATEMENT'] );
+}
 
 $select_procs_stmt = oci_parse( $oradb, "SELECT 'DROP ' || object_name || ' ' || object_type AS statement FROM user_objects WHERE object_type in ('FUNCTION', 'PROCEDURE')" );
 if ( !$select_procs_stmt ||
      !oci_execute( $select_procs_stmt ) ||
      !oci_fetch_all( $select_procs_stmt, $res_procs_names ) )
 {
-    die( "Failed to get procedures list\n" );
+    echo( "Failed to get procedures list\n" );
 }
-$statements = array_merge( $statements, $res_procs_names['STATEMENT'] );
-
+else
+{
+    $statements = array_merge( $statements, $res_procs_names['STATEMENT'] );
+}
 
 foreach( $statements as $statement )
 {
