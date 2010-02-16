@@ -4,7 +4,7 @@
 //
 // Created on: <25-Feb-2002 14:50:11 ce>
 //
-// Copyright (C) 1999-2009 eZ Systems as. All rights reserved.
+// Copyright (C) 1999-2010 eZ Systems as. All rights reserved.
 //
 // This source file is part of the eZ Publish (tm) Open Source Content
 // Management System.
@@ -630,7 +630,18 @@ class eZOracleDB extends eZDBInterface
             }
             $sql = "SELECT $sequence.currval from DUAL";
             $res = $this->arrayQuery( $sql );
-            $id = $res[0]["currval"];
+            if ( $res == false )
+            {
+                // retrieving the triggers that operate on the given table
+                // SELECT trigger_name, trigger_body, status FROM user_triggers WHERE table_name = $table
+                // retrieving the incriminated sequence
+                // SELECT * FROM user_sequences where sequence_name = $sequence;
+                eZDebug::writeError( "Cannot retrieve last serial ID on table $table. Please make sure that sequence $sequence exists and its 'before insert' trigger is valid" );
+            }
+            else
+            {
+                $id = $res[0]["currval"];
+            }
         }
 
         return $id;
