@@ -46,7 +46,9 @@ class eZOracleSchema extends eZDBSchemaInterface
     function schema( $params = array() )
     {
         $params = array_merge( array( 'meta_data' => false,
-                                      'format' => 'generic' ),
+                                      'format' => 'generic',
+                                      'sort_columns' => true,
+                                      'sort_indexes' => true ),
                                $params );
 
         $schema = array();
@@ -65,8 +67,8 @@ class eZOracleSchema extends eZDBSchemaInterface
                 $table_name    = current( $tableNameArray );
                 $table_name_lc = strtolower( $table_name );
                 $schema_table['name']    = $table_name_lc;
-                $schema_table['fields']  = $this->fetchTableFields( $table_name, $autoIncrementColumns );
-                $schema_table['indexes'] = $this->fetchTableIndexes( $table_name );
+                $schema_table['fields']  = $this->fetchTableFields( $table_name, array_merge( $params, array( 'autoIncrementColumns' => $autoIncrementColumns ) ) );
+                $schema_table['indexes'] = $this->fetchTableIndexes( $table_name, $params );
 
                 $schema[$table_name_lc] = $schema_table;
             }
@@ -87,8 +89,12 @@ class eZOracleSchema extends eZDBSchemaInterface
      * @access private
      * @param string $table name
      */
-    function fetchTableFields( $table, $autoIncrementColumns )
+    function fetchTableFields( $table, $params )
     {
+        // hack: we changed this function's prototype to be more compatible with other
+        // db handlers. We expect an array but accept a string nonetheless
+        $autoIncrementColumns = is_string( $params ) ? $params : $params['autoIncrementColumns'];
+
         $numericTypes = array( 'float', 'int' );                               // FIXME: const
         $oraNumericTypes = array( 'FLOAT', 'NUMBER' );                         // FIXME: const
         $oraStringTypes  = array( 'CHAR', 'VARCHAR2' );                        // FIXME: const
@@ -187,7 +193,10 @@ class eZOracleSchema extends eZDBSchemaInterface
             $fields[$colName] =& $field;
             unset( $field );
         }
-        ksort( $fields );
+        if ( $params['sort_columns'] )
+        {
+            ksort( $fields );
+        }
 
         return $fields;
     }
@@ -195,7 +204,7 @@ class eZOracleSchema extends eZDBSchemaInterface
     /**
      * @access private
      */
-    function fetchTableIndexes( $table )
+    function fetchTableIndexes( $table, $params=array() )
     {
         $indexes = array();
         $query = "SELECT ui.index_name AS name, " .
@@ -223,7 +232,10 @@ class eZOracleSchema extends eZDBSchemaInterface
             $indexes[$idxName]['type']     = $idxType;
             $indexes[$idxName]['fields'][$row['col_pos'] - 1] = strtolower( $row['col_name'] );
         }
-        ksort( $indexes );
+        if ( $params['sort_indexes'] )
+        {
+            ksort( $indexes );
+        }
 
         return $indexes;
     }
