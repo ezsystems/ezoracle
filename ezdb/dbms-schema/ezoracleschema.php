@@ -462,6 +462,41 @@ class eZOracleSchema extends eZDBSchemaInterface
         {
             return '';
         }
+
+        if ( eZOracleSchema::getOracleType( $def['type'] ) == 'CLOB' )
+        {
+            return "-- WARNING: LOB COLUMN $field_name IN TABLE $table_name NEEDS TO BE ALTERED!\n" .
+                   "-- The current version of the ezoracle extension is not able to produce a corrective SQL yet.\n" .
+                   "-- please consult eZ Systems support for detailed instructions\n\n";
+        }
+
+        // this field was not recognized any more as auto_increment: it must have
+        // lost its trigger or its sequence...
+        if ( $def['type'] == 'auto_increment' && in_array( 'type', $params['different-options'] ) )
+        {
+            $defs = $this->generateAutoIncrement( $table_name, $field_name );
+            $seq_name = str_replace ( array( 'CREATE SEQUENCE ', ";\n" ), '', $defs['sequences'][0] );
+            $out = "\n" .
+                "DECLARE\n" .
+                "  maxval INTEGER;\n" .
+                "  obj_exists EXCEPTION;\n" .
+                "  PRAGMA EXCEPTION_INIT(obj_exists, -955);\n" .
+                "BEGIN\n" .
+                "  SELECT MAX($field_name) INTO maxval FROM $table_name;\n" .
+                "  maxval := maxval + 1;\n" . // takes care of 0 elements table too
+                "  EXECUTE IMMEDIATE 'CREATE SEQUENCE $seq_name MINVALUE ' || maxval;\n" .
+                "EXCEPTION WHEN obj_exists THEN\n" .
+                "  NULL;\n" .
+                "END;\n" .
+                "/\n" . $defs['triggers'][0];
+            // if there is some other difference than the presence of trigger/sequence, go on...
+            // nb: nullable cannot be different, if we always put autoincrements on pks
+            if ( $params['different-options'] == array( 'type' ) )
+            {
+                return $out;
+            }
+        }
+
         $sql = "ALTER TABLE $table_name MODIFY (";
         $sql .= eZOracleSchema::generateFieldDef ( $field_name, $def, $params['different-options'] );
         $sql .= ")";
@@ -479,7 +514,7 @@ class eZOracleSchema extends eZDBSchemaInterface
     function shorten( $identifier, $length = 30 )
     {
         static $cnt = 1;
-        if( strlen( $identifier ) <= $length)
+        if( strlen( $identifier ) <= $length )
             return $identifier;
         return substr( $identifier, 0, $length-5 ) . sprintf( "%05d", $cnt++ );
     }
