@@ -78,19 +78,19 @@ ALTER TABLE ezcobj_state_language
 ALTER TABLE ezcobj_state_link
     ADD PRIMARY KEY (contentobject_id, contentobject_state_id);
 
-CREATE SEQUENCE s_ezcobj_state;
-CREATE OR REPLACE TRIGGER ezcobj_state_tr
-BEFORE INSERT ON ezurlwildcard FOR EACH ROW WHEN (new.id IS NULL)
+CREATE SEQUENCE s_cobj_state;
+CREATE OR REPLACE TRIGGER ezcobj_state_id_tr
+BEFORE INSERT ON ezcobj_state FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
-  SELECT s_ezcobj_state.nextval INTO :new.id FROM dual;
+  SELECT s_cobj_state.nextval INTO :new.id FROM dual;
 END;
 /
 
-CREATE SEQUENCE s_ezcobj_state_group;
-CREATE OR REPLACE TRIGGER ezcobj_state_group_tr
+CREATE SEQUENCE s_cobj_state_group;
+CREATE OR REPLACE TRIGGER ezcobj_state_group_id_tr
 BEFORE INSERT ON ezcobj_state_group FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
-  SELECT s_ezcobj_state_group.nextval INTO :new.id FROM dual;
+  SELECT s_cobj_state_group.nextval INTO :new.id FROM dual;
 END;
 /
 
@@ -107,11 +107,11 @@ CREATE TABLE ezurlalias_ml_incr (
     id integer NOT NULL
 );
 
-CREATE SEQUENCE s_ezurlalias_ml_incr;
-CREATE OR REPLACE TRIGGER ezurlalias_ml_incr_tr
+CREATE SEQUENCE s_urlalias_ml_incr;
+CREATE OR REPLACE TRIGGER ezurlalias_ml_incr_id_tr
 BEFORE INSERT ON ezurlalias_ml_incr FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
-  SELECT s_ezurlalias_ml_incr.nextval INTO :new.id FROM dual;
+  SELECT s_urlalias_ml_incr.nextval INTO :new.id FROM dual;
 END;
 /
 -- END: from 4.0.2
