@@ -137,11 +137,15 @@ class eZOracleSchema extends eZDBSchemaInterface
             }
             elseif ( $colType == 'CLOB' )
             {
-                // We do not want default for blobs.
+                // was: 'We do not want default for blobs.' ...
                 $field['type']    = eZOracleSchema::parseType( $colType );
                 if ( $colNotNull )
                     $field['not_null'] = (string) $colNotNull;
-                $field['default'] = false;
+                if ( $colDefault !== null &&  $colDefault !== 'NULL' )
+                {
+                    // strip leading and trailing quotes
+                    $field['default'] = preg_replace( array( '/^\\\'/', '/\\\'$/' ), '', $colDefault );
+                }
             }
             elseif ( in_array( $colType, $oraNumericTypes ) ) // number
             {
@@ -165,7 +169,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                 if ( $colNotNull )
                     $field['not_null'] = (string) $colNotNull;
 
-                if ( $colDefault !== null )
+                if ( $colDefault !== null && $colDefault !== 'NULL' )
                 {
                     // strip leading and trailing quotes
                     $field['default'] = preg_replace( array( '/^\\\'/', '/\\\'$/' ), '', $colDefault );
@@ -416,10 +420,18 @@ class eZOracleSchema extends eZDBSchemaInterface
             // default
             if ( in_array( 'default', $optionsToDump ) && array_key_exists( 'default', $def ) )
             {
-                if ( isset( $def['default'] ) && $def['default'] !== false )
+                if ( isset( $def['default'] ) && $def['default'] !== false ) // not null, not false
                 {
                     $quote = $isNumericField ? '' : '\'';
                     $sql_def .= " DEFAULT $quote{$def['default']}$quote";
+                }
+                else
+                {
+                    if ( in_array( 'force_default', $optionsToDump ) )
+                    {
+                        // reset to NULL the default value
+                        $sql_def .= " DEFAULT NULL";
+                    }
                 }
             }
 
@@ -463,8 +475,22 @@ class eZOracleSchema extends eZDBSchemaInterface
             return '';
         }
 
+        // make sure that if a default null is specified in the diff, we reset it
+        $params['different-options'][] = 'force_default';
+
         if ( eZOracleSchema::getOracleType( $def['type'] ) == 'CLOB' )
         {
+            // easy case: we can use alter table for changing nullability or default
+            // there's no length for blobs, that leaves us with a type change
+            if ( !in_array( 'type', $params['different-options'] ) )
+            {
+                $sql = "ALTER TABLE $table_name MODIFY (";
+                $sql .= str_replace( ' CLOB', '', eZOracleSchema::generateFieldDef ( $field_name, $def, $params['different-options'] ) );
+                $sql .= ")";
+
+                return $sql . ";\n";
+            }
+            // though case...
             return "-- WARNING: LOB COLUMN $field_name IN TABLE $table_name NEEDS TO BE ALTERED!\n" .
                    "-- The current version of the ezoracle extension is not able to produce a corrective SQL yet.\n" .
                    "-- please consult eZ Systems support for detailed instructions\n\n";
@@ -638,6 +664,10 @@ BEGIN\n".
         return "DROP TABLE $table;\n";
     }
 
+    /**
+    * It might be a good idea to transform default === false into default === null,
+    * as there is no FALSE value in Oracle
+    */
     function transformSchema( &$schema, /* bool */ $toLocal )
     {
         if ( !eZDBSchemaInterface::transformSchema( $schema, $toLocal ) )
