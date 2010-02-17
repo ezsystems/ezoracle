@@ -37,3 +37,4 @@ DROP SEQUENCE s_ezurlalias_ml_incr;
 -- this one too is only needed if the user previously upgraded the eZP installation
 -- from 4.0 to 4.1 using an ezoracle version from 2.0.0 to 2.0.2
 ALTER TABLE ezcobj_state_group_language MODIFY ( description NULL );
+ALTER TABLE ezcobj_state_language MODIFY ( description NULL );

@@ -53,7 +53,7 @@ CREATE TABLE ezcobj_state_group_language (
 
 CREATE TABLE ezcobj_state_language (
     contentobject_state_id integer DEFAULT 0 NOT NULL,
-    description clob NOT NULL,
+    description clob NULL,
     language_id integer DEFAULT 0 NOT NULL,
     name varchar2(45) DEFAULT '' NOT NULL
 );
