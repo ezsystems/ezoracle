@@ -1,4 +1,4 @@
-eZ Oracle extension [ExtensionVersion] README
+eZ Oracle extension [EXTENSION_VERSION] README
 
 What is the eZ Oracle extension?
 ================================
@@ -11,8 +11,8 @@ connect to any Oracle database that fits the minimum requirements.
 eZ Oracle version
 =======================
 
-The current version of eZ Oracle is [ExtensionVersion].
-You can find details about changes for this version in doc/changelogs/CHANGELOG-[ExtensionVersion]
+The current version of eZ Oracle is [EXTENSION_VERSION].
+You can find details about changes for this version in doc/changelogs/CHANGELOG-[EXTENSION_VERSION]
 
 
 License
