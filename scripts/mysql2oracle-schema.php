@@ -82,6 +82,7 @@ $columnsWithDefaultNullVal = array(
     'ezuser_discountrule.name',
     'ezcontentclass.identifier',
     'ezcontentclass_attribute.identifier',
+	'ezcontentclass_attribute.category',
     'ezworkflow_event.description',
     'ezcontentclass.remote_id',
     'ezcollab_group.path_string',
