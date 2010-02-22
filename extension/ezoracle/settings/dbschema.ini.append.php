@@ -41,6 +41,7 @@ ColumnOptionTranslations[ezuser.login]=null
 ColumnOptionTranslations[ezuser_discountrule.name]=null
 ColumnOptionTranslations[ezcontentclass.identifier]=null
 ColumnOptionTranslations[ezcontentclass_attribute.identifier]=null
+ColumnOptionTranslations[ezcontentclass_attribute.category]=null
 ColumnOptionTranslations[ezworkflow_event.description]=null
 ColumnOptionTranslations[ezcontentclass.remote_id]=null
 ColumnOptionTranslations[ezcollab_group.path_string]=null
