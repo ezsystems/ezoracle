@@ -1,4 +1,4 @@
-eZ Oracle extension [ExtensionVersion] INSTALL
+eZ Oracle extension [EXTENSION_VERSION] INSTALL
 
 Introduction
 ============
@@ -87,7 +87,7 @@ Installing eZ Oracle extension
 
 2. Unpack the files in the distribution.
 
-   $ unzip ezoracle-extension-[ExtensionVersion].zip
+   $ unzip ezoracle-extension-[EXTENSION_VERSION].zip
 
 
 3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the

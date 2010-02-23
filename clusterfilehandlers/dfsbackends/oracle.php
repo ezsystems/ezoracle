@@ -2,11 +2,11 @@
 //
 // Definition of eZDFSFileHandlerOracleBackend class
 //
-// Created on: <13-Oct-2009 11:28:15 gg>
+// Created on: <14-Oct-2009 11:28:15 gg>
 //
 // ## BEGIN COPYRIGHT, LICENSE AND WARRANTY NOTICE ##
 // SOFTWARE NAME: eZ Oracle
-// SOFTWARE RELEASE: 2.1.x
+// SOFTWARE RELEASE: 2.0.x
 // COPYRIGHT NOTICE: Copyright (C) 1999-2009 eZ Systems AS
 // SOFTWARE LICENSE: GNU General Public License v2.0
 // NOTICE: >
