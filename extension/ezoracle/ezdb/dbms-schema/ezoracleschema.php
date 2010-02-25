@@ -102,7 +102,7 @@ class eZOracleSchema extends eZDBSchemaInterface
         $fields      = array();
 
         $query = "SELECT   a.column_name AS col_name, " .
-                 "         decode (a.nullable, 'N', 1, 'Y', 0) AS not_null, " .
+                 "         decode (a.nullable, 'N', '1', 'Y', '0') AS not_null, " .
                  "         a.data_type AS col_type, " .
                  "         a.data_length AS col_size, " .
                  "         a.data_default AS default_val, " .
@@ -118,7 +118,7 @@ class eZOracleSchema extends eZDBSchemaInterface
             $colName     = strtolower( $row['col_name'] );
             $colLength   = $row['col_size'];
             $colType     = $row['col_type'];
-            $colNotNull  = (int) $row['not_null'];
+            $colNotNull  = $row['not_null'];
             $colDefault  = $row['default_val'];
 
             $isAutoIncCol = isset( $autoIncrementColumns[strtolower( $table ) . '.' . $colName] );
@@ -140,8 +140,8 @@ class eZOracleSchema extends eZDBSchemaInterface
                 // was: 'We do not want default for blobs.' ...
                 $field['type']    = eZOracleSchema::parseType( $colType );
                 if ( $colNotNull )
-                    $field['not_null'] = (string) $colNotNull;
-                if ( $colDefault !== null &&  $colDefault !== 'NULL' )
+                    $field['not_null'] = $colNotNull;
+                if ( $colDefault !== null && $colDefault !== 'NULL' )
                 {
                     // strip leading and trailing quotes
                     $field['default'] = preg_replace( array( '/^\\\'/', '/\\\'$/' ), '', $colDefault );
@@ -154,11 +154,12 @@ class eZOracleSchema extends eZDBSchemaInterface
                 $field['type']   = eZOracleSchema::parseType( $colType, isset( $field['length'] ) ? $field['length'] : '' );
 
                 if ( $colNotNull )
-                    $field['not_null'] = (string) $colNotNull;
+                    $field['not_null'] = $colNotNull;
 
                 if ( $colDefault !== null && $colDefault !== false )
                 {
-                    $field['default'] = (float) $colDefault;
+                    /// @todo: verify if changing NLS settings can give us back defaults with comma...
+                    $field['default'] = /*(float)*/ $colDefault; // in ezdbschema defaults are always strings
                 }
             }
             elseif ( in_array( $colType, $oraStringTypes ) ) // string
@@ -167,7 +168,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                 $field['type']   = eZOracleSchema::parseType( $colType );
 
                 if ( $colNotNull )
-                    $field['not_null'] = (string) $colNotNull;
+                    $field['not_null'] = $colNotNull;
 
                 if ( $colDefault !== null && $colDefault !== 'NULL' )
                 {
@@ -180,7 +181,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                 $field['length'] = eZOracleSchema::parseLength( $colType, $colLength, $row['col_precision'], $row['col_scale'] );
                 $field['type']   = eZOracleSchema::parseType( $colType, $field['length'] );
                 if ( $colNotNull )
-                    $field['not_null'] = (string) $colNotNull;
+                    $field['not_null'] = $colNotNull;
 
                 if ( $colDefault !== null )
                 {
@@ -665,8 +666,13 @@ BEGIN\n".
     }
 
     /**
-    * It might be a good idea to transform default === false into default === null,
-    * as there is no FALSE value in Oracle
+    * Take care: this is not a fully reversible operation in any case...
+    *
+    * 1. It might be a good idea to transform default === false into default === null,
+    *    regardless of column type, as there is no FALSE value in Oracle.
+    * 2. also default '' to default NULL for char/varchar/clob
+    * Both of those are lossles transformations so we try to avoid them, and hack
+    * around them when comparing schemas for conformance...
     */
     function transformSchema( &$schema, /* bool */ $toLocal )
     {
@@ -690,12 +696,29 @@ BEGIN\n".
                         $tmpNewIndexes[$idxName] =& $tableSchema['indexes'][$idxName];
                     eZDebugSetting::writeDebug( 'lib-dbschema-transformation', '',
                                                 "renamed index $tableName.$idxName => PRIMARY" );
+
+                    // restore the mysql-specific stuff, if it is found
+                    if ( isset( $tmpNewIndexes[$idxName]['_original'] ) && isset( $tmpNewIndexes[$idxName]['_original']['fields'] ) )
+                    {
+                        foreach ( $tmpNewIndexes[$idxName]['_original']['fields'] as $field => $desc )
+                        {
+                            if ( is_string( $tmpNewIndexes[$idxName]['fields'][$field] ) )
+                            {
+                                $tmpNewIndexes[$idxName]['fields'][$field] = array ( 'name' => $tmpNewIndexes[$idxName]['fields'][$field] );
+                            }
+                            foreach( $desc as $key => $val )
+                            {
+                                $tmpNewIndexes[$idxName]['fields'][$field][$key] = $val;
+                            }
+                        }
+                    }
                 }
                 $schema[$tableName]['indexes'] =& $tmpNewIndexes;
                 unset( $tmpNewIndexes );
                 ksort( $schema[$tableName]['indexes'] );
 
                 // fix default values for CLOB fields: they should be false instead of null
+                // NB: this is a weird convention in eZP standard dba files...
                 foreach ( $tableSchema['fields'] as $fieldName => $fieldSchema )
                 {
                     if ( $fieldSchema['type'] == 'longtext' && $fieldSchema['default'] === null )
@@ -721,6 +744,29 @@ BEGIN\n".
                     }
                     else
                         $tmpNewIndexes[$idxName] =& $tableSchema['indexes'][$idxName];
+
+                    // remove the mysql-specific stuff, store it for later if we want to go back
+                    foreach ( $tmpNewIndexes[$idxName]['fields'] as $field => $desc )
+                    {
+                        if ( is_array( $desc ) )
+                        {
+                            foreach( $desc as $key => $val )
+                            {
+                                if ( strpos( $key, 'mysql:' ) === 0 )
+                                {
+                                    $tmpNewIndexes[$idxName]['_original']['fields'][$field][$key] = $val;
+                                    unset( $tmpNewIndexes[$idxName]['fields'][$field][$key] );
+                                    eZDebugSetting::writeDebug( 'lib-dbschema-transformation', '',
+                                                    "removed constraint $key from index $idxName, field $field" );
+                                }
+                                // if only 'name' field is left, rewrite array so that is easily checkable for diffs
+                                if ( count( $tmpNewIndexes[$idxName]['fields'][$field] ) == 1 && isset( $tmpNewIndexes[$idxName]['fields'][$field]['name'] ) )
+                                {
+                                     $tmpNewIndexes[$idxName]['fields'][$field] = $tmpNewIndexes[$idxName]['fields'][$field]['name'];
+                                }
+                            }
+                        }
+                    }
                 }
                 $schema[$tableName]['indexes'] =& $tmpNewIndexes;
                 unset( $tmpNewIndexes );
