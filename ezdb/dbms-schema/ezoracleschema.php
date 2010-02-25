@@ -666,13 +666,14 @@ BEGIN\n".
     }
 
     /**
-    * Take care: this is not a fully reversible operation in any case...
-    *
-    * 1. It might be a good idea to transform default === false into default === null,
-    *    regardless of column type, as there is no FALSE value in Oracle.
-    * 2. also default '' to default NULL for char/varchar/clob
-    * Both of those are lossles transformations so we try to avoid them, and hack
-    * around them when comparing schemas for conformance...
+    * Take care: this is NOT a fully reversible operation in many cases...
+    * 1. we transform default === false into default === null for text cols,
+    *    (char, varchar, clob), as there is no FALSE value in Oracle.
+    * 2. also default '' to default
+    * When we carry out such operations, we store info about the changes in extra
+    * fields in the schema def, so that if we later want to revert using the
+    * same schema object, we're able to do it - this won't work when eg. creating
+    * the schema def starting out of an oracle db...
     */
     function transformSchema( &$schema, /* bool */ $toLocal )
     {
@@ -717,10 +718,16 @@ BEGIN\n".
                 unset( $tmpNewIndexes );
                 ksort( $schema[$tableName]['indexes'] );
 
-                // fix default values for CLOB fields: they should be false instead of null
-                // NB: this is a weird convention in eZP standard dba files...
+
                 foreach ( $tableSchema['fields'] as $fieldName => $fieldSchema )
                 {
+                    if ( isset( $tableSchema['_original'] ) && isset( $tableSchema['_original']['fields'][$fieldName] ) && isset( $tableSchema['_original']['fields'][$fieldName]['default'] ) )
+                    {
+                        $schema[$tableName]['fields'][$fieldName]['default'] = $tableSchema['_original']['fields'][$fieldName]['default'];
+                    }
+
+                    // always fix default values for CLOB fields: they should be false instead of null
+                    // NB: this is a weird convention in eZP standard dba files that we should fix...
                     if ( $fieldSchema['type'] == 'longtext' && $fieldSchema['default'] === null )
                     {
                         $schema[$tableName]['fields'][$fieldName]['default'] = false;
@@ -771,6 +778,19 @@ BEGIN\n".
                 $schema[$tableName]['indexes'] =& $tmpNewIndexes;
                 unset( $tmpNewIndexes );
                 ksort( $schema[$tableName]['indexes'] );
+
+                foreach ( $tableSchema['fields'] as $fieldName => $fieldSchema )
+                {
+                    if ( ( $fieldSchema['type'] == 'longtext' && $fieldSchema['default'] === false ) ||
+                         ( ( $fieldSchema['type'] == 'varchar' || $fieldSchema['type'] == 'char' ) && ( $fieldSchema['default'] === '' || $fieldSchema['default'] === false ) ) )
+                    {
+                        $schema[$tableName]['_original']['fields'][$fieldName]['default'] = $schema[$tableName]['fields'][$fieldName]['default'];
+                        $schema[$tableName]['fields'][$fieldName]['default'] = null;
+                        eZDebugSetting::writeDebug( 'lib-dbschema-transformation', '',
+                                                    "changed default value for $tableName.$fieldName from null to false" );
+
+                    }
+                }
             }
         }
 
