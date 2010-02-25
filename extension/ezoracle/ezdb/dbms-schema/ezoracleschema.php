@@ -48,14 +48,15 @@ class eZOracleSchema extends eZDBSchemaInterface
         $params = array_merge( array( 'meta_data' => false,
                                       'format' => 'generic',
                                       'sort_columns' => true,
-                                      'sort_indexes' => true ),
+                                      'sort_indexes' => true,
+                                      'force_autoincrement_rebuild' => false ),
                                $params );
 
         $schema = array();
 
         if ( $this->Schema === false )
         {
-            $autoIncrementColumns = $this->detectAutoIncrements();
+            $autoIncrementColumns = $this->detectAutoIncrements( $params );
             $tableArray = $this->DBInstance->arrayQuery( "SELECT table_name FROM user_tables" );
 
             // prevent PHP warning in the cycle below
@@ -248,10 +249,10 @@ class eZOracleSchema extends eZDBSchemaInterface
     /**
      * @access private
      */
-    function detectAutoIncrements()
+    function detectAutoIncrements( $params )
     {
         $autoIncColumns = array();
-        $query = "SELECT table_name, trigger_name, trigger_body FROM user_triggers WHERE table_name LIKE 'EZ%'";
+        $query = "SELECT table_name, trigger_name, trigger_body, status FROM user_triggers WHERE table_name LIKE 'EZ%'";
         $resultArray = $this->DBInstance->arrayQuery( $query );
         foreach ( $resultArray as $row )
         {
@@ -261,6 +262,19 @@ class eZOracleSchema extends eZDBSchemaInterface
 
             $seqName =& $matches[1];
             $colName =& $matches[2];
+
+            if ( isset( $params['force_autoincrement_rebuild'] ) && $params['force_autoincrement_rebuild'] )
+            {
+                // check that the sequence exists. If it does not, trigger cannot be enabled!
+                // the column is thus technically an autoincrement, but it can never work...
+                $query = "SELECT COUNT(*) AS ok FROM user_sequences WHERE sequence_name = '" . strtoupper( $seqName ) . "'";
+                $resultArray2 = $this->DBInstance->arrayQuery( $query );
+                if ( $resultArray2[0]['ok'] != 1 )
+                {
+                    continue;
+                }
+            }
+
             $autoIncColumns[strtolower( $row['table_name'] ) . '.' . strtolower( $colName )] = true;
         }
 
@@ -419,7 +433,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                 $sql_def .= "({$def['length']})";
 
             // default
-            if ( in_array( 'default', $optionsToDump ) && array_key_exists( 'default', $def ) )
+            if ( in_array( 'default', $optionsToDump ) /*&& array_key_exists( 'default', $def )*/ )
             {
                 if ( isset( $def['default'] ) && $def['default'] !== false ) // not null, not false
                 {
@@ -437,9 +451,21 @@ class eZOracleSchema extends eZDBSchemaInterface
             }
 
             // not null
-            if ( in_array( 'not_null', $optionsToDump ) && isset( $def['not_null'] ) && $def['not_null'] )
+            if ( in_array( 'not_null', $optionsToDump ) )
             {
-                $sql_def .= ' NOT NULL';
+                if ( isset( $def['not_null'] ) && $def['not_null'] )
+                {
+                    $sql_def .= ' NOT NULL';
+                }
+                else
+                {
+                    if ( in_array( 'force_null', $optionsToDump ) )
+                    {
+                        // reset to NULL the default value
+                        $sql_def .= " NULL";
+                    }
+                }
+
             }
 
         }
@@ -470,7 +496,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         // in oracle we store every INTEGER with a length of 38 instead of 11
         // (and we do not want to change that for historical compatibility)
         // we fix it here: if the field is int and all that is changed is its length
-        // and the new one is shorter than 38, we ignore it...
+        // and the new one is shorter than 38, we ignore it.
+        // NB: this might be changed into a fix in TransformSchema instead...
         if ( eZOracleSchema::getOracleType( $def['type'] ) == 'INTEGER' && $params['different-options'] == array( 'length' ) && $def['length'] < 38 )
         {
             return '';
@@ -478,38 +505,67 @@ class eZOracleSchema extends eZDBSchemaInterface
 
         // make sure that if a default null is specified in the diff, we reset it
         $params['different-options'][] = 'force_default';
+        // also that we reset nullability
+        $params['different-options'][] = 'force_null';
+
+        $sql = '';
 
         if ( eZOracleSchema::getOracleType( $def['type'] ) == 'CLOB' )
         {
-            // easy case: we can use alter table for changing nullability or default
-            // there's no length for blobs, that leaves us with a type change
-            if ( !in_array( 'type', $params['different-options'] ) )
+            // though case... oracle cannot change a varchar2 to a clob directly
+            // but since 9i it can convert a long to a clob!
+            // So we convert to long first then to lob
+            // NB: using dbms_redefinition plsql package is probably much better
+            // for performances and in clusteed/partitioned setups, but we go
+            // for the low-hanging fruit (no need to check if the package is
+            // compiled/available
+            // see http://download.oracle.com/docs/cd/B10500_01/appdev.920/a96591/toc.htm
+            // or http://download.oracle.com/docs/cd/B10500_01/appdev.920/a96591/adl08lon.htm#104177
+            // in short: we need to rebuild all table indexes after switching type
+            if ( in_array( 'type', $params['different-options'] ) )
             {
-                $sql = "ALTER TABLE $table_name MODIFY (";
-                $sql .= str_replace( ' CLOB', '', eZOracleSchema::generateFieldDef ( $field_name, $def, $params['different-options'] ) );
-                $sql .= ")";
-
-                return $sql . ";\n";
+                $sql .= "ALTER TABLE $table_name MODIFY (". $field_name . " NULL);\n" .
+                        "ALTER TABLE $table_name MODIFY (". $field_name . " LONG);\n" .
+                        "ALTER TABLE $table_name MODIFY (" . $field_name . " CLOB);\n" .
+                        "DECLARE\n" .
+                        "  CURSOR idx_cur IS SELECT index_name FROM user_indexes WHERE table_name='" . strtoupper( $table_name ) . "' AND index_type <> 'LOB';\n" .
+                        "BEGIN\n" .
+                        "  FOR idx_cur_rec IN idx_cur LOOP\n" .
+                        "    EXECUTE IMMEDIATE 'ALTER INDEX ' || idx_cur_rec.index_name || ' REBUILD;';\n" .
+                        "  END LOOP;\n" .
+                        "END;\n/\n";
             }
-            // though case...
-            return "-- WARNING: LOB COLUMN $field_name IN TABLE $table_name NEEDS TO BE ALTERED!\n" .
-                   "-- The current version of the ezoracle extension is not able to produce a corrective SQL yet.\n" .
-                   "-- please consult eZ Systems support for detailed instructions\n\n";
+
+            // easy part: we can use alter table for changing nullability or default
+            // there's no length for blobs, that leaves us with a non-type change
+            if ( $params['different-options'] != array( 'type' ) )
+            {
+                $sql .= "ALTER TABLE $table_name MODIFY (". str_replace( ' CLOB', '',  eZOracleSchema::generateFieldDef ( $field_name, $def, $params['different-options'] ) ). ");\n";
+            }
+
+            return $sql;
+        }
+
+        if ( $table_name == 'eznode_assignment')
+        {
+            var_dump( $params );
+            var_dump( $def );
         }
 
         // this field was not recognized any more as auto_increment: it must have
         // lost its trigger or its sequence...
+        // unluckily there is no 'create or replace sequence' statement
         if ( $def['type'] == 'auto_increment' && in_array( 'type', $params['different-options'] ) )
         {
-            $defs = $this->generateAutoIncrement( $table_name, $field_name );
+            $defs = $this->generateAutoIncrement( $table_name, $field_name, $def );
             $seq_name = str_replace ( array( 'CREATE SEQUENCE ', ";\n" ), '', $defs['sequences'][0] );
-            $out = "\n" .
+            $sql = "\n" .
                 "DECLARE\n" .
                 "  maxval INTEGER;\n" .
                 "  obj_exists EXCEPTION;\n" .
                 "  PRAGMA EXCEPTION_INIT(obj_exists, -955);\n" .
                 "BEGIN\n" .
-                "  SELECT MAX($field_name) INTO maxval FROM $table_name;\n" .
+                "  SELECT NVL(MAX($field_name), 0) INTO maxval FROM $table_name;\n" .
                 "  maxval := maxval + 1;\n" . // takes care of 0 elements table too
                 "  EXECUTE IMMEDIATE 'CREATE SEQUENCE $seq_name MINVALUE ' || maxval;\n" .
                 "EXCEPTION WHEN obj_exists THEN\n" .
@@ -520,11 +576,11 @@ class eZOracleSchema extends eZDBSchemaInterface
             // nb: nullable cannot be different, if we always put autoincrements on pks
             if ( $params['different-options'] == array( 'type' ) )
             {
-                return $out;
+                return $sql;
             }
         }
 
-        $sql = "ALTER TABLE $table_name MODIFY (";
+        $sql .= "ALTER TABLE $table_name MODIFY (";
         $sql .= eZOracleSchema::generateFieldDef ( $field_name, $def, $params['different-options'] );
         $sql .= ")";
 
@@ -554,7 +610,7 @@ class eZOracleSchema extends eZDBSchemaInterface
      *        'triggers' => array( 'CREATE OR REPLACE TRIGGER...' ) );
      * </code>
      */
-    function generateAutoIncrement( $table_name, $field_name, $field_def, $params, $withClosure = true )
+    function generateAutoIncrement( $table_name, $field_name, $field_def, $params=array(), $withClosure = true )
     {
         $seqName  = preg_replace( '/^ez/', 's_', $table_name );
         if ( $seqName == $table_name )
