@@ -22,6 +22,7 @@ ColumnTypeTranslation[ezrss_import.import_description]=longtext;varchar(3100)
 ColumnTypeTranslation[ezcontentclass.serialized_name_list]=longtext;varchar(3100)
 ColumnTypeTranslation[ezcontentclass_attribute.serialized_name_list]=longtext;varchar(3100)
 ColumnTypeTranslation[ezpending_actions.param]=longtext;varchar(3000)
+ColumnTypeTranslation[ezcontentclass.serialized_description_list]=longtext;varchar(3000)
 
 # Translation of column options, such as NOT NULL and DEFAULT xxx.
 # Currently only "null" (remove "NOT NULL" requirement) is supported.
