@@ -3,6 +3,10 @@ Changes from 1.8.2 to 1.8.3 - released xxxx/yy/zz
 *General:
 - Added update sql scripts up to 4.0.7
 - Improvement for bug #013469: allowed the md5_digest function to return a value for empty strings
+- vastly improved the consistency checks and the generated corrective sql in the "Setup"/"System upgrade check" page
+  To take full advantage of the improvements, you should use eZ Publish 4.0.8+
+  For lower versions in the 4.0 series a patched kernel/setup/systemupgrade.php script
+  is available in the 'patches' directory of the extension.
 
 *Bugfixes:
 - Fixed bug #015054: Index on table ezkeyword_attribute_link
