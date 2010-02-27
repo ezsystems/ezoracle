@@ -548,12 +548,6 @@ class eZOracleSchema extends eZDBSchemaInterface
             return $sql;
         }
 
-        if ( $table_name == 'eznode_assignment')
-        {
-            var_dump( $params );
-            var_dump( $def );
-        }
-
         // this field was not recognized any more as auto_increment: it must have
         // lost its trigger or its sequence...
         // unluckily there is no 'create or replace sequence' statement
@@ -767,6 +761,7 @@ BEGIN\n".
                                 $tmpNewIndexes[$idxName]['fields'][$field] = array ( 'name' => $tmpNewIndexes[$idxName]['fields'][$field] );
                             }
                             foreach( $desc as $key => $val )
+
                             {
                                 $tmpNewIndexes[$idxName]['fields'][$field][$key] = $val;
                             }
