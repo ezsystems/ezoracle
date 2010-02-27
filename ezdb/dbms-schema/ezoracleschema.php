@@ -67,11 +67,16 @@ class eZOracleSchema extends eZDBSchemaInterface
             {
                 $table_name    = current( $tableNameArray );
                 $table_name_lc = strtolower( $table_name );
-                $schema_table['name']    = $table_name_lc;
-                $schema_table['fields']  = $this->fetchTableFields( $table_name, array_merge( $params, array( 'autoIncrementColumns' => $autoIncrementColumns ) ) );
-                $schema_table['indexes'] = $this->fetchTableIndexes( $table_name, $params );
+                if ( !isset( $params['table_include'] ) or
+                    ( is_array( $params['table_include'] ) and
+                    ( in_array( $table_name_lc, $params['table_include'] ) or in_array( $table_name, $params['table_include'] ) ) ) )
+                {
+                    $schema_table['name']    = $table_name_lc;
+                    $schema_table['fields']  = $this->fetchTableFields( $table_name, array_merge( $params, array( 'autoIncrementColumns' => $autoIncrementColumns ) ) );
+                    $schema_table['indexes'] = $this->fetchTableIndexes( $table_name, $params );
 
-                $schema[$table_name_lc] = $schema_table;
+                    $schema[$table_name_lc] = $schema_table;
+                }
             }
             $this->transformSchema( $schema, $params['format'] == 'local' );
             ksort( $schema );
