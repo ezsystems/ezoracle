@@ -17,3 +17,4 @@ Changes from 2.0.2 to 2.0.3 - released 2010/??/??
 - Fixed bug: script ora-drop-schema.php would produce invalid sql statements and not drop objects
 - Fixed bug #016203: update scripts from eZP 4.0 to 4.1 would leave EZCOBJ_STATE_GROUP_LANGUAGE.DESCRIPTION and EZCOBJ_STATE_LANGUAGE.DESCRIPTION not null, making it impossible to have empty descriptions in object states groups
 - Partial fixes for bugs #015528, #015877, #015675
+- Fixed bug #015450: allow eZDBSchemaInterface::schema() to only recover definition of desired tables
