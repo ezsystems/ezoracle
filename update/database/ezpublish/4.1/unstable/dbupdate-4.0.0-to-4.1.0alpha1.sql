@@ -15,7 +15,7 @@ CREATE UNIQUE INDEX ezcobj_remote_id ON ezcontentobject (remote_id);
 -- END: from 4.0.1
 
 CREATE UNIQUE INDEX ezgeneral_digest_user_sett_add on ezgeneral_digest_user_settings(address);
-DELETE FROM ezgeneral_digest_user_settings WHERE address not in (SELECT email FROM ezuser);
+DELETE FROM ezgeneral_digest_user_settings WHERE address not in (SELECT email FROM ezuser) OR address is null;
 
 -- START: from 3.10.1
 ALTER TABLE ezurlalias_ml ADD alias_redirects number(11) default 1 NOT NULL;
