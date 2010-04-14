@@ -98,7 +98,9 @@ $columnsWithDefaultNullVal = array(
     'ezrss_import.import_description',
     'ezisbn_registrant_range.registrant_from',
     'ezisbn_registrant_range.registrant_to',
-    'ezsession.data'
+    'ezsession.data',
+    'ezenumvalue.enumelement',
+    'ezenumvalue.enumvalue'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
