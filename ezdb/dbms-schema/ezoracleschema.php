@@ -533,7 +533,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                         "  CURSOR idx_cur IS SELECT index_name FROM user_indexes WHERE table_name='" . strtoupper( $table_name ) . "' AND index_type <> 'LOB';\n" .
                         "BEGIN\n" .
                         "  FOR idx_cur_rec IN idx_cur LOOP\n" .
-                        "    EXECUTE IMMEDIATE 'ALTER INDEX ' || idx_cur_rec.index_name || ' REBUILD;';\n" .
+                        "    EXECUTE IMMEDIATE 'ALTER INDEX ' || idx_cur_rec.index_name || ' REBUILD';\n" .
                         "  END LOOP;\n" .
                         "END;\n/\n";
             }
