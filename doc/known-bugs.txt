@@ -1,0 +1,6 @@
+Known bugs:
+
+- When generating differences between two databases, the oracle schema handler
+  is unable to tell the difference between an auto_increment column and just an integer column.
+
+- see #015528 ezoracle: suggestion to alter table columns produces invalid SQL

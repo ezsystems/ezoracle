@@ -1,0 +1,10 @@
+Changes from 2.0.1 to 2.0.2 - released 2009/09/29
+
+*General:
+- Improvement for bug #013469: allowed the md5_digest function to return a value for empty strings
+- Replaced all usage of ereg_ with preg_ to avoid warnings with php 5.3
+
+*Bugfixes:
+- Fixed bug #015436 DBA file not handled correctly by ezoracle
+- Fixed bug #015390 Wrong test is put in oracle test suite
+- Fixed bug #015462 The db upgrade scripts for oracle do not work on table ezpending_actions

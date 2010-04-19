@@ -1,0 +1,13 @@
+Changes from 1.8 to 1.8.1 - released 2009/03/10
+
+*General:
+- added support for eZ Publish 4.0.2 and 4.0.3 (fixed bug #14474)
+- improved debug messages for cluster file handler
+- do not halt anymore the php script upon fatal cluster file handler errors (as the mysql driver does)
+
+*Bugfixes:
+- Fixed bug #13271: File permissions on shared environments
+- Fixed bug #14513: oracle connector returns empty arrays on some php setups
+- Fix issue #14555: initurlaliasmlid.php upgrade script is not oracle-compatible, by adding a patched upgrade script to be used instead of the original one
+- Fixed bug #14579: arrayquery() does not work with a string "column" parameter with oracle
+- Fixed bug #14514: mysql2oracle-data.php script is not UTF-8 aware

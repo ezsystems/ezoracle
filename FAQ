@@ -1,0 +1,56 @@
+eZ Oracle extension 2.0.3 FAQ
+
+Connection problems
+===================
+
+Please refer to the online php manual at www.php.net to find more information
+about configuring your php server to connect to an Oracle database. A lot of
+valuable information is contained within the users comments.
+
+The first step to see if the Oracle support is activated in php is to check the
+output of the phpinfo() php function, or to run `php -i' on the command line. If
+it is, a section titled `oci8' will be present. When php is compiled in a modular
+fashion (as on windows), remember to enable the oracle extension in the php.ini file.
+
+The second step is to have a simple php script connecting to a known database.
+This way you can make sure that all the environment variables needed by the
+Oracle client are properly set up and accessible to the php process.
+
+If you cannot connect to the database, Oracle provides useful command-line
+utilities to troubleshoot connection problems: tnsping, sqlplus, lsnrctl.
+Please refer to the Oracle documentation for more information about those.
+
+
+Oracle errors
+=============
+
+If you receive some Oracle error codes it may be related to these issues.
+
+   ORA-12162 or OCI_INVALID_HANDLE
+   -------------------------------
+
+      ORA-12162: Error while trying to retrieve text for error
+      or
+      ocilogon(): _oci_open_session: OCIHandleAlloc OCI_HTYPE_SVCCTX:
+      OCI_INVALID_HANDLE in
+      extension/ezoracle/ezdb/dbms-drivers/ezoracledb.php on line 68
+
+      Most probably it meens that you haven't set ORACLE_HOME environment
+      variable before starting Apache.
+
+      Set it manually:
+      $ export ORACLE_HOME=/u01/app/oracle/product/10.1.0/db_1 # or whatever
+      or with oraenv script coming with Oracle:
+      $ . oraenv
+      and then restart Apache in the same terminal:
+      $ apachectl restart
+
+
+   ORA-12545
+   ---------
+
+      Most likely the server is not listening on incoming requests or has a badly
+      configured instance.
+
+      See this page for more information.
+      http://www.orafaq.com/error/ora-12545.htm

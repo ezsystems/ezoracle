@@ -1,0 +1,10 @@
+Changes from 1.1 to 1.2
+
+*General:
+- Added db upgrade SQL to upgrade from 3.5.2 to 3.6.0.
+- Removed obsolete patches.
+
+*Bugfixes:
+- Fixed mysql2oracle-schema.php for it to dump schema that is
+  logically identical to the one dumped by ezsqldumpschema.php.
+- Fixed some call-time pass-by-reference issues.

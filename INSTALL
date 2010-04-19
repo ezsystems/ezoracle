@@ -1,0 +1,301 @@
+eZ Oracle extension 2.0.3 INSTALL
+
+Introduction
+============
+
+1. What is the eZ Oracle extension?
+   --------------------------------
+
+   This extension adds support for the Oracle database to eZ Publish by
+   plugging into the database framework. After it is installed you can
+   connect to any Oracle database that fits the minimum requirements.
+
+2. License
+   -------
+
+   This software is licensed under the ${version.license}. The complete
+   license agreement is included in the LICENSE file. For more information
+   or questions please contact info@ez.no
+
+3. Requirements
+   ------------
+
+   The following requirements exists for using eZ Oracle extension:
+
+   o  eZ Publish version:
+
+      Make sure you use eZ Publish version 4.1.0 or higher, earlier
+      versions did not take Oracle properly into account and will not work
+      correctly.
+
+   o  Oracle version:
+
+      Make sure you have Oracle 9, 10 or 11 (client and server).
+
+      If the Oracle server version is less than 9.2, setting the environment
+      variable NLS_LANG is mandatory to indicate that php expects to receive
+      data from the database in the UTF8 character set.
+
+   o  PHP with Oracle support (oci8 extension):
+
+      Make sure your PHP installation has compiled in support for Oracle. To
+      compile this you will need the Oracle client libraries and headers.
+      The standard windows version of php includes the dll needed for oracle support.
+      To check if Oracle support is enabled, the output of the phpinfo() php
+      function includes a section titled "oci8". From the command line run `php -i'
+
+   o  Oracle user with correct privileges:
+
+      Make sure you have a user on the oracle server that can create the
+      following elements: session, table, trigger, sequence and procedure.
+
+
+Getting eZ Publish
+==================
+
+You can download a version of eZ Publish from ez.no, you will find the
+various versions at:
+http://ez.no/download/ez_publish/ez_publish_4_stable_releases
+
+NOTE: You will require eZ Publish 4.1.0 or higher
+
+Information on the installation of eZ Publish can be found at:
+http://ez.no/doc/ez_publish/technical_manual
+
+
+Restarting Apache
+=================
+
+   Detailed instructions on the installation and configuration of the oci8
+   extension are available at http://www.php.net/manual/en/oci8.setup.php.
+
+   Possibly you will have to restart the Apache webserver to make sure PHP is
+   loaded with Oracle support and the needed enviroment variable are in effect.
+
+   $ . oraenv
+   $ apachectl restart
+
+   NOTE: Each time you restart the webserver you might need to run the `oraenv'
+         command, if not the Oracle extension in PHP will not work properly.
+
+
+Installing eZ Oracle extension
+==============================
+
+1. Copy or untar the package into the `extension' directory in the root of your
+   eZ Publish installation.
+
+2. Unpack the files in the distribution.
+
+   $ unzip ezoracle-extension-2.0.3.zip
+
+
+3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the
+   folder root_of_ezpublish/settings/override. If this file does not exist, create it.
+   Locate (or add) the block [ExtensionSettings] and add the line:
+
+   ActiveExtensions[]=ezoracle
+
+   If you run several sites using only one distribution and only some of the sites should use
+   the extension, make the changes in the override file of that siteaccess.
+   E.g root_of_ezpublish/settings/siteaccess/news/site.ini.append(.php)
+   But instead of using ActiveExtensions you must add these lines instead:
+
+   [ExtensionSettings]
+   ActiveAccessExtensions[]=ezoracle
+
+   Regenerate the extension autoload file, either via GUI (in case the  eZ Publish
+   site is already installed ) in the Admin interface, "Setup" tab, "Extensions" page,
+   or by executing the ezpgenerateautoloads.php file.
+
+
+Initializing Oracle database
+============================
+
+1. Automated install with ora-initialize.sh
+   ----------------------------------------
+
+   Go to the eZ Publish installation directory and run the script:
+
+   $ ./extension/ezoracle/scripts/ora-initialize.sh
+
+   The script will check your system against the requirements. If something
+   is not as it should be it will give you information on the problem.
+   The script will ask for some information in some steps, the steps are:
+
+   o  Testing connection to Oracle server
+
+      This step will check if the Oracle server can be connected to using PHP.
+      Running this step is recommended since it will give information on what
+      can be done if it fails.
+
+      The following information will be asked for:
+
+      Username: Which user to connect with
+      Password: The password for the user
+      Instance: The name of the oracle instance, this must match the instance
+                configured on the client. If you are unsure about this you can
+                use the one set in the ORACLE_SID environment variable.
+
+   o  Create a new user
+
+      This step can create a new user with the required privileges for you.
+      This is the user that will be the owner of the eZ Publish objects (schema).
+      If you already have a user with the required privileges you can skip
+      this step.
+
+   o  Connecting to Oracle server
+
+      This step will read in information which will be used to connect to the
+      server in later steps. The specified user must have the required
+      privileges.
+      Note: This step will be skipped if a user is created in the step above.
+
+   Once the script has all necessary information it will connect to the server
+   and initialize the Oracle database.
+
+   o  Creating md5_digest and bitor functions
+
+      The extension requires custom procedures in the database to handle
+      md5 strings and bit operations. Your user will require `CREATE PROCEDURE'
+      privilege for this.
+
+   o  Cleaning up existing elements in database
+
+      If eZ Publish has been previously installed it will remove any elements
+      left.
+
+   o  Creating the database schema and inserting data
+
+      The schema and data will be taken from the eZ Publish installation files
+      and initialized in the database.
+
+2. Manual install
+   --------------
+
+   Suppose you have a running Oracle instance named "orcl" which you can access
+   as user "scott" with password "tiger", and you want to run eZ Publish on it.
+   Here are several steps to achieve this goal:
+
+   o  Environment variables
+
+      Set all the needed environment variables by eg. running `oraenv'.
+
+      $ . oraenv
+
+      (you may need to consult with your DBA to know which SID to enter)
+
+   o  Setup a database user:
+
+      You must make sure you have a user with the correct privileges
+
+# Here user "system" (DBA) has password "sys".
+#################################################################
+$ cat <<EOF | sqlplus system/sys@orcl
+CREATE USER scott IDENTIFIED BY tiger QUOTA UNLIMITED ON SYSTEM;
+GRANT CREATE    SESSION   TO scott;
+GRANT CREATE    TABLE     TO scott;
+GRANT CREATE    TRIGGER   TO scott;
+GRANT CREATE    SEQUENCE  TO scott;
+GRANT CREATE    PROCEDURE TO scott;
+EOF
+#################################################################
+
+      You will see "ORA-01920: user name 'SCOTT' conflicts with another user
+      or role name" if user scott already exists.
+      If the Oracle server is version 10g or later, new users might be created
+      with a default tablespace which is not SYSTEM; you should alter the above sql
+      command accordingly to grant unlimited quota on the correct tablespace
+      (and possibly specify a customised default tablespace for the user)
+
+   o  Create md5_digest and bitor functions
+
+      The extension requires custom procedures in the database to handle
+      md5 strings and bit operations. Your user will require `CREATE PROCEDURE'
+      privilege for this.
+      $ sqlplus scott/tiger@orcl < extension/ezoracle/sql/md5_digest.sql
+      $ sqlplus scott/tiger@orcl < extension/ezoracle/sql/bitor.sql
+
+   o  Initialize the schema
+
+     The schema must now be created with all the tables, sequences and
+     triggers for eZ Publish. Then the schema must be filled with data.
+     Here you have two choices:
+
+     1. Start from scratch
+        ------------------
+
+        You can start from scratch by using the schema bundled with the
+        eZ Publish installation, and filling it with the basic data.
+
+        o  Create the schema
+           $ ./bin/php/ezsqlinsertschema.php --type=oracle --user=<user> \
+               --password=<password> \
+               share/db_schema.dba <instance>
+
+        o  Insert data
+           $ ./bin/php/ezsqlinsertschema.php --type=oracle --user=<user> \
+               --password=<password> --schema-file=share/db_schema.dba \
+               --insert-types=data \
+               share/db_data.dba <instance>
+
+     2. Migrate from existing MySQL database
+        ------------------------------------
+
+        This step is as automated as possible. Ideally, you should only run
+        these scripts to transfer your MySQL DB schema and data to Oracle:
+
+        1. mysql2oracle-schema.php
+        2. mysql2oracle-data.php
+        3. ora-update-seqs.php
+
+        Run each script without arguments to see its usage.
+        Here is a sample scenario:
+
+        $ cd extension/ezoracle/scripts/
+        $ ./mysql2oracle-schema.php corporate_34:root/@heaven:3400 \
+            > corporate_34.sql
+        $ sqlplus scott/tiger@orcl < corporate_34.sql
+        $ ./mysql2oracle-data.php corporate_34:root/@heaven:3400 \
+            scott/tiger@orcl
+        $ ./ora-update-seqs.php scott/tiger@orcl
+
+
+Configuring eZ Publish
+======================
+
+1. Changing eZ Publish database handler
+
+   Before eZ Publish will start using the Oracle database, the current
+   database handler must be changed.
+
+   Edit your settings/override/site.ini.append.php and make sure the
+   DatabaseSettings section contains the following information:
+
+##################################
+[DatabaseSettings]
+DatabaseImplementation=ezoracle
+User=<user>
+Password=<password>
+Database=<instance>
+##################################
+
+   You must replace `<user>' `<password>' and `<instance>' with the user and
+   instance you use to connect to Oracle.
+
+
+Troubleshooting
+===============
+
+1. Read the FAQ
+   ------------
+
+   Some problems are more common than others. The most common ones are listed
+   in the the FAQ.
+
+2. Support
+   -------
+
+   If you have find any problems not handled by this document or the FAQ you
+   can contact eZ system trough the support system:
+   http://ez.no/support

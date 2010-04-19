@@ -1,0 +1,8 @@
+eZ Oracle extension 2.0.3 cluster README
+
+eZ Publish 4.1 and 4.2 DFS cluster mode is not supported with the current release of the eZ Oracle extension.
+
+It will be be available again in the next version of the extension.
+
+Current users of eZ Publish that run on Oracle+eZ cluster can upgrade safely
+as long as they use the eZDB cluster.
