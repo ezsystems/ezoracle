@@ -108,7 +108,7 @@ else
     $statements = array_merge( $statements, $res_seqs_names['STATEMENT'] );
 }
 
-$select_procs_stmt = oci_parse( $oradb, "SELECT 'DROP ' || object_name || ' ' || object_type AS statement FROM user_objects WHERE object_type in ('FUNCTION', 'PROCEDURE')" );
+$select_procs_stmt = oci_parse( $oradb, "SELECT 'DROP ' || object_type || ' ' || object_name AS statement FROM user_objects WHERE object_type in ('FUNCTION', 'PROCEDURE')" );
 if ( !$select_procs_stmt ||
      !oci_execute( $select_procs_stmt ) ||
      !oci_fetch_all( $select_procs_stmt, $res_procs_names ) )
