@@ -491,7 +491,7 @@ class eZOracleDB extends eZDBInterface
         //$numCols = oci_num_fields( $statement );
         $results = array();
 
-        eZDebug::accumulatorStart( 'looping_oracle_results', 'oracle_total', 'Oracle looping results' );
+        eZDebug::accumulatorStart( 'oracle_loop', 'oracle_total', 'Oracle looping results' );
 
         if ( $column !== false )
         {
@@ -546,7 +546,7 @@ class eZOracleDB extends eZDBInterface
             }
         }
 
-        eZDebug::accumulatorStop( 'looping_oracle_results' );
+        eZDebug::accumulatorStop( 'oracle_loop' );
         oci_free_statement( $statement );
 
         return $resultArray;
