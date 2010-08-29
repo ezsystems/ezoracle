@@ -68,6 +68,22 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
     $mtime    = $row['MTIME'];
     $mdate    = gmdate( 'D, d M Y H:i:s', $mtime ) . ' GMT';
 
+    if ( defined( 'USE_ETAG' ) && USE_ETAG )
+    {
+        // getallheaders() not available on every server
+        foreach ( $_SERVER as $header => $value )
+        {
+            if ( strtoupper( $header ) == 'HTTP_IF_NONE_MATCH' && trim( $value ) == "$mtime-$size" )
+            {
+                header( "HTTP/1.1 304 Not Modified" );
+                oci_free_statement( $statement );
+                oci_close( $db );
+                die();
+            }
+        }
+        header( "ETag: $mtime-$size" );
+    }
+
     header( "Content-Length: $size" );
     header( "Content-Type: $mimeType" );
     header( "Last-Modified: $mdate" );
@@ -89,9 +105,8 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
         // minor memory optimization trick. See http://blogs.oracle.com/opal/2010/03/reducing_oracle_lob_memory_use.html
         unset( $chunk );
     }
-
-
     $lob->free();
+
 }
 else
 {
