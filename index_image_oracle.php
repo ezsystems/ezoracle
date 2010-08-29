@@ -73,7 +73,12 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
     // output image data
     $lob = $row['LOB'];
     while ( $chunk = $lob->read( $chunkSize ) )
+    {
         echo $chunk;
+        // minor memory optimization trick. See http://blogs.oracle.com/opal/2010/03/reducing_oracle_lob_memory_use.html
+        unset( $chunk );
+    }
+
 
     $lob->free();
 }
