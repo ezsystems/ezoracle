@@ -37,7 +37,15 @@ function _die( $value )
 if ( !function_exists( 'oci_connect' ) )
     _die( "PECL oci8 extension (http://pecl.php.net/package/oci8) is required to use Oracle clustering functionality.\n" );
 
-if ( !( $db = @oci_connect( STORAGE_USER, STORAGE_PASS, STORAGE_DB ) ) )
+if ( defined( 'STORAGE_PERMANENT_CONNECTION' ) && STORAGE_PERMANENT_CONNECTION )
+{
+    $db = @oci_pconnect( STORAGE_USER, STORAGE_PASS, STORAGE_DB );
+}
+else
+{
+     $db = @oci_connect( STORAGE_USER, STORAGE_PASS, STORAGE_DB );
+}
+if ( !$db )
     _die( "Unable to connect to storage server.\n" );
 
 $filename = ltrim( $_SERVER['REQUEST_URI'], "/");
@@ -75,6 +83,9 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
     while ( $chunk = $lob->read( $chunkSize ) )
     {
         echo $chunk;
+        // in case output_buffering is on in php.ini, take over with out own
+        // to avoid php buffering the whole image
+        flush();
         // minor memory optimization trick. See http://blogs.oracle.com/opal/2010/03/reducing_oracle_lob_memory_use.html
         unset( $chunk );
     }
@@ -96,5 +107,8 @@ The requested URL <?php echo htmlspecialchars( $filename ); ?> was not found on 
 <?php
 }
 oci_free_statement( $statement );
-oci_close( $db );
+if ( defined( 'STORAGE_PERMANENT_CONNECTION' ) && STORAGE_PERMANENT_CONNECTION )
+{
+    oci_close( $db );
+}
 ?>
