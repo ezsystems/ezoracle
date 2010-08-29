@@ -5,7 +5,6 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 - added update script up to eZ Publish versions 4.1.5, 4.2.1 and 4.3.1 (all of them unreleased)
 - small reduction in memory usage for index_image_oracle.php file and big images in cluster mode
 - make sure that php output_buffering does not store in memory big images in cluster mode when serving them via index_image_oracle.php
-- allow usage of persistent connections in index_image_oracle_php (#017158)
 
 *Bugfixes:
 - improved 4.0 to 4.1 update scripts for the case where ezgeneral_digest_user_settings table has rows with NULL address
@@ -13,3 +12,7 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 - fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
 - renamed the accumulator used for select queries to make it more uniform with mysql/postgres
 - fixed bug: script ora-drop-schema.php has a bug preventing proper dropping of functions
+
+*Enhancements:
+- Implemented enhancement #017158: allow persistent database connections in index_image.php and friends
+- Implemented enhancement #017159: allow index_image_mysql.php (and others) to honour Etag http headers
