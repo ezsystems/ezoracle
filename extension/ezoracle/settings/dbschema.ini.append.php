@@ -65,6 +65,7 @@ ColumnOptionTranslations[ezcobj_state_language.description]=null
 ColumnOptionTranslations[ezsession.user_hash]=null
 ColumnOptionTranslations[ezenumvalue.enumelement]=null
 ColumnOptionTranslations[ezenumvalue.enumvalue]=null
+ColumnOptionTranslations[ezenumobjectvalue.enumvalue]=null
 
 IndexNameTranslation[ezcontentobject_attribute.ezcontentobject_attribute_contentobject_id]=ezco_attr_co_id
 IndexNameTranslation[ezcontentobject_attribute.ezcontentobject_attribute_co_id_ver_lang_code]=ezco_attr_co_id_ver_lang_code
