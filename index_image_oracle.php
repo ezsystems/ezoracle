@@ -78,7 +78,10 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
             {
                 header( "HTTP/1.1 304 Not Modified" );
                 oci_free_statement( $statement );
-                oci_close( $db );
+                if ( !defined( 'STORAGE_PERMANENT_CONNECTION' ) || STORAGE_PERMANENT_CONNECTION == false )
+                {
+                    oci_close( $db );
+                }
                 die();
             }
         }
@@ -123,7 +126,7 @@ The requested URL <?php echo htmlspecialchars( $filename ); ?> was not found on 
 <?php
 }
 oci_free_statement( $statement );
-if ( defined( 'STORAGE_PERMANENT_CONNECTION' ) && STORAGE_PERMANENT_CONNECTION )
+if ( !defined( 'STORAGE_PERMANENT_CONNECTION' ) || STORAGE_PERMANENT_CONNECTION == false )
 {
     oci_close( $db );
 }
