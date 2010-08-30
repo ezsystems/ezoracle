@@ -100,7 +100,8 @@ $columnsWithDefaultNullVal = array(
     'ezisbn_registrant_range.registrant_to',
     'ezsession.data',
     'ezenumvalue.enumelement',
-    'ezenumvalue.enumvalue'
+    'ezenumvalue.enumvalue',
+    'ezenumobjectvalue.enumvalue'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
