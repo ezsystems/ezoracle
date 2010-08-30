@@ -104,7 +104,8 @@ $columnsWithDefaultNullVal = array(
     'ezcobj_state_language.description',
     'ezsession.user_hash',
     'ezenumvalue.enumelement',
-    'ezenumvalue.enumvalue'
+    'ezenumvalue.enumvalue',
+    'ezenumobjectvalue.enumvalue'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
