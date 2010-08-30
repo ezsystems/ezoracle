@@ -16,11 +16,12 @@ CREATE TABLE ezscheduled_script (
   last_report_timestamp INTEGER DEFAULT 0 NOT NULL,
   progress INTEGER DEFAULT 0,
   user_id INTEGER DEFAULT 0 NOT NULL,
-  PRIMARY KEY (id),
-  INDEX ezscheduled_script_timestamp (last_report_timestamp)
+  PRIMARY KEY (id)
 );
+CREATE INDEX ezscheduled_script_timestamp ON ezscheduled_script (last_report_timestamp);
 
-CREATE SEQUENCE s_scheduled_script
+
+CREATE SEQUENCE s_scheduled_script;
 CREATE OR REPLACE TRIGGER ezscheduled_script_id_tr
 BEFORE INSERT ON ezscheduled_script FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
