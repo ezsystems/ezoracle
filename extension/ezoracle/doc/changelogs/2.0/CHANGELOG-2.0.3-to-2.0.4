@@ -3,8 +3,6 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 *General:
 - added update script up to eZ Publish version 4.3.0 final
 - added update script up to eZ Publish versions 4.1.5, 4.2.1 and 4.3.1 (all of them unreleased)
-- small reduction in memory usage for index_image_oracle.php file and big images in cluster mode
-- make sure that php output_buffering does not store in memory big images in cluster mode when serving them via index_image_oracle.php
 
 *Bugfixes:
 - improved 4.0 to 4.1 update scripts for the case where ezgeneral_digest_user_settings table has rows with NULL address
@@ -14,6 +12,7 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 - fixed bug: script ora-drop-schema.php has a bug preventing proper dropping of functions
 
 *Enhancements:
+- Implemented enhancement #017157: optimize memory usage of index_image_mysql for big images
 - Implemented enhancement #017158: Allow persistent database connections in index_image.php and friends
 - Implemented enhancement #017159: Allow index_image_mysql.php (and others) to honour Etag http headers
 - Implemented enhancement #017160: Allow index_image_mysql.php (and others) to play nice with keepalive
