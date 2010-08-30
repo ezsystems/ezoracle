@@ -82,7 +82,7 @@ $columnsWithDefaultNullVal = array(
     'ezuser_discountrule.name',
     'ezcontentclass.identifier',
     'ezcontentclass_attribute.identifier',
-	'ezcontentclass_attribute.category',
+    'ezcontentclass_attribute.category',
     'ezworkflow_event.description',
     'ezcontentclass.remote_id',
     'ezcollab_group.path_string',
@@ -127,7 +127,7 @@ $indexNameTransTable = array(
     'ezsearch_object_word_link.ezsearch_object_word_link_word'          => 'ezsearch_object_word_l_word',
     'ezsubtree_notification_rule.ezsubtree_notification_rule_user_id' => 'ezsubtree_notif_rule_user_id',
     'ezwaituntildatevalue.ezwaituntildateevalue_wf_ev_id_wf_ver' => 'ezwaituntdateval_wfeid_wfever',
-	'ezgeneral_digest_user_settings.ezgeneral_digest_user_settings_address' => 'ezgen_digest_user_settings_add'
+    'ezgeneral_digest_user_settings.ezgeneral_digest_user_settings_address' => 'ezgen_digest_user_settings_add'
     );
 
 /**
