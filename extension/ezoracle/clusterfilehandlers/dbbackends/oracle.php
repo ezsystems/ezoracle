@@ -830,6 +830,7 @@ class eZDBFileHandlerOracleBackend
 
 //////////////////////////////////////
 //         Helper methods
+
 //////////////////////////////////////
 
     // note: the mysql equivalent does not die anymore with this call...
@@ -1095,7 +1096,7 @@ class eZDBFileHandlerOracleBackend
     }
 
     /**
-     Performs query and returns result/bbolean/nr of rows.
+     Performs query and returns result/boolean/nr of rows.
      Times the sql execution, adds accumulator timings and reports SQL to debug.
 
      @param string $fname The function name that started the query, should contain relevant arguments in the text.
@@ -1518,7 +1519,41 @@ class eZDBFileHandlerOracleBackend
         if( !isset( $row[0] ) )
             return -1;
 
+
         return ( $row[0] + $this->dbparams['cache_generation_timeout'] ) - time();
+    }
+
+    /**
+     * Returns the list of expired binary files (images + binaries)
+     *
+     * @param array $scopes Array of scopes to consider. At least one.
+     * @param int $limit Max number of items. Set to false for unlimited.
+     *
+     * @return array(filepath)
+     *
+     * @since 4.3
+     */
+    public function expiredFilesList( $scopes, $limit = array( 0, 100 ) )
+    {
+        /*if ( count( $scopes ) == 0 )
+            throw new ezcBaseValueException( 'scopes', $scopes, "array of scopes", "parameter" );
+
+        foreach ( $scopes as $key => $val )
+        {
+            $scopes[$key] = str_replace("'", "''", $val );
+        }
+        $scopeString = "'" . implode( "', '", $scopes ) . "'";
+        $query = "SELECT name FROM " . self::TABLE_METADATA . " WHERE expired = 1 AND scope IN( $scopeString )";
+        if ( $limit !== false )
+        {
+            $query .= " LIMIT {$limit[0]}, {$limit[1]}";
+        }
+        $res = $this->_query( $query, __METHOD__, true, array(), eZDBFileHandlerOracleBackend::RETURN_DATA );
+        $filePathList = array();
+        while ( $row = mysql_fetch_row( $res ) )
+            $filePathList[] = $row[0];*/
+
+        return array();
     }
 
     public $db = null;
