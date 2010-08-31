@@ -9,7 +9,6 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 - improved 4.0 to 4.1 update scripts for the case where ezgeneral_digest_user_settings table has rows with NULL address
 - fixed the generated sql for correcting database schema when a varchar column is being migrated to clob (in the 'Setup|Upgrade check' page)
 - fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
-- renamed the accumulator used for select queries to make it more uniform with mysql/postgres
 - fixed bug: script ora-drop-schema.php has a bug preventing proper dropping of functions
 - fixedb bug #017017: Errors in Migration/Update Script
 
@@ -19,3 +18,4 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 - Implemented enhancement #017159: Allow index_image_mysql.php (and others) to honour Etag http headers
 - Implemented enhancement #017160: Allow index_image_mysql.php (and others) to play nice with keepalive
 - Implemented enhancement #016513: Add ability to define Expires offset send by index_cluster.php
+- renamed the accumulator used for select queries to make it more uniform with mysql/postgres
