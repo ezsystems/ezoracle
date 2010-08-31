@@ -340,7 +340,7 @@ class eZDBFileHandlerOracleBackend
         $like = ''; // not sure it is necessary to initialize, but in case...
         $sql = eZDBFileHandlerOracleBackend::$deletequery . "WHERE name LIKE :alike" ;
         $statement = oci_parse( $this->db, $sql );
-        oci_bind_by_name($statement, ':alike', $like, 255);
+        oci_bind_by_name($statement, ':alike', $like, 4000);
 
         foreach ( $dirList as $dirItem )
         {
@@ -380,6 +380,7 @@ class eZDBFileHandlerOracleBackend
             return false;
         }
         /// @todo should not we check 'expired', too?
+        /// @todo fix this before enabling logical deletes: only test if $ignoreExpiredFiles
         return $row['mtime'] >= 0;
     }
 
