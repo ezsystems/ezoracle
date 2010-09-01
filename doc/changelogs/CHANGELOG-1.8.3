@@ -2,13 +2,10 @@ Changes from 1.8.2 to 1.8.3 - released xxxx/yy/zz
 
 *General:
 - Added update sql scripts up to 4.0.7
-- Improvement for bug #013469: allowed the md5_digest function to return a value for empty strings
 - vastly improved the consistency checks and the generated corrective sql in the "Setup"/"System upgrade check" page
   To take full advantage of the improvements, you should use eZ Publish 4.0.8+
   For lower versions in the 4.0 series a patched kernel/setup/systemupgrade.php script
   is available in the 'patches' directory of the extension.
-- small reduction in memory usage for index_image_oracle.php file and big images in cluster mode
-- make sure that php output_buffering does not store in memory big images in cluster mode when serving them via index_image_oracle.php
 
 *Bugfixes:
 - Fixed bug #015054: Index on table ezkeyword_attribute_link
@@ -22,7 +19,8 @@ Changes from 1.8.2 to 1.8.3 - released xxxx/yy/zz
 - Fixed bug: column ezurl.url reported as changed in System Upgrade page even though it was fine
 - Fixed bug #015880: bad names of triggers in update sql from 3.10.0 to 4.0.0 (also added sql script to fix this)
 - Fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
-- Renamed the accumulator used for select queries to make it more uniform with mysql/postgres
+- fixed bug #017184: oracle ezdb cluster handler: zero byte files not supported
+- fixed bug #017185: oracle ezdb cluster handler: function _handleerrortype is missing
 
 *Enhancements:
 - Implemented enhancement #017157: optimize memory usage of index_image_mysql for big images
@@ -30,3 +28,5 @@ Changes from 1.8.2 to 1.8.3 - released xxxx/yy/zz
 - Implemented enhancement #017159: Allow index_image_mysql.php (and others) to honour Etag http headers
 - Implemented enhancement #017160: Allow index_image_mysql.php (and others) to play nice with keepalive
 - Implemented enhancement #016513: Add ability to define Expires offset send by index_cluster.php
+- Renamed the accumulator used for select queries to make it more uniform with mysql/postgres
+- Improvement for bug #013469: allowed the md5_digest function to return a value for empty strings

@@ -365,7 +365,7 @@ class eZDBFileHandlerOracleBackend
         $like = ''; // not sure it is necessary to initialize, but in case...
         $sql = eZDBFileHandlerOracleBackend::$deletequery . "WHERE name LIKE :alike" ;
         $statement = oci_parse( $this->db, $sql );
-        oci_bind_by_name($statement, ':alike', $like, 255);
+        oci_bind_by_name($statement, ':alike', $like, 4000);
 
         foreach ( $dirList as $dirItem )
         {
@@ -456,6 +456,7 @@ class eZDBFileHandlerOracleBackend
         if ( !( $lob = $this->_fetchLob( $filePath ) ) )
             return false;
         $metaData = $lob;
+        // nb: a NULL lob means an empty file
         $lob = $metaData['lob'];
 
         // Create temporary file.
@@ -470,14 +471,20 @@ class eZDBFileHandlerOracleBackend
         if ( !( $fp = fopen( $tmpFilePath, 'wb' ) ) )
         {
             eZDebug::writeError( "Cannot write to '$tmpFilePath' while fetching file.", __METHOD__ );
+            if ( is_object( $lob ) )
+            {
             $lob->free();
+            }
             return false;
         }
 
+        if ( is_object( $lob ) )
+        {
         // Read large object contents and write them to file.
         $chunkSize = $this->dbparams['chunk_size'];
         while ( $chunk = $lob->read( $chunkSize ) )
             fwrite( $fp, $chunk );
+        }
         fclose( $fp );
 
         // Make sure all data is written correctly
@@ -486,7 +493,10 @@ class eZDBFileHandlerOracleBackend
         if ( $tmpSize != $metaData['filesize'] )
         {
             eZDebug::writeError( "Size ($tmpSize) of written data for file '$tmpFilePath' does not match expected size " . $metaData['size'], __METHOD__ );
+            if ( is_object( $lob ) )
+            {
             $lob->free();
+            }
             return false;
         }
 
@@ -499,7 +509,10 @@ class eZDBFileHandlerOracleBackend
         {
             $filePath = $tmpFilePath;
         }
+        if ( is_object( $lob ) )
+        {
         $lob->free();
+        }
         return $filePath;
     }
 
@@ -523,8 +536,16 @@ class eZDBFileHandlerOracleBackend
             return false;
 
         $lob = $lob['lob'];
+        if ( is_object( $lob ) )
+        {
         $contents = $lob->load();
         $lob->free();
+        }
+        else
+        {
+            // zero-length file
+            $contents = '';
+        }
         return $contents;
     }
 
@@ -578,11 +599,19 @@ class eZDBFileHandlerOracleBackend
             return false;
         $lob = $lob['lob'];
 
+        if ( is_object( $lob ) )
+        {
         $chunkSize = $this->dbparams['chunk_size'];
         while ( $chunk = $lob->read( $chunkSize ) )
             echo $chunk;
 
         $lob->free();
+        }
+        else
+        {
+            // zero-byte file
+            echo '';
+        }
         return true;
     }
 
@@ -1048,7 +1077,7 @@ class eZDBFileHandlerOracleBackend
     /**
      Locks the file entry for exclusive write access.
 
-     The locking is performed by usage os SELECT FOR UPDATE
+     The locking is performed by usage of SELECT FOR UPDATE
 
      Note: All reads of the row must be done with LOCK IN SHARE MODE.
      */
@@ -1086,7 +1115,7 @@ class eZDBFileHandlerOracleBackend
 
 
     /**
-     A kind of two-phse-commit lock verification process - orcale does not need this,
+     A kind of two-phse-commit lock verification process - oracle does not need this,
      since _exclusiveLock works for good (locking is not advisory....)
      Ugly API needed for backward compatibility with code that was in ezDBFileHandler
 
@@ -1115,7 +1144,7 @@ class eZDBFileHandlerOracleBackend
     }
 
     /**
-     Performs query and returns result/bbolean/nr of rows.
+     Performs query and returns result/boolean/nr of rows.
      Times the sql execution, adds accumulator timings and reports SQL to debug.
 
      @param string $fname The function name that started the query, should contain relevant arguments in the text.
@@ -1179,7 +1208,7 @@ class eZDBFileHandlerOracleBackend
 
     /**
      Protects a custom function with SQL queries in a database transaction,
-     if the function reports an error the transaciton is ROLLBACKed.
+     if the function reports an error the transaction is ROLLBACKed.
 
      The first argument to the _protect() is the callback and the second is the name of the function (for query reporting). The remainder of arguments are sent to the callback.
 
@@ -1240,6 +1269,18 @@ class eZDBFileHandlerOracleBackend
         if ( $this->transactionCount == 0 )
             oci_commit( $this->db );
         return $result;
+    }
+
+    protected function _handleErrorType( $res )
+    {
+        if ( $res === false )
+        {
+            eZDebug::writeError( "SQL failed" );
+        }
+        elseif ( $res instanceof eZMySQLBackendError )
+        {
+            eZDebug::writeError( $res->errorValue, $res->errorText );
+        }
     }
 
     /**
