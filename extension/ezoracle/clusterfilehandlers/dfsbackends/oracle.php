@@ -88,14 +88,24 @@ class eZDFSFileHandlerOracleBackend
             self::$dbparams['sql_output'] = $siteINI->variable( "DatabaseSettings", "SQLOutput" ) == "enabled";
 
             self::$dbparams['cache_generation_timeout'] = $siteINI->variable( "ContentSettings", "CacheGenerationTimeout" );
+
+            self::$dbparams['persistent_connection'] = $fileINI->hasVariable( 'eZDFSClusteringSettings', 'DBPersistentConnection' ) ? $fileINI->variable( 'eZDFSClusteringSettings', 'DBPersistentConnection' ) : false;
         }
 
         $maxTries = self::$dbparams['max_connect_tries'];
         $tries = 0;
         while ( $tries < $maxTries )
         {
-            if ( $this->db = oci_connect( self::$dbparams['user'], self::$dbparams['pass'], self::$dbparams['dbname'] ) )
-                break;
+            if ( self::$dbparams['persistent_connection'] )
+            {
+                if ( $this->db = oci_pconnect( self::$dbparams['user'], self::$dbparams['pass'], self::$dbparams['dbname'] ) )
+                    break;
+            }
+            else
+            {
+                if ( $this->db = oci_connect( self::$dbparams['user'], self::$dbparams['pass'], self::$dbparams['dbname'] ) )
+                    break;
+            }
             ++$tries;
         }
         if ( !$this->db )

@@ -98,6 +98,8 @@ class eZDBFileHandlerOracleBackend
 
             $params['cache_generation_timeout'] = $siteINI->variable( "ContentSettings", "CacheGenerationTimeout" );
 
+            $params['persistent_connection'] = $fileINI->hasVariable( 'ClusteringSettings', 'DBPersistentConnection' ) ? $fileINI->variable( 'ClusteringSettings', 'DBPersistentConnection' ) : false;
+
             $GLOBALS['eZDBFileHandlerOracleBackend_dbparams'] = $params;
         }
         else
@@ -116,8 +118,16 @@ class eZDBFileHandlerOracleBackend
             }
             else
             {
-                if ( $this->db = oci_connect( $params['user'], $params['pass'], $params['dbname'] ) )
-                    break;
+                if ( $this->dbparams['persistent_connection'] )
+                {
+                    if ( $this->db = oci_pconnect( $params['user'], $params['pass'], $params['dbname'] ) )
+                        break;
+                }
+                else
+                {
+                    if ( $this->db = oci_connect( $params['user'], $params['pass'], $params['dbname'] ) )
+                        break;
+                }
             }
             ++$tries;
         }
