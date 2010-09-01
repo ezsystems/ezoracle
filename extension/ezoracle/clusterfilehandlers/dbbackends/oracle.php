@@ -98,7 +98,7 @@ class eZDBFileHandlerOracleBackend
 
             $params['cache_generation_timeout'] = $siteINI->variable( "ContentSettings", "CacheGenerationTimeout" );
 
-            $params['persistent_connection'] = $fileINI->hasVariable( 'ClusteringSettings', 'DBPersistentConnection' ) ? $fileINI->variable( 'ClusteringSettings', 'DBPersistentConnection' ) : false;
+            $params['persistent_connection'] = $fileINI->hasVariable( 'ClusteringSettings', 'DBPersistentConnection' ) ? ( $fileINI->variable( 'ClusteringSettings', 'DBPersistentConnection' ) == 'enabled' ) : false;
 
             $GLOBALS['eZDBFileHandlerOracleBackend_dbparams'] = $params;
         }
