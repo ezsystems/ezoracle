@@ -123,7 +123,7 @@ class eZDBFileHandlerOracleBackend
 
             $params['sql_output'] = $siteINI->variable( "DatabaseSettings", "SQLOutput" ) == "enabled";
 
-            $params['persistent_connection'] = $fileINI->hasVariable( 'ClusteringSettings', 'DBPersistentConnection' ) ? $fileINI->variable( 'ClusteringSettings', 'DBPersistentConnection' ) : false;
+            $params['persistent_connection'] = $fileINI->hasVariable( 'ClusteringSettings', 'DBPersistentConnection' ) ? ( $fileINI->variable( 'ClusteringSettings', 'DBPersistentConnection' ) == 'enabled' ) : false;
 
             $GLOBALS['eZDBFileHandlerOracleBackend_dbparams'] = $params;
         }
