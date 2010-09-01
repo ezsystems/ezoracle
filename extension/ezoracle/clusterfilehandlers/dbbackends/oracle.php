@@ -441,6 +441,7 @@ class eZDBFileHandlerOracleBackend
         if ( !( $lob = $this->_fetchLob( $filePath ) ) )
             return false;
         $metaData = $lob;
+        // nb: a NULL lob means an empty file
         $lob = $metaData['lob'];
 
         // Create temporary file.
@@ -455,14 +456,20 @@ class eZDBFileHandlerOracleBackend
         if ( !( $fp = fopen( $tmpFilePath, 'wb' ) ) )
         {
             eZDebug::writeError( "Cannot write to '$tmpFilePath' while fetching file.", __METHOD__ );
-            $lob->free();
+            if ( is_object( $lob ) )
+            {
+                $lob->free();
+            }
             return false;
         }
 
-        // Read large object contents and write them to file.
-        $chunkSize = $this->dbparams['chunk_size'];
-        while ( $chunk = $lob->read( $chunkSize ) )
-            fwrite( $fp, $chunk );
+        if ( is_object( $lob ) )
+        {
+            // Read large object contents and write them to file.
+            $chunkSize = $this->dbparams['chunk_size'];
+            while ( $chunk = $lob->read( $chunkSize ) )
+                fwrite( $fp, $chunk );
+        }
         fclose( $fp );
 
         // Make sure all data is written correctly
@@ -471,7 +478,10 @@ class eZDBFileHandlerOracleBackend
         if ( $tmpSize != $metaData['filesize'] )
         {
             eZDebug::writeError( "Size ($tmpSize) of written data for file '$tmpFilePath' does not match expected size " . $metaData['size'], __METHOD__ );
-            $lob->free();
+            if ( is_object( $lob ) )
+            {
+                $lob->free();
+            }
             return false;
         }
 
@@ -484,7 +494,10 @@ class eZDBFileHandlerOracleBackend
         {
             $filePath = $tmpFilePath;
         }
-        $lob->free();
+        if ( is_object( $lob ) )
+        {
+            $lob->free();
+        }
         return $filePath;
     }
 
@@ -508,8 +521,16 @@ class eZDBFileHandlerOracleBackend
             return false;
 
         $lob = $lob['lob'];
-        $contents = $lob->load();
-        $lob->free();
+        if ( is_object( $lob ) )
+        {
+            $contents = $lob->load();
+            $lob->free();
+        }
+        else
+        {
+            // zero-length file
+            $contents = '';
+        }
         return $contents;
     }
 
@@ -563,11 +584,19 @@ class eZDBFileHandlerOracleBackend
             return false;
         $lob = $lob['lob'];
 
-        $chunkSize = $this->dbparams['chunk_size'];
-        while ( $chunk = $lob->read( $chunkSize ) )
-            echo $chunk;
+        if ( is_object( $lob ) )
+        {
+            $chunkSize = $this->dbparams['chunk_size'];
+            while ( $chunk = $lob->read( $chunkSize ) )
+                echo $chunk;
 
-        $lob->free();
+            $lob->free();
+        }
+        else
+        {
+            // zero-byte file
+            echo '';
+        }
         return true;
     }
 
