@@ -21,7 +21,7 @@ index_image_oracle.php file.
 To make use of them, add the corresponding DEFINE lines to the index file that
 you use to serve clustered images (the one that includes the index_image.php):
 
-  define ( 'STORAGE_PERMANENT_CONNECTION', true );
+  define ( 'STORAGE_PERSISTENT_CONNECTION', true );
 
 use this to allow persistent database connections from the index_image_oracle.php
 file to the cluster database
