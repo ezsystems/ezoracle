@@ -89,7 +89,7 @@ class eZDFSFileHandlerOracleBackend
 
             self::$dbparams['cache_generation_timeout'] = $siteINI->variable( "ContentSettings", "CacheGenerationTimeout" );
 
-            self::$dbparams['persistent_connection'] = $fileINI->hasVariable( 'eZDFSClusteringSettings', 'DBPersistentConnection' ) ? $fileINI->variable( 'eZDFSClusteringSettings', 'DBPersistentConnection' ) : false;
+            self::$dbparams['persistent_connection'] = $fileINI->hasVariable( 'eZDFSClusteringSettings', 'DBPersistentConnection' ) ? ( $fileINI->variable( 'eZDFSClusteringSettings', 'DBPersistentConnection' ) == 'enabled' ) : false;
         }
 
         $maxTries = self::$dbparams['max_connect_tries'];
