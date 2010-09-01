@@ -4,15 +4,29 @@
 ExtensionDirectories[]=ezoracle
 
 # Example configuration for activating cluster mode with oracle
+
+# ezdb
+
 #FileHandler=eZDBFileHandler
 #DBBackend=eZDBFileHandlerOracleBackend
-#DBHost=orcl
-#DBPort=1521
-#DBName=
+#DBName=orcl
 #DBUser=scott
 #DBPassword=tiger
 #DBChunkSize=65535
 #DBConnectRetries=3
 #DBExecuteRetries=20
+#DBPersistentConnection=disabled
+
+# ezdfs
+
+#DBBackend=eZDFSFileHandlerOracleBackend
+#DBName=orcl
+#DBUser=scott
+#DBPassword=tiger
+#DBChunkSize=65535
+#DBConnectRetries=3
+#DBExecuteRetries=20
+#DBPersistentConnection=disabled
+#MountPointPath=
 
 */ ?>
