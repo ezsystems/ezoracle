@@ -1,8 +1,44 @@
 eZ Oracle extension [EXTENSION_VERSION] cluster README
 
-eZ Publish 4.1 and 4.2 DFS cluster mode is not supported with the current release of the eZ Oracle extension.
+eZ Publish 4.1 and 4.2 DFS cluster mode is supported starting with the current
+release of the eZ Oracle extension.
 
-It will be be available again in the next version of the extension.
+Recommendations
+===============
 
-Current users of eZ Publish that run on Oracle+eZ cluster can upgrade safely
-as long as they use the eZDB cluster.
+For both eZDB and eZDFS, we strongly recommend to use a separate oracle schema
+for the main content data and for cluster data.
+Besides easing backups and maintenance operations, this setup guarantees that
+the transactions used to insure correctness of operations in both databases
+dot not mix up with each other, which might cause in unexpected (and hard to
+track) behavior.
+
+New parameters for index_image_oracle.php
+=========================================
+
+Performance enhancing parameters have been added in version 2.0.4 to the
+index_image_oracle.php file.
+To make use of them, add the corresponding DEFINE lines to the index file that
+you use to serve clustered images (the one that includes the index_image.php):
+
+  define ( 'STORAGE_PERMANENT_CONNECTION', true );
+
+use this to allow persistent database connections from the index_image_oracle.php
+file to the cluster database
+
+  define( 'USE_ETAG', true );
+
+use this to enable management of the ETag http header associated with images
+stored in the cluster:
+. the ETag header is sent along with image files in http responses. It is built
+  from the file timestamp and size
+. if the browser sends and If-None-Match header in its request, that header is
+  matched to the image metadata. If the image is still fresh, an http 304 response
+  is sent, which greatly reduces the memory usage and loading time.
+
+  define( 'EXPIRY_TIMEOUT', 60 * 60 * 24 * 30 );
+
+use this to send an http Expiry header along with images that will instruct the
+browser to store the image in its cache and not request it again for 30 days.
+Note: since the url of the images contains the version of the object, you do
+not need to worry about that cache becoming stale when content is edited.
