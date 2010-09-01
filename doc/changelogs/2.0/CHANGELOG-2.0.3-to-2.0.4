@@ -10,8 +10,9 @@ Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
 - fixed the generated sql for correcting database schema when a varchar column is being migrated to clob (in the 'Setup|Upgrade check' page)
 - fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
 - fixed bug: script ora-drop-schema.php has a bug preventing proper dropping of functions
-- fixedb bug #017017: Errors in Migration/Update Script
-- fixedb bug #017183: fetchExpiredBinaryItems function missing from oracle ezdb cluster handler
+- fixed bug #017017: Errors in Migration/Update Script
+- fixed bug #017183: fetchExpiredBinaryItems function missing from oracle ezdb cluster handler
+- fixed bug #017184: oracle ezdb cluster handler: zero byte files not supported
 
 *Enhancements:
 - Implemented enhancement #017157: optimize memory usage of index_image_mysql for big images
