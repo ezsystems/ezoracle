@@ -123,6 +123,8 @@ class eZDBFileHandlerOracleBackend
 
             $params['sql_output'] = $siteINI->variable( "DatabaseSettings", "SQLOutput" ) == "enabled";
 
+            $params['persistent_connection'] = $fileINI->hasVariable( 'ClusteringSettings', 'DBPersistentConnection' ) ? $fileINI->variable( 'ClusteringSettings', 'DBPersistentConnection' ) : false;
+
             $GLOBALS['eZDBFileHandlerOracleBackend_dbparams'] = $params;
         }
         else
@@ -141,8 +143,16 @@ class eZDBFileHandlerOracleBackend
             }
             else
             {
-                if ( $this->db = oci_connect( $params['user'], $params['pass'], $params['dbname'] ) )
-                    break;
+                if ( $this->dbparams['persistent_connection'] )
+                {
+                    if ( $this->db = oci_pconnect( $params['user'], $params['pass'], $params['dbname'] ) )
+                        break;
+                }
+                else
+                {
+                    if ( $this->db = oci_connect( $params['user'], $params['pass'], $params['dbname'] ) )
+                        break;
+                }
             }
             ++$tries;
         }
@@ -1360,7 +1370,265 @@ class eZDBFileHandlerOracleBackend
         if ( strlen( $fname ) == 0 )
             $fname = "_query";
         $backgroundClass = ($this->transactionCount > 0  ? "debugtransaction transactionlevel-$this->transactionCount" : "");
-        eZDebug::writeNotice( "$query", "cluster::oracle::{$fname}[{$rowText}" . number_format( $timeTaken, 3 ) . " ms] query number per page:" . $numQueries++, $backgroundClass );
+    }
+
+    /**
+    * Attempts to begin cache generation by creating a new file named as the
+    * given filepath, suffixed with .generating. If the file already exists,
+    * insertion is not performed and false is returned (means that the file
+    * is already being generated)
+    * @param string $filePath
+    * @return array array with 2 indexes: 'result', containing either ok or ko,
+    *         and another index that depends on the result:
+    *         - if result == 'ok', the 'mtime' index contains the generating
+    *           file's mtime
+    *         - if result == 'ko', the 'remaining' index contains the remaining
+    *           generation time (time until timeout) in seconds
+    **/
+    function _startCacheGeneration( $filePath, $generatingFilePath )
+    {
+        $fname = "_startCacheGeneration( {$filePath} )";
+
+        $nameHash = "'" . md5( $generatingFilePath ) . "'";
+        $mtime = time();
+
+        $insertData = array( 'name' => "'" . $this->_escapeString( $generatingFilePath ) . "'",
+                             //'name_trunk' => "'" . $this->_escapeString( $generatingFilePath ) . "'",
+                             'name_hash' => $nameHash,
+                             'scope' => "''",
+                             'datatype' => "''",
+                             'mtime' => $mtime,
+                             'expired' => 0 );
+        $query = 'INSERT INTO ' . self::TABLE_METADATA . ' ( '. implode(', ', array_keys( $insertData ) ) . ' ) ' .
+                 "VALUES(" . implode( ', ', $insertData ) . ")";
+
+        if ( !$this->_query( $query, "_startCacheGeneration( $filePath )", false ) )
+        {
+            $errno = $this->error['code'];
+            if ( $errno != 1 )
+            {
+                eZDebug::writeError( "Unexpected error #$errno when trying to start cache generation on $filePath ($errno)", __METHOD__ );
+                eZDebug::writeDebug( $query, '$query' );
+
+                // @todo Make this an actual error, maybe an exception
+                return array( 'res' => 'ko' );
+            }
+            // error 00001 is expected, since it means duplicate key (file is being generated)
+            else
+            {
+                // generation timout check
+                $query = "SELECT mtime FROM " . self::TABLE_METADATA . " WHERE name_hash = $nameHash";
+                $row = $this->_selectOneRow( $query, $fname, false, false );
+
+                // file has been renamed, i.e it is no longer a .generating file
+                if( $row and !isset( $row[0] ) )
+                    return array( 'result' => 'ok', 'mtime' => $mtime );
+
+                $remainingGenerationTime = $this->remainingCacheGenerationTime( $row );
+                if ( $remainingGenerationTime < 0 )
+                {
+                    $previousMTime = $row[0];
+
+                    eZDebugSetting::writeDebug( 'kernel-clustering', "$filePath generation has timedout (timeout={$this->dbparams['cache_generation_timeout']}), taking over", __METHOD__ );
+                    $updateQuery = "UPDATE " . self::TABLE_METADATA . " SET mtime = {$mtime} WHERE name_hash = {$nameHash} AND mtime = {$previousMTime}";
+                    eZDebug::writeDebug( $updateQuery, '$updateQuery' );
+
+                    // we run the query manually since the default _query won't
+                    // report affected rows
+                    //$stmt = oci_parse( $this->db, $updateQuery );
+                    //$res = oci_execute( $stmt );
+                    $res = $this->_query( $updateQuery, $fname, false, array(), eZDBFileHandlerOracleBackend::RETURN_COUNT );
+                    if ( $res === 1 )
+                    {
+                        return array( 'result' => 'ok', 'mtime' => $mtime );
+                    }
+                    else
+                    {
+                        // @todo This would require an actual error handling
+                        $errno = $this->error['code'];
+                        eZDebug::writeError( "An error occured taking over timedout generating cache file $generatingFilePath ($errno)", __METHOD__ );
+                        return array( 'result' => 'error' );
+                    }
+                }
+                else
+                {
+                    return array( 'result' => 'ko', 'remaining' => $remainingGenerationTime );
+                }
+            }
+        }
+        else
+        {
+            return array( 'result' => 'ok', 'mtime' => $mtime );
+        }
+    }
+
+    /**
+    * Ends the cache generation for the current file: moves the (meta)data for
+    * the .generating file to the actual file, and removes the .generating
+    * @param string $filePath
+    * @return bool
+    **/
+    function _endCacheGeneration( $filePath, $generatingFilePath, $rename=true )
+    {
+        $fname = "_endCacheGeneration( $filePath )";
+
+        eZDebugSetting::writeDebug( 'kernel-clustering', $filePath, __METHOD__ );
+
+        $nameHash = "'" . md5( $generatingFilePath ) . "'";
+
+        // if no rename is asked, the .generating file is just removed
+        if ( $rename === false )
+        {
+            if ( !$this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash" ) )
+            {
+                eZDebug::writeError( "Failed removing metadata entry for '$generatingFilePath'", $fname );
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
+            $this->_begin( $fname );
+
+            $newPath = "'" . md5( $filePath ) . "'";
+
+            // both files are locked for update
+            if ( !$generatingMetaData = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash FOR UPDATE", $fname, true, array(), eZDBFileHandlerOracleBackend::RETURN_DATA ) )
+            {
+                $this->_rollback( $fname );
+                return false;
+            }
+            //$generatingMetaData = mysql_fetch_assoc( $res );
+
+            // we cannot use RETURN COUNT here, as it does not work with selects
+            $res = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath FOR UPDATE", $fname, false, array(), eZDBFileHandlerOracleBackend::RETURN_DATA );
+            if ( $res && count( $res ) === 1 )
+            {
+                // the original file exists: we remove it before updating the .generating file
+                if ( !$this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath", $fname, true ) )
+                {
+                    $this->_rollback( $fname );
+                    return false;
+                }
+            }
+
+            if ( !$this->_query( "UPDATE " . self::TABLE_METADATA . " SET name = '" . $this->_escapeString( $filePath ) . "', name_hash=$newPath WHERE name_hash=$nameHash", $fname, true ) )
+            {
+                $this->_rollback( $fname );
+                return false;
+            }
+
+            $this->_commit( $fname );
+        }
+
+        return true;
+    }
+
+    /**
+    * Checks if generation has timed out by looking for the .generating file
+    * and comparing its timestamp to the one assigned when the file was created
+    *
+    * @param string $generatingFilePath
+    * @param int    $generatingFileMtime
+    *
+    * @return bool true if the file didn't timeout, false otherwise
+    **/
+    function _checkCacheGenerationTimeout( $generatingFilePath, $generatingFileMtime )
+    {
+        $fname = "_checkCacheGenerationTimeout( $generatingFilePath, $generatingFileMtime )";
+        eZDebugSetting::writeDebug( 'kernel-clustering', "Checking for timeout of '$generatingFilePath' with mtime $generatingFileMtime", $fname );
+
+        // reporting
+        eZDebug::accumulatorStart( 'oracle_cluster_query', 'oracle_cluster_total', 'Oracle_cluster_queries' );
+        $time = microtime( true );
+
+        $nameHash = "'" . md5( $generatingFilePath ) . "'";
+        $newMtime = time();
+
+        // The update query will only succeed if the mtime wasn't changed in between
+        $query = "UPDATE " . self::TABLE_METADATA . " SET mtime = $newMtime WHERE name_hash = $nameHash AND mtime = $generatingFileMtime";
+        $numRows = $this->_query( $query, $fname, false, array(), self::RETURN_COUNT );
+        if ( $numRows === false )
+        {
+            $this->_error( $query, $fname );
+            return false;
+        }
+
+        // rows affected: mtime has changed, or row has been removed
+        if ( $numRows == 1 )
+        {
+            return true;
+        }
+        else
+        {
+            eZDebugSetting::writeDebug( 'kernel-clustering', "No rows affected by query '$query', record has been modified", __METHOD__ );
+            return false;
+        }
+    }
+
+    /**
+    * Aborts the cache generation process by removing the .generating file
+    * @param string $filePath Real cache file path
+    * @param string $generatingFilePath .generating cache file path
+    * @return void
+    **/
+    function _abortCacheGeneration( $generatingFilePath )
+    {
+        $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash = '" . md5( $generatingFilePath ) . "'";
+        $this->_query( $sql, "_abortCacheGeneration( '$generatingFilePath' )" );
+    }
+
+    /**
+     * Returns the remaining time, in seconds, before the generating file times
+     * out
+     *
+     * @param resource $fileRow
+     *
+     * @return int Remaining generation seconds. A negative value indicates a timeout.
+     **/
+    private function remainingCacheGenerationTime( $row )
+    {
+        if( !isset( $row[0] ) )
+            return -1;
+
+
+        return ( $row[0] + $this->dbparams['cache_generation_timeout'] ) - time();
+    }
+
+    /**
+     * Returns the list of expired binary files (images + binaries)
+     *
+     * @param array $scopes Array of scopes to consider. At least one.
+     * @param int $limit Max number of items. Set to false for unlimited.
+     *
+     * @return array(filepath)
+     *
+     * @since 4.3
+     */
+    public function expiredFilesList( $scopes, $limit = array( 0, 100 ) )
+    {
+        /*if ( count( $scopes ) == 0 )
+            throw new ezcBaseValueException( 'scopes', $scopes, "array of scopes", "parameter" );
+
+        foreach ( $scopes as $key => $val )
+        {
+            $scopes[$key] = str_replace("'", "''", $val );
+        }
+        $scopeString = "'" . implode( "', '", $scopes ) . "'";
+        $query = "SELECT name FROM " . self::TABLE_METADATA . " WHERE expired = 1 AND scope IN( $scopeString )";
+        if ( $limit !== false )
+        {
+            $query .= " LIMIT {$limit[0]}, {$limit[1]}";
+        }
+        $res = $this->_query( $query, __METHOD__, true, array(), eZDBFileHandlerOracleBackend::RETURN_DATA );
+        $filePathList = array();
+        while ( $row = mysql_fetch_row( $res ) )
+            $filePathList[] = $row[0];*/
+
+        return array();
     }
 
     public $db = null;
