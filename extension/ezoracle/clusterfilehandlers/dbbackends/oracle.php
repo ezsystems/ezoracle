@@ -1247,6 +1247,18 @@ class eZDBFileHandlerOracleBackend
         return $result;
     }
 
+    protected function _handleErrorType( $res )
+    {
+        if ( $res === false )
+        {
+            eZDebug::writeError( "SQL failed" );
+        }
+        elseif ( $res instanceof eZMySQLBackendError )
+        {
+            eZDebug::writeError( $res->errorValue, $res->errorText );
+        }
+    }
+
     /**
      * @private
      * @static
