@@ -1193,6 +1193,18 @@ class eZDFSFileHandlerOracleBackend
 
     }
 
+    protected function _handleErrorType( $res )
+    {
+        if ( $res === false )
+        {
+            eZDebug::writeError( "SQL failed" );
+        }
+        elseif ( $res instanceof eZMySQLBackendError )
+        {
+            eZDebug::writeError( $res->errorValue, $res->errorText );
+        }
+    }
+
     /**
      * Creates an error object which can be read by some backend functions.
      * @param mixed $value The value which is sent to the debug system.
