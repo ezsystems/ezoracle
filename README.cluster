@@ -1,5 +1,27 @@
 eZ Oracle extension [EXTENSION_VERSION] cluster README
 
+Configuration
+=============
+
+The instructions to set up eZ Publish clustering configurations are available online:
+
+http://ez.no/doc/ez_publish/technical_manual/4_x/features/clustering/setting_it_up_for_an_ezdbfilehandler
+
+The main differences to set up clustering mode on oracle are:
+
+Step 2: the value to be used for the DBBackend is
+  oracle
+
+also note that the DBHost, DBPort and DBSocket parameters are not used; only the DBName
+
+Step 3: you will need to copy one of the files
+  extension/ezoracle/index_image_oracle.php
+to the root directory of eZ Publish before proceeding
+
+Step 4: the definition of the database structures to be created can be found in:
+  extension/ezoracle/clusterfilehandlers/dbbackends/oracle.php
+
+
 Recommendations
 ===============
 
@@ -10,6 +32,7 @@ the transactions used to insure correctness of operations in both databases
 dot not mix up with each other, which might cause in unexpected (and hard to
 track) behavior.
 
+
 New parameters for index_image_oracle.php
 =========================================
 
@@ -17,11 +40,6 @@ Performance enhancing parameters have been added in version 1.8.3 to the
 index_image_oracle.php file.
 To make use of them, add the corresponding DEFINE lines to the index file that
 you use to serve clustered images (the one that includes the index_image.php):
-
-  define ( 'STORAGE_PERSISTENT_CONNECTION', true );
-
-use this to allow persistent database connections from the index_image_oracle.php
-file to the cluster database
 
   define( 'USE_ETAG', true );
 
@@ -40,3 +58,11 @@ browser to store the image in its cache and not request it again for 30 days.
 Note: since the url of the images contains the version of the object, you do
 not need to worry about that cache becoming stale when content is edited.
 Note: if you do not define a timeout, 10 minutes is used as default.
+
+  define ( 'STORAGE_PERSISTENT_CONNECTION', true );
+
+use this to allow persistent database connections from the index_image_oracle.php
+file to the cluster database
+To make sure persistent connections are used also by the main index.php script
+(standard eZ Publish web pages), use the DBPersistentConnection parameter in
+the file.ini settings file.
