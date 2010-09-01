@@ -37,7 +37,7 @@ function _die( $value )
 if ( !function_exists( 'oci_connect' ) )
     _die( "PECL oci8 extension (http://pecl.php.net/package/oci8) is required to use Oracle clustering functionality.\n" );
 
-if ( defined( 'STORAGE_PERMANENT_CONNECTION' ) && STORAGE_PERMANENT_CONNECTION )
+if ( defined( 'STORAGE_PERSISTENT_CONNECTION' ) && STORAGE_PERSISTENT_CONNECTION )
 {
     $db = @oci_pconnect( STORAGE_USER, STORAGE_PASS, STORAGE_DB );
 }
@@ -78,7 +78,7 @@ if ( ( $row = oci_fetch_array( $statement, OCI_ASSOC ) ) )
             {
                 header( "HTTP/1.1 304 Not Modified" );
                 oci_free_statement( $statement );
-                if ( !defined( 'STORAGE_PERMANENT_CONNECTION' ) || STORAGE_PERMANENT_CONNECTION == false )
+                if ( !defined( 'STORAGE_PERSISTENT_CONNECTION' ) || STORAGE_PERSISTENT_CONNECTION == false )
                 {
                     oci_close( $db );
                 }
@@ -126,7 +126,7 @@ The requested URL <?php echo htmlspecialchars( $filename ); ?> was not found on 
 <?php
 }
 oci_free_statement( $statement );
-if ( !defined( 'STORAGE_PERMANENT_CONNECTION' ) || STORAGE_PERMANENT_CONNECTION == false  )
+if ( !defined( 'STORAGE_PERSISTENT_CONNECTION' ) || STORAGE_PERSISTENT_CONNECTION == false  )
 {
     oci_close( $db );
 }
