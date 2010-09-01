@@ -42,3 +42,4 @@ use this to send an http Expiry header along with images that will instruct the
 browser to store the image in its cache and not request it again for 30 days.
 Note: since the url of the images contains the version of the object, you do
 not need to worry about that cache becoming stale when content is edited.
+Note: if you do not define a timeout, 10 minutes is used as default.
