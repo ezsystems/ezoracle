@@ -246,33 +246,29 @@ class eZDFSFileHandlerOracleBackend
 
         // common query part used for both DELETE and SELECT
         $where = " WHERE name LIKE :alike";
-        $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name LIKE :alike";
         $params = array ( ':alike' => $like );
         if ( $expiry !== false )
         {
-            $sql .= " AND mtime < :expiry";
+            $where .= " AND mtime < :expiry";
             $params[':expiry'] = $expiry;
         }
         elseif ( $onlyExpired )
-            $sql .= " AND expired = '1'";
+            $where .= " AND expired = '1'";
         /// @todo use a bind param for rownum (is it even possible ?)
         if ( $limit )
-            $sql .= " and ROWNUM <= $limit";
-
-        if ( ($numrows = $this->_query( $sql, $fname, true, $params, self::RETURN_COUNT ) ) === false )
-            return $this->_fail( "Purging file metadata by like statement $like failed" );
+            $where .= " and ROWNUM <= $limit";
 
         $this->_begin( $fname );
 
         // select query, in FOR UPDATE mode
         $selectSQL = "SELECT name FROM " . self::TABLE_METADATA .
-                     "{$where} {$sqlLimit} FOR UPDATE";
-        if ( !$files = $this->_query( $selectSQL, $fname, true, $params, self::RETURN_DATA ) )
+                     "{$where} FOR UPDATE";
+        if ( ( $files = $this->_query( $selectSQL, $fname, true, $params, self::RETURN_DATA_BY_COL ) ) === false )
         {
             $this->_rollback( $fname );
             return $this->_fail( "Selecting file metadata by like statement $like failed" );
         }
-        $resultCount = count( $files );
+        $resultCount = count( $files['NAME'] );
 
         // if there are no results, we can just return 0 and stop right here
         if ( $resultCount == 0 )
@@ -285,14 +281,19 @@ class eZDFSFileHandlerOracleBackend
         // delete query
         /// @bug what if other rows have been added / removed that match our conditions
         ///      in the meantime? we should use a condition of the form WHERE name_hash IN ( ... )
-        $deleteSQL = "DELETE FROM " . self::TABLE_METADATA . " {$where} {$sqlLimit}";
+        $deleteSQL = "DELETE FROM " . self::TABLE_METADATA . " {$where}";
         if ( !$res = $this->_query( $deleteSQL, $fname, true, $params, self::RETURN_COUNT ) )
         {
             $this->_rollback( $fname );
             return $this->_fail( "Purging file metadata by like statement $like failed" );
         }
 
-        $this->dfsbackend->delete( $files );
+        if ( $res != $resultCount )
+        {
+            eZDebug::writewarning( "Mismatch in files to be deleted count when purging like '$like'.", __METHOD__ );
+        }
+
+        $this->dfsbackend->delete( $files['NAME'] );
 
         $this->_commit( $fname );
 
@@ -1259,6 +1260,10 @@ class eZDFSFileHandlerOracleBackend
                 {
                     oci_fetch_all( $statement, $res, 0, 0, OCI_FETCHSTATEMENT_BY_ROW+OCI_ASSOC );
                 }
+                else if ( $return_type == self::RETURN_DATA_BY_COL )
+                {
+                    oci_fetch_all( $statement, $res, 0, 0, OCI_FETCHSTATEMENT_BY_COL+OCI_ASSOC );
+                }
             }
 
             oci_free_statement( $statement );
@@ -1669,6 +1674,7 @@ class eZDFSFileHandlerOracleBackend
     const RETURN_BOOL = 0;
     const RETURN_COUNT = 1;
     const RETURN_DATA = 2;
+    const RETURN_DATA_BY_COL = 4;
 
     /// @todo add runtime support (via an ini param?) to switch to logical deletes
     //static $deletequery = "UPDATE ezdbfile SET mtime=-ABS(mtime), expired='1' ";
