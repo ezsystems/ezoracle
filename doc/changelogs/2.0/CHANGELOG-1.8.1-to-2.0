@@ -1,0 +1,14 @@
+Changes from 1.8.1 to 2.0 - released 2009/03/17
+
+*General:
+- Added update sql scripts up to 4.1.4
+- Implemented request #013445: Reimplemented script ora-drop-schema.sh in php, to improve portability and reduce dependency on sqlplus; added dropping of functions and stored procedures, cleaning of recycle bin
+- Implemented request #013761: allow oracle "easy naming" connect strings to work
+- Implemented request #014602: allow the oracle db driver to log transaction start/commit/rollback
+- Added debug.ini file to simplify enabling of database-driver-level debug information
+
+*Bugfixes:
+- Fixed bug #011051: ezoracle sql updates out of date
+- Fixed bug #014608: oracle driver: error when rolling back transactions if an arrayquery() has been executed after trans start
+- Fixed bug #015054 Index on table ezkeyword_attribute_link
+- Fixed bug #015051 Fatal Error accessing collection information (infocollector/overview)

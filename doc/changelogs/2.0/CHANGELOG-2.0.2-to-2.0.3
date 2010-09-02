@@ -1,0 +1,20 @@
+Changes from 2.0.2 to 2.0.3 - released 2010/03/30
+
+*General:
+- Cluster support is back, for eZ Publish versions 4.1.0 to 4.2.0 (no ezfsdb yet)
+- added update script up to eZ Publish version 4.3.0rc1
+- vastly improved the consistency checks and the generated corrective sql in the "Setup"/"System upgrade check" page
+  To take full advantage of the improvements, you should use eZ Publish 4.1.5+, 4.2.1+ or 4.3.0+
+  For lower versions in the 4.1 and 4.2 series a patched kernel/setup/systemupgrade.php script
+  is available in the 'patches' directory of the extension.
+
+*Bugfixes:
+- Fixed bug #015694: oracle: database consystency check fails for INTEGER columns
+- Fixed bug #015695: oracle: index ezgeneral_digest_user_settings created with bad name
+- Fixed bug #015696: oracle: mysql2oracle-schema.php looses NOT NULL constraints on some fields
+- Fixed bug: column ezurl.url reported as changed in System Upgrade page even though it was fine
+- Fixed bug #015880: bad names of triggers in update sql from 4.0.0 to 4.1.0 (also added sql script to fix this)
+- Fixed bug: script ora-drop-schema.php would produce invalid sql statements and not drop objects
+- Fixed bug #016203: update scripts from eZP 4.0 to 4.1 would leave EZCOBJ_STATE_GROUP_LANGUAGE.DESCRIPTION and EZCOBJ_STATE_LANGUAGE.DESCRIPTION not null, making it impossible to have empty descriptions in object states groups
+- Partial fixes for bugs #015528, #015877, #015675
+- Fixed bug #015450: allow eZDBSchemaInterface::schema() to only recover definition of desired tables

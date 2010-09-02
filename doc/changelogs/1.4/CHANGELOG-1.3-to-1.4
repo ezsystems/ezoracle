@@ -1,0 +1,59 @@
+Changes from 1.3 to 1.4
+
+*General:
+- Added an option to mysql2oracle-schema.php for dropping tables/sequences
+  before creating them.
+- A meaningful error message is now displayed when Oracle server we're trying
+  to connect to is down.
+- Improved charsets handling.
+- Added chapter "Comparison with empty string" to oracle-notes.txt.
+- Added support of SlowQueriesOutput (DatabaseSettings in site.ini) feature.
+- Modified ora-drop-schema.sh: Removed hardcoded ORACLE_HOME and
+  drop all tables instead instead of only some.
+- Modified mysql2oracle-schema.php:
+   - Added BLOB support.
+   - Rewritten some code trying to make it cleaner.
+   - Removed some references usage.
+- Added db upgrade scripts for upgrade from eZ Publish 3.4.4 to 3.8.0.
+- Added support for clustering in 3.8.
+
+*Bugfixes:
+- Fixed "Cannot send session cookie - headers already sent" errors
+  that could happen on some unusual installations.
+- Fixed improper work of ora-update-seqs.php when Oracle is running on
+  Windows.
+- Fixed bug: Queries dumped by ora-grant.php didn't allow the user to create
+  procedures. Thus it was impossible to create MD5 function.
+- Fixed bug: ora-initialize.sh didn't catch errors occured when creating
+  MD5 function.
+- Fixed bug #7083: Empty workflow event description causes SQL error.
+- Fixed bug: SQL error when copying a content class.
+- Fixed bug: SQL errors when publishing an object that must be approved.
+- Fixed bug: SQL error in notifications settings.
+- Minor bugfixes in scripts/ora-update-seqs.php.
+- Fixed bug: SQL error in RSS import.
+- Fixed bug #8259: Performance issue with eZKeyword datatype.
+- Fixed bug #8342: Missing index on ezurlalias, eznode_assignment table.
+- Added escaping of $filename variable.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

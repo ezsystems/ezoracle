@@ -1,0 +1,11 @@
+Changes from 1.7 to 1.8 - released 2008/12/22
+
+*General:
+- Ported extension to PHP 5
+- Declare de-support for oracle 8
+- Added update sql scripts up to 4.0.1
+- Lowered the permissions granted to new oracle database users created for eZ Publish usage
+
+*Bugfixes:
+- Fixed bug #011051: ezoracle sql updates out of date
+- Fixed definition of column ezisbn_registrant_range.registrant_from and registrant_to: made impossible installation of a standard 4.0.1 eZ Publish schema
