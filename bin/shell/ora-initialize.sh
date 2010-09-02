@@ -237,12 +237,12 @@ function is_ezpublish_dir
 
 echo -n "Looking for eZ Publish installation"
 if ! is_ezpublish_dir "$EZP_PATH"; then
-    # also check if running from ezoracle script dir
-    if ! is_ezpublish_dir "$EZP_PATH/../../.."; then
+    # also check if running from ezoracle bin/shell dir
+    if ! is_ezpublish_dir "$EZP_PATH/../../../.."; then
         EZP_PATH=""
     else
-        EZP_PATH="$EZP_PATH/../../.."
-        EZORACLE_EXT_PATH="$EZORACLE_EXT_PATH/.."
+        EZP_PATH="$EZP_PATH/../../../.."
+        EZORACLE_EXT_PATH="$EZORACLE_EXT_PATH/../.."
     fi
 else
     EZORACLE_EXT_PATH="$EZP_PATH/extension/ezoracle"
