@@ -24,9 +24,10 @@ Introduction
 
    o  eZ Publish version:
 
-      Make sure you use eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher, earlier
-      versions did not take Oracle properly into account and will not work
-      correctly.
+      Make sure you use eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher
+      together with this extension.
+      It is generally recommended to always use the latest stable version of
+      eZ Publish when running on Oracle.
 
    o  Oracle version:
 
@@ -282,7 +283,6 @@ Database=<instance>
 
    You must replace `<user>' `<password>' and `<instance>' with the user and
    instance you use to connect to Oracle.
-
 
 Troubleshooting
 ===============
