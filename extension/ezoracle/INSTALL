@@ -118,7 +118,7 @@ Initializing Oracle database
 
    Go to the eZ Publish installation directory and run the script:
 
-   $ ./extension/ezoracle/scripts/ora-initialize.sh
+   $ ./extension/ezoracle/bin/sh/ora-initialize.sh
 
    The script will check your system against the requirements. If something
    is not as it should be it will give you information on the problem.
@@ -253,7 +253,7 @@ EOF
         Run each script without arguments to see its usage.
         Here is a sample scenario:
 
-        $ cd extension/ezoracle/scripts/
+        $ cd extension/ezoracle/bin/php/
         $ ./mysql2oracle-schema.php corporate_34:root/@heaven:3400 \
             > corporate_34.sql
         $ sqlplus scott/tiger@orcl < corporate_34.sql
