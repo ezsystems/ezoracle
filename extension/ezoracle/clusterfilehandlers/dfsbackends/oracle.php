@@ -1272,7 +1272,7 @@ class eZDFSFileHandlerOracleBackend
                 }
                 else if ( $return_type == self::RETURN_DATA_BY_COL )
                 {
-                    oci_fetch_all( $statement, $res, 0, 0, OCI_FETCHSTATEMENT_BY_COL+OCI_ASSOC );
+                    oci_fetch_all( $statement, $res, 0, 0, OCI_FETCHSTATEMENT_BY_COLUMN+OCI_ASSOC );
                 }
             }
 
@@ -1639,6 +1639,109 @@ class eZDFSFileHandlerOracleBackend
 
         return array();
     }
+
+
+    /**
+     * Similar to eZDFSFileHandler::purge()
+     *
+     * The difference here is that since we do physical deletes in the db and not
+     * logical ones, the standard purge operation will not work - after we have
+     * removed the row in the database and left the file in the dfs, we cannot
+     * retrieve any more an indicator that it has to be purged. :-(
+     * So we do a dumb, dumb scan of the dfs folder, and for every file found we
+     * check if it is not in the db anymore. If it is not, we delete it.
+     * To make this bearable, we build the following ad hoc functions. The
+     * standard purging API is not a good fit.
+     *
+     * @param string   $dir
+     * @param callback $printCallback will be called possibly many times over; expect 1 param: an arry of deleted file names
+     * @param int      $microsleep
+     * @param int      $max
+     */
+    public function dfspurge( $dir, $printCallback = false, $microsleep = false, $max = 100, $dryRun = false )
+    {
+        // this we should recover from eZDFSFileHandlerDFSBackend, but it is
+        // currently a protected member. So we copy code over
+        $mountPointPath = eZINI::instance( 'file.ini' )->variable( 'eZDFSClusteringSettings', 'MountPointPath' );
+        if ( substr( $mountPointPath, -1 ) != '/' )
+            $mountPointPath = "$mountPointPath/";
+
+        // remove an extra recursive 'if' check within _dfspurge and do it here...
+        if ( is_file( "$mountPointPath$dir") )
+        {
+            $this->_dfspurgeInner( array( $dir ), $printCallback, false );
+            return;
+        }
+
+        $rest = $this->_dfspurge( $dir, $mountPointPath, $dryRun, $max, $printCallback, $microsleep );
+        if ( count( $rest ) )
+        {
+            $this->_dfspurgeInner( $rest, $dryRun, $printCallback, false );
+        }
+    }
+
+    protected function _dfspurge( $dir, $root, $dryRun = false, $limit = 100, $printCallback = false, $microsleep = false )
+    {
+        $files = array();
+        foreach ( scandir( "$root$dir" ) as $file )
+        {
+            if ( $file != '.' && $file != '..' )
+            {
+                $file = "$dir/$file";
+                if ( is_dir( "$root$file" ) )
+                {
+                    $files = array_merge( $files, $this->_dfspurge( $file, $root, $dryRun, $limit, $printCallback, $microsleep ) );
+                    if ( count( $files ) >= $limit )
+                    {
+                        $this->_dfspurgeInner( array_slice( $files, 0, $limit ), $dryRun, $printCallback, $microsleep );
+                        $files = array_slice( $files, $limit );
+                    }
+                }
+                else
+                {
+                    $files[md5( $file )] = $file;
+                    if ( count( $files ) % $limit == 0 )
+                    {
+                        $this->_dfspurgeInner( $files, $dryRun, $printCallback, $microsleep );
+                        $files = array();
+                    }
+                }
+            }
+        }
+        return $files;
+    }
+
+    protected function _dfspurgeInner( $array, $dryRun = false, $printCallback = false, $microsleep = false )
+    {
+        // look for files present in the db
+        $selectSQL = 'select name_hash from ' . self::TABLE_METADATA . " where name_hash in ('" . implode( "', '", array_keys( $array ) ) . "')";
+        //$connector = new eZDFSFileHandlerOracleBackend();
+        //$connector->connect();
+        $found = $this->_query( $selectSQL, '_dfspurgeInner', true, array(), self::RETURN_DATA_BY_COL );
+
+        /// @todo manage db error case
+        if ( $found )
+        {
+            // remove them from files to be deleted
+            foreach( $found['NAME_HASH'] as $md5file )
+            {
+                unset( $array[$md5file] );
+            }
+
+            // remove the rest from the filesystem
+            if ( !$dryRun )
+            {
+                $this->dfsbackend->delete( $array );
+            }
+
+            if ( $printCallback && count( $array ) )
+            {
+                call_user_func_array( $printCallback, array( $array ) );
+            }
+        }
+        usleep( $microsleep );
+    }
+
 
     /**
      * DB connection handle
