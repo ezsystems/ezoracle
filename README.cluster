@@ -35,6 +35,21 @@ Step 4: the definition of the database structures to be created can be found in:
   extension/ezoracle/clusterfilehandlers/dbbackends/oracle.php
   extension/ezoracle/clusterfilehandlers/dfsackends/oracle.php
 
+Cronjobs: the cluster_maintenance cronjob is
+
+. not needed when using the Oracle eZDB handler.
+  All binary files are immediately deleted in the database
+
+. not effective when using the Oracle eZDFS handler.
+  A separate script is provided to the same effect:
+
+  extension/ezoracle/scripts/oracleclusterbinarypurge.php
+
+  Please note that it can take a long time to run, as it has to scan the complete
+  dfs mount point for expired files.
+  It can put a lot of strain on the NFS server, too.
+  Run it once with the --help option to see all available options for it and take
+  advantage of those options to tune its usage to your needs.
 
 
 Recommendations
