@@ -1,13 +1,5 @@
-This branch is meant to be used with eZ Publish 4.1.x, 4.2.x and 4.3.x:
+This branch is meant to be used with eZ Publish 4.4.x:
 
 detailed compatibily table
 
-2.0 => 4.1.0 
-
-2.0.1 => 4.1.0 - 4.1.4
-
-2.0.2 => 4.1.0 - 4.1.4, 4.2.0
-
-2.0.3 => 4.1.0 - 4.1.4, 4.2.0, 4.3.0
-
-other: ?
+2.1.0 => 4.4.0 
