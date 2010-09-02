@@ -43,7 +43,7 @@ Cronjobs: the cluster_maintenance cronjob is
 . not effective when using the Oracle eZDFS handler.
   A separate script is provided to the same effect:
 
-  extension/ezoracle/scripts/oracleclusterbinarypurge.php
+  extension/ezoracle/bin/php/oracleclusterbinarypurge.php
 
   Please note that it can take a long time to run, as it has to scan the complete
   dfs mount point for expired files.
