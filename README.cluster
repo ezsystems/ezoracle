@@ -3,7 +3,12 @@ eZ Oracle extension [EXTENSION_VERSION] cluster README
 Configuration
 =============
 
-The instructions to set up eZ Publish clustering configurations are available online:
+The instructions to set up eZ Publish clustering configurations on oracle are
+available online:
+
+http://ez.no/doc/extensions/ez_publish_extension_for_oracle_r_database/1_8/clustering
+
+Generic instructions to set up eZ Publish clustering configurations (on mysql)
 
 http://ez.no/doc/ez_publish/technical_manual/4_x/features/clustering/setting_it_up_for_an_ezdbfilehandler
 
@@ -31,6 +36,9 @@ Besides easing backups and maintenance operations, this setup guarantees that
 the transactions used to insure correctness of operations in both databases
 dot not mix up with each other, which might cause in unexpected (and hard to
 track) behavior.
+
+We recommend to use the UTF8 character set for the cluster database (and an
+appropriate NLS_LANG environment variable client-side).
 
 
 New parameters for index_image_oracle.php

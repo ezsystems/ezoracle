@@ -282,6 +282,11 @@ Database=<instance>
    You must replace `<user>' `<password>' and `<instance>' with the user and
    instance you use to connect to Oracle.
 
+2.  Installing patches
+
+Since version 1.8.1, a "patches" directory is present within the extension.
+It contains php files that are meant to replace the corresponding eZ Publish
+kernel files to insure a smooth experience.
 
 Troubleshooting
 ===============
