@@ -1,0 +1,9 @@
+Changes from 2.0.4 to 2.1.0 - released 2010/xx/yy
+
+*General:
+- removed the "patches" directory, as no patches are currently needed to eZPublish 4.4 kernel code
+- moved the command line scripts from extension/ezoracle/scripts to the more standard ones:
+  extension/ezoracle/bin/php
+  extension/ezoracle/bin/sh
+
+*Bugfixes:
