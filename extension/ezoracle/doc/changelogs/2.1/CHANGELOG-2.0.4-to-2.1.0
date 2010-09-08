@@ -8,3 +8,4 @@ Changes from 2.0.4 to 2.1.0 - released 2010/xx/yy
 - removed the deprecated script ora-drop-schema.sh. Use ora-drop-schema.php instead
 
 *Bugfixes:
+- Fixed bug #017241: tc-181 (Oracle) Translating a class in admin 2 interface generates a database error
