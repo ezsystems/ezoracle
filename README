@@ -31,8 +31,7 @@ The following requirements exists for using eZ Oracle extension:
 o  eZ Publish version:
 
    Make sure you eZ Publish version [EXTENSION_PUBLISH_VERSION] or higher, earlier
-   versions did not take Oracle properly into account and will not work
-   correctly.
+   versions will not work correctly with this extension.
 
 o  Oracle version:
 
@@ -46,7 +45,8 @@ o  PHP with Oracle support:
 
    Make sure your PHP installation has compiled in support for Oracle. To
    compile this you will need the Oracle client libraries and headers.
-   The standard windows version of php includes the dll needed for oracle support.
+   The standard windows version of php includes the dll needed for oracle support
+   (but the oracle client is still neded).
 
 o  Oracle user with correct permissions:
 
