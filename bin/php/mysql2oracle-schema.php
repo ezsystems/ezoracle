@@ -52,7 +52,8 @@ $columnTypeTransTable = array(
     'ezrss_import.import_description' => 'VARCHAR2(3100)',
     'ezcontentclass.serialized_name_list' => 'VARCHAR2(3100)',
     'ezcontentclass_attribute.serialized_name_list' => 'VARCHAR2(3100)',
-    'ezpending_actions.param' => 'VARCHAR2(3000)'
+    'ezpending_actions.param' => 'VARCHAR2(3000)',
+    'ezcontentclass.serialized_description_list' => 'VARCHAR2(3000)'
     );
 
 // columns that could not have default value
