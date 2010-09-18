@@ -41,7 +41,8 @@ Introduction
 
       Make sure your PHP installation has compiled in support for Oracle. To
       compile this you will need the Oracle client libraries and headers.
-      The standard windows version of php includes the dll needed for oracle support.
+      The standard windows version of php includes the dll needed for oracle support
+      (but the oracle client is still neded).
       To check if Oracle support is enabled, the output of the phpinfo() php
       function includes a section titled "oci8". From the command line run `php -i'
 
@@ -88,8 +89,7 @@ Installing eZ Oracle extension
 
 2. Unpack the files in the distribution.
 
-   $ unzip ezoracle-extension-[EXTENSION_VERSION].zip
-
+   $ unzip ezoracle-[EXTENSION_VERSION].zip
 
 3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the
    folder root_of_ezpublish/settings/override. If this file does not exist, create it.
