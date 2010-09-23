@@ -5,9 +5,9 @@ ALTER TABLE ezcontentobject DROP COLUMN is_published;
 
 ALTER TABLE ezsection ADD identifier VARCHAR2(255) NULL;
 
-CREATE INDEX ezinfocollection_att_ca_id ON ezinfocollection_attribute( contentclass_attribute_id );
-CREATE INDEX ezinfocollection_att_oa_id ON ezinfocollection_attribute( contentobject_attribute_id );
-CREATE INDEX ezinfocollection_att_in_id ON ezinfocollection_attribute( informationcollection_id );
+CREATE INDEX ezinfocollection_attr_cca_id ON ezinfocollection_attribute( contentclass_attribute_id );
+CREATE INDEX ezinfocollection_attr_coa_id ON ezinfocollection_attribute( contentobject_attribute_id );
+CREATE INDEX ezinfocollection_attr_ic_id ON ezinfocollection_attribute( informationcollection_id );
 
 ALTER TABLE ezpreferences RENAME COLUMN value TO value_temp;
 ALTER TABLE ezpreferences ADD value LONG NULL;
