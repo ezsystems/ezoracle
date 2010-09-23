@@ -10,7 +10,7 @@ CREATE INDEX ezinfocollection_attr_coa_id ON ezinfocollection_attribute( content
 CREATE INDEX ezinfocollection_attr_ic_id ON ezinfocollection_attribute( informationcollection_id );
 
 ALTER TABLE ezpreferences RENAME COLUMN value TO value_temp;
-ALTER TABLE ezpreferences ADD value LONG NULL;
+ALTER TABLE ezpreferences ADD value CLOB NULL;
 UPDATE ezpreferences set value=value_temp;
 ALTER TABLE ezpreferences DROP COLUMN value_temp;
 
