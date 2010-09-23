@@ -9,7 +9,12 @@ CREATE INDEX ezinfocollection_att_ca_id ON ezinfocollection_attribute( contentcl
 CREATE INDEX ezinfocollection_att_oa_id ON ezinfocollection_attribute( contentobject_attribute_id );
 CREATE INDEX ezinfocollection_att_in_id ON ezinfocollection_attribute( informationcollection_id );
 
-ALTER TABLE ezpreferences MODIFY ( value LONG );
+ALTER TABLE ezpreferences RENAME COLUMN value TO value_temp;
+ALTER TABLE ezpreferences ADD value LONG NULL;
+UPDATE ezpreferences set value=value_temp;
+ALTER TABLE ezpreferences DROP COLUMN value_temp;
+
+
 ALTER TABLE ezpolicy ADD original_id INTEGER DEFAULT 0 NOT NULL;
 CREATE INDEX ezpolicy_original_id ON ezpolicy( original_id );
 
