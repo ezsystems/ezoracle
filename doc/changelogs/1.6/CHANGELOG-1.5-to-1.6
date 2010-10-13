@@ -1,0 +1,38 @@
+Changes from 1.5 to 1.6 - released 2008/12/22
+
+*General:
+- Support for Oracle 1Og
+- Added update sql scripts up to 3.9.5
+- Implemented request #011595: allow oracle db connector to honor persistent, numretries settings for connecting to db
+- Implemented request #011767: Added query analysis support
+- Improved oracle cluster handler (uses less queries, bind parameters)
+- Improved oracle cluster handler index_image_oracle.php file
+- Better time measuring
+- More correct time accumulators
+- Improved script ora-initialize.sh
+- Added bitOr and bitAnd interface methods
+- Added bitor.sql to create bitor function in oracle. Included bitor creation in ora-initialize.sh
+- Removed quotes around default values for columns that are of type DECIMAL in mysql
+- Added function databaseServerVersion() to database driver
+- Improved error reporting and shutdown when a query fails inside a transaction
+- Improved execution time and memory usage for fetching results from the database
+- Implemented request #013821: oracle: allow user to specify tablespace when creating ezpublish user
+
+*Bugfixes:
+- Fixed bugs #009802 and #009807: errors in ora-initialise.sh
+- Fixed bug #009958: Error (911): ORA-00911: invalid character in eZ Oracle is 1.4
+- Fixed bug #010512: Create a wrapper function for ezdb to encapsulate the IN-creation
+- Fixed bug #010865: eZOracle and search indexing
+- Fixed bug #010947: Missing ezinfo.php and wrong ini files in ezoracle ext
+- Fixed bug #010948: Error: ORA-24816: Expanded non LONG bind data supplied after actual LONG or LOB column
+- Fixed bug #011051: ezoracle sql updates out of date
+- Fixed bug #011187: Oracle 1.5 uses rename function
+- Fixed bug #011188: oracle 1.5 returns wrong value in function _fetch
+- Fixed bug #011623: php short open tag used in mysql2oracle-data.php and other files in ezora/scripts
+- Fixed bug #011629: only variables should be assigned by reference
+- Fixed bug #012211: Errors in RSS import
+- Fixed bug #013023: segmentation fault when creating a clean eZP database on Oracle
+- Fixed bug: Wrong table conversion from mysql. ezurl.url field should be varchar2 in oracle
+- Fixed bug: arrayQuery() would not honor offset with limit = -1
+- Fixed bug: bad sequence name generated when importing an existing mysql installation that contains extensions tables with an autoincrement column
+- Fixed bug: System Upgrade page in admin interface would give unnecessary warnings about tables with decimal columns

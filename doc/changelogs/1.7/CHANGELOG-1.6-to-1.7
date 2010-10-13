@@ -1,0 +1,15 @@
+Changes from 1.6 to 1.7 - released 2008/12/22
+
+*General:
+- Added update sql scripts up to 3.10.1
+- Implemented request #011610: add support for connect retries in oracle cluster handler
+- Updated oracle cluster handler to new model (uses less queries, bind parameters; can provide debug traces; increased max allowed file path length)
+- Improved further oracle cluster handler index_image_oracle.php file
+
+
+*Bugfixes:
+- Fixed bug #011051: ezoracle sql updates out of date
+- Fixed bug #011625: ezurlalias_ml.text (clob) must be nullable in oracle
+- Fixed bug #011626: generated sql is invalid in oracle, in ezurlaliasml.php
+- Fixed bug #011627: cannot compare ezurlalias_ml.action with plain strings in oracle
+- Fixed bug #011948: ezoracle's dbupdate-3.9.0-to-3.10.0.sql does not work

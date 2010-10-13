@@ -1,0 +1,31 @@
+Changes from 2.0.3 to 2.0.4 - released 2010/xx/yy
+
+*General:
+- cluster support is fully functional again: ezdfs setups are now possible
+  It is recommended to read the README;cluster for more information
+- added update script up to eZ Publish version 4.3.0 final
+- added update script up to eZ Publish version 4.4.0beta1
+- added update script up to eZ Publish versions 4.1.5, 4.2.1 and 4.3.1 (all of them unreleased)
+- new parameters are possible to improve performance of the index_image_oracle.php
+  script in cluster setups. More details in the README.cluster file
+
+*Bugfixes:
+- improved 4.0 to 4.1 update scripts for the case where ezgeneral_digest_user_settings table has rows with NULL address
+- fixed the generated sql for correcting database schema when a varchar column is being migrated to clob (in the 'Setup|Upgrade check' page)
+- fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
+- fixed bug: script ora-drop-schema.php has a bug preventing proper dropping of functions
+- fixed bug #017017: Errors in Migration/Update Script
+- fixed bug #017183: fetchExpiredBinaryItems function missing from oracle ezdb cluster handler
+- fixed bug #017184: oracle ezdb cluster handler: zero byte files not supported
+- fixed bug #017185: oracle ezdb cluster handler: function _handleerrortype is missing
+- fixed bug #017241: tc-181 (Oracle) Translating a class in admin 2 interface generates a database error
+- fixed bug: http://share.ez.no/forums/install-configuration/ezoracle-extension-error-932-ora-00932-inconsistent-datatypes-expected-got-clob
+
+*Enhancements:
+- Implemented enhancement #017157: optimize memory usage of index_image_mysql for big images
+- Implemented enhancement #017158: Allow persistent database connections in index_image.php and friends
+- Implemented enhancement #017159: Allow index_image_mysql.php (and others) to honour Etag http headers
+- Implemented enhancement #017160: Allow index_image_mysql.php (and others) to play nice with keepalive
+- Implemented enhancement #016513: Add ability to define Expires offset send by index_cluster.php
+- renamed the accumulator used for select queries to make it more uniform with mysql/postgres
+- Implemented enhancement #013870: Allow db cluster file handlers to have their own connection charset, persistence settings (only persistent connection part)

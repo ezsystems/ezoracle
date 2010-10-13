@@ -1,0 +1,256 @@
+
+       SOME ORACLE-SPECIFIC NOTES FOR eZ Publish DEVELOPERS
+
+Short Oracle introduction
+------------------------
+Oracle is a unique program which is quite different from other databases. Here are a few hints to get you going.
+- There are no databases that form a server, only oracle instances. (see oracle doc on how to setup an instance)
+- The instances you can connect to from your system can generally be found in the tnsnames.ora file.
+- The instances running on your system can generally be found in the listener.ora file.
+- Each instance can have several users.
+- Users can not by default see the data of each other, effectively creating a new database for each user.
+- The set of objects belonging to one user is called schema
+
+Updating the Oracle SQL schemas
+-----------------------------
+- Remember to test on both Oracle 8 and 9
+
+Oracle SQL oddities
+------------------
+
+1. IDENTIFIERS
+
+1.1.
+
+Oracle does not support identifiers longer than 30 characters. That is,
+table, column, trigger or sequence names cannot exceed this limit. Since some
+fields of eZ Publish tables have names too long for Oracle we use "short
+field names" as fields aliases when working with Oracle. To use this feature
+in your class (derived from eZPersistentObject) you should specify
+'short_name' in definition() for each field that requires and alias, like
+this (cut from ezenumobjectvalue.php):
+
+function &definition()
+{
+    return array( "fields" => array(
+// <skipped>
+                   "contentobject_attribute_version" =>
+                    array( 'name' => "ContentObjectAttributeVersion",
+                           'datatype' => 'integer',
+                           'default' => 0,
+                           'required' => true,
+                           'short_name' => 'contentobject_attr_version' ),
+// <skipped>
+                  ),
+                  "keys" => array( "contentobject_attribute_id",
+                                   "contentobject_attribute_version",
+                                   "enumid" ),
+                  "sort" => array( "contentobject_attribute_id" => "asc" ),
+                  "class_name" => "eZEnumObjectValue",
+                  "name" => "ezenumobjectvalue" );
+}
+
+1.2.
+
+The sequences made for oracle start with s_ instead of ez. The reason for
+this is the 30 character limitation: if _s was appended to the table names
+the identifier would exceed this value. Instead ez at the start is replaced
+with s_.
+
+2. "AS" keywords in SQL FROM clauses
+
+Oracle does not support specifying table aliases in FROM clause using AS
+keyword. In other words, you should write
+ SELECT t1.a, t2.b FROM table1 t1, table2 t2 WHERE <condition>;
+instead of
+ SELECT t1.a, t2.b FROM table1 AS t1, table2 AS t2 WHERE <condition>;
+
+Both MySQL and PostgreSQL understand table aliases without AS (as well as
+Oracle), so simple removal of all AS keywords from your FROM clauses would
+not cause any problems.
+
+3. LONG TEXT FIELDS
+
+3.1.
+
+Strings longer than 4000 bytes can be saved in Oracle DB only in fields of
+type CLOB (character large object). This datatype has significant
+limitations which you must consider when developing eZ Publish.
+
+The most important limitation is inability to mention CLOB fields in SQL
+WHERE clauses. For example, ezcontentobject_attribute table has data_text
+field of type CLOB, and you cannot write a query like this:
+
+SELECT * FROM ezcontentobject_attribute WHERE data_text='some string';
+
+If you definitely need to do this, you should either think about changing
+datatype from CLOB to VARCHAR2(4000) or make a workaround to avoid
+comparisons on the CLOB field. The last remedy for comparing CLOB to
+strings (which size is less than 32 kB) is to call the next SQL query:
+
+SELECT * FROM ezcontentobject_attribute
+WHERE DBMS_LOB.getlength(data_text)=5 AND DBMS_LOB.substr(data_text,5)='BW015'
+
+3.2.
+
+Oracle is unable to create standard indexes on CLOB fields.
+
+3.3.
+
+You cannot pass strings longer than 240 characters to your INSERT/UPDATE
+queries. To bypass this limitation you have to use a special feature called
+"variable binding".
+
+Let's look at the simple example to know what does it mean.
+
+In a query like this:
+
+  INSERT INTO emp (empno, ename, sal) VALUES (2365, 'VERYVERYLONGNAME', 2000);
+
+you shouldn't explicitly specify long employee name, instead you should pass
+that name in a bound variable (":ename" in this example):
+
+  INSERT INTO emp (empno, ename, sal) VALUES (23655, :ename, 2000);
+
+Here is how it looks in PHP:
+===================================================================
+$employeeName = 'VERYVERYLONGNAME';
+$stmt = OCIParse( $oradb, "INSERT INTO emp (empno, ename, sal)" .
+                          " VALUES (23655, :ename, 2000)" );
+OCIBindByName( $stmt, ':ename', $employeeName );
+OCIExecute( $stmt );
+OCIFreeStatement( $stmt );
+===================================================================
+
+eZ Publish is already binding-aware. That is, if you use some descendant of
+eZPersistentObject to store data in a table having one or more CLOB fields,
+binding is done automatically. However if you want to do INSERTs/UPDATEs
+manually, you should take care of variables binding yourself. For example of
+how to do it please look at eZPersistentObject::storeObject() method.
+
+3.4.
+
+Oracle 8 has a a default limit of 3218 characters for key in an index, setting the length
+of a varchar or char to 3100 keeps it below that value.
+In fact the limit is tied to the db block size parameter, which defaults to 8K. If the
+block size used was for the db was doubled there would be no problem at all.
+Oracle 9 and later have higher limits on index key length, so that even with a block
+size of 8k there is no problem in using a varchar2(4000) column as index key.
+
+4. SQL Errors with PHP
+
+4.1.
+
+PL/SQL
+
+On Oracle 8 the BEGIN and END statements need to be placed on a separate line
+without any other SQL code on it. The END statement also needs a semicolon after
+to properly end the statement.
+
+5. Joins
+
+5.1. Left/right joins don't work in Oracle 8
+
+In Oracle 8 you have to use a (+) on the column that you want to join with,
+this means that all code that uses joins must have a special case for oracle.
+
+e.g.
+
+SELECT DISTINCT language_code, name
+FROM ezcontentobject_attribute LEFT JOIN ezcontent_translation ON locale=language_code
+WHERE contentobject_id='1' AND version='1'
+ORDER BY name
+
+must be written as:
+
+SELECT DISTINCT language_code, name
+FROM ezcontentobject_attribute, ezcontent_translation
+WHERE contentobject_id='58' AND version='1' and
+locale(+) = language_code
+ORDER BY name
+
+6. LIMIT and OFFSET clauses in SQL queries.
+
+Oracle SQL syntax does not support limiting number of records returned by a query
+with LIMIT and OFFSET clauses.
+So, if you need this, you can either use eZPersistentObject interface or call
+eZDBInterface::arrayQuery() method like this:
+
+    $rows = $db->arrayQuery( 'SELECT * FROM ezfoo',
+                             array( 'offset' => $offset,
+                                    'limit'  => $limit ) );
+
+Both MySQL and PostgreSQL eZ Publish driver driver support these parameters,
+so it's not a problem not to use LIMIT at all.
+
+7. Trailing semicolons.
+
+Make sure there are no trailing semicolons in your queries.
+For example, the following line will produce Oracle error:
+
+    $rows = $db->arrayQuery( $query, 'SELECT * FROM ezfoo;" );
+
+8. Temporary tables.
+
+Temporary tables in Oracle are global across sessions. This means that
+tables created in one session are visible in an other, and it's impossible to create
+two temporary tables with the same name in different sessions.
+Thus, before creating a temporary table you must take care of uniqueness of its name.
+You can use eZDBInterface::generateUniqueTempTableName() method for this.
+
+Example:
+
+    $db =& eZDB::instance();
+    $tmpTableName = $db->generateUniqueTempTableName( 'eznode_count_%' );
+    $db->createTempTable( "CREATE TEMPORARY TABLE $tmpTableName ( count int )" );
+    $db->query( "INSERT INTO $tmpTableName VALUES (5)" );
+    $db->dropTempTable( "DROP TABLE $tmpTableName" );
+
+The percent sign (%) will be replaced with a random number by ezoracle driver.
+
+9. Comparison with empty string.
+
+When you want to compare a text field with empty string, in MySQL you
+would write something like this in your WHERE clause:
+
+    WHERE name != '' AND desc = ''
+
+Unfortunately, Oracle does not allow you to use such comparisons. The
+point is that Oracle does not distinguish NULL and empty string.
+Thus, the above WHERE clause must be rewritten for Oracle to work correctly.
+
+Here come two cases:
+1. field <> '' ("does not equal to empty string")
+2. field =  '' ("equals to empty string")
+
+The first case is simple and can be solved in a DBMS-portable way like this:
+
+    WHERE LENGTH(name) > 0
+or
+    WHERE (name != '' and name IS NOT NULL)
+
+(these work at least on Oracle, MySQL, PostgreSQL. Null strings are filtered out together with empty ones)
+
+If you don't need compatibility with other DBMSs, you can of course use
+the following clause:
+
+    WHERE name IS NOT NULL
+
+The second case is more complex. However, you can use the following clause:
+
+    WHERE desc || 'x' = 'x'
+or
+    WHERE (desc = '' OR desc IS NULL)
+
+(this works on PostgreSQL as well. Null strings are selected together with empty ones)
+
+Or, if compatitibility is not needed, the following one:
+
+    WHERE desc IS NULL
+
+Using the tricks described above, we can rewrite the original clause for
+Oracle as following:
+
+    WHERE name IS NOT NULL AND desc IS NULL
+or
+    WHERE length(name) > 0 AND desc || 'x' = 'x'
