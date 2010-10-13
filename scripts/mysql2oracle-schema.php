@@ -102,6 +102,7 @@ $columnsWithDefaultNullVal = array(
     'ezenumvalue.enumelement',
     'ezenumvalue.enumvalue',
     'ezenumobjectvalue.enumvalue',
+    'ezcontentclass_name.name',
     'ezcollab_simple_message.data_text1',
     'ezcollab_simple_message.data_text2',
     'ezcollab_simple_message.data_text3'

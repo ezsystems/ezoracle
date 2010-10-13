@@ -16,6 +16,8 @@ ALTER TABLE ezcollab_simple_message MODIFY ( data_text1 NULL );
 ALTER TABLE ezcollab_simple_message MODIFY ( data_text2 NULL );
 ALTER TABLE ezcollab_simple_message MODIFY ( data_text3 NULL );
 
+ALTER TABLE ezcontentclass_name MODIFY ( name NULL );
+
 -- Follows: fixes for bad triggers/sequences 
 -- need to be run only if the site was upgraded from 3.10 to 4.0 using extension 1.8.0 to 1.8.3
 

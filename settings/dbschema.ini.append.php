@@ -61,6 +61,7 @@ ColumnOptionTranslations[ezsession.data]=null
 ColumnOptionTranslations[ezenumvalue.enumelement]=null
 ColumnOptionTranslations[ezenumvalue.enumvalue]=null
 ColumnOptionTranslations[ezenumobjectvalue.enumvalue]=null
+ColumnOptionTranslations[ezcontentclass_name.name]=null
 ColumnOptionTranslations[ezcollab_simple_message.data_text1]=null
 ColumnOptionTranslations[ezcollab_simple_message.data_text2]=null
 ColumnOptionTranslations[ezcollab_simple_message.data_text3]=null
