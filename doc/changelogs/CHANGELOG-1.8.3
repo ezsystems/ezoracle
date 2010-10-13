@@ -1,4 +1,4 @@
-Changes from 1.8.2 to 1.8.3 - released xxxx/yy/zz
+Changes from 1.8.2 to 1.8.3 - released 2010/yy/zz
 
 *General:
 - Added update sql scripts up to 4.0.7
@@ -21,8 +21,9 @@ Changes from 1.8.2 to 1.8.3 - released xxxx/yy/zz
 - Fixed bug: column ezurl.url reported as changed in System Upgrade page even though it was fine
 - Fixed bug #015880: bad names of triggers in update sql from 3.10.0 to 4.0.0 (also added sql script to fix this)
 - Fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
-- fixed bug #017184: oracle ezdb cluster handler: zero byte files not supported
-- fixed bug #017185: oracle ezdb cluster handler: function _handleerrortype is missing
+- Fixed bug #017184: oracle ezdb cluster handler: zero byte files not supported
+- Fixed bug #017185: oracle ezdb cluster handler: function _handleerrortype is missing
+- Fixed bug #017451: ezoracle: Cannot add a comment in Collaboration Approval screen
 
 *Enhancements:
 - Implemented enhancement #017157: optimize memory usage of index_image_mysql for big images
