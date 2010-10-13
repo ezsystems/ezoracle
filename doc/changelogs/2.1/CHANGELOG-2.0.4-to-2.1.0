@@ -1,4 +1,4 @@
-Changes from 2.0.4 to 2.1.0 - released 2010/xx/yy
+Changes from 2.0.4 to 2.1.0 - released 2010/9/29
 
 *General:
 - removed the "patches" directory, as no patches are currently needed to eZPublish 4.4 kernel code
