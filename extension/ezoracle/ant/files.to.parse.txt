@@ -1,4 +1,0 @@
-INSTALL
-README
-README.cluster
-FAQ
