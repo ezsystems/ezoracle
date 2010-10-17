@@ -1,0 +1,37 @@
+Changes from 1.8.2 to 1.8.3 - released 2010/10/17
+
+*General:
+- Added update sql scripts up to 4.0.7
+- vastly improved the consistency checks and the generated corrective sql in the "Setup"/"System upgrade check" page
+  To take full advantage of the improvements, you should use eZ Publish 4.0.8+
+  For lower versions in the 4.0 series a patched kernel/setup/systemupgrade.php script
+  is available in the 'patches' directory of the extension.
+- new parameters are possible to improve performance of the index_image_oracle.php
+  script in cluster setups. More details in the README.cluster file
+
+*Bugfixes:
+- Fixed bug #015054: Index on table ezkeyword_attribute_link
+- Fixed bug #015051: Fatal Error accessing collection information (infocollector/overview)
+- Fixed bug #015075: persistent objects on tables not prefixed with ez_ do not work with oracle
+- Fixed bug #015436: DBA file not handled correctly by ezoracle
+- Fixed bug #015462: The db upgrade scripts for oracle do not work on table ezpending_actions
+- Fixed bug #015662: problems with wildcard cache and oracle in cluster mode
+- Fixed bug #015694: oracle: database consystency check fails for INTEGER columns
+- Fixed bug #015696: oracle: mysql2oracle-schema.php looses NOT NULL constraints on some fields
+- Fixed bug: column ezurl.url reported as changed in System Upgrade page even though it was fine
+- Fixed bug #015880: bad names of triggers in update sql from 3.10.0 to 4.0.0 (also added sql script to fix this)
+- Fixed bug: eznumvalue table columns should be nullable, or it is impossible to add enum attributes to classes (even though it's a deprecated datatype)
+- Fixed bug #017184: oracle ezdb cluster handler: zero byte files not supported
+- Fixed bug #017185: oracle ezdb cluster handler: function _handleerrortype is missing
+- Fixed bug #017451: ezoracle: Cannot add a comment in Collaboration Approval screen
+- Fixed bug #017241: tc-181 (Oracle) Translating a class in admin 2 interface generates a database error
+
+*Enhancements:
+- Implemented enhancement #017157: optimize memory usage of index_image_mysql for big images
+- Implemented enhancement #017158: Allow persistent database connections in index_image.php and friends
+- Implemented enhancement #017159: Allow index_image_mysql.php (and others) to honour Etag http headers
+- Implemented enhancement #017160: Allow index_image_mysql.php (and others) to play nice with keepalive
+- Implemented enhancement #016513: Add ability to define Expires offset send by index_cluster.php
+- Renamed the accumulator used for select queries to make it more uniform with mysql/postgres
+- Improvement for bug #013469: allowed the md5_digest function to return a value for empty strings
+- Implemented enhancement #013870: Allow db cluster file handlers to have their own connection charset, persistence settings (only persistent connection part)

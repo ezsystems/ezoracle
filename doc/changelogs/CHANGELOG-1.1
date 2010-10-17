@@ -1,0 +1,16 @@
+Changes from 1.0 to 1.1
+
+*General:
+- Recursive transaction are omitted, and result in one big transaction.
+  This is the same behavior as used for MySQL and PostgreSQL. The behavior
+  of autocommit mode is not changed.
+- Updated 3.4 Oracle support cumulative patch to work on eZ Publish 3.4.4.
+- Updated 3.3 cumulative Oracle support patch to work with eZ Publish 3.3-6.
+- Added two new chapters to the Oracle notes.
+- Added notes to oracle-notes.txt.
+- Added update sql-scripts for eZ Publish 3.5.1 and eZ Publish 3.5.2
+
+*Bugfixes:
+- Fixed the problem regarding temporary tables that led to inability of
+  searching in an Oracle db.
+- Fixed wrong configure line given for adding Oracle support to PHP.
