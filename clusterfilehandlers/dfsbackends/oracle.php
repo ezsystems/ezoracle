@@ -592,11 +592,7 @@ class eZDFSFileHandlerOracleBackend
      **/
     public function _fetch( $filePath, $uniqueName = false )
     {
-        if ( $fname )
-            $fname .= "::_fetch($filePath)";
-        else
-            $fname = "_fetch($filePath)";
-        $metaData = $this->_fetchMetadata( $filePath, $fname );
+        $metaData = $this->_fetchMetadata( $filePath );
         if ( !$metaData )
         {
             // @todo Throw an exception
@@ -1791,7 +1787,7 @@ class eZDFSFileHandlerOracleBackend
 
     /// @todo add runtime support (via an ini param?) to switch to logical deletes
     //static $deletequery = "UPDATE ezdbfile SET mtime=-ABS(mtime), expired='1' ";
-    static $deletequery = "DELETE FROM ezdbfile ";
+    static $deletequery = "DELETE FROM ezdfsfile ";
 
 }
 
