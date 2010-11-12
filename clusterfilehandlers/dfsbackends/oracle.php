@@ -592,7 +592,8 @@ class eZDFSFileHandlerOracleBackend
      **/
     public function _fetch( $filePath, $uniqueName = false )
     {
-        $metaData = $this->_fetchMetadata( $filePath );
+        $fname = "_fetch($filePath)";
+        $metaData = $this->_fetchMetadata( $filePath, $fname );
         if ( !$metaData )
         {
             // @todo Throw an exception
@@ -733,10 +734,7 @@ class eZDFSFileHandlerOracleBackend
         if ( strcmp( $srcFilePath, $dstFilePath ) == 0 )
             return;
 
-        if ( $fname )
-            $fname .= "::_rename($srcFilePath, $dstFilePath)";
-        else
-            $fname = "_rename($srcFilePath, $dstFilePath)";
+         $fname = "_rename($srcFilePath, $dstFilePath)";
         // Fetch source file metadata.
         $metaData = $this->_fetchMetadata( $srcFilePath, $fname );
         if ( !$metaData ) // if source file does not exist then do nothing.
