@@ -592,10 +592,7 @@ class eZDFSFileHandlerOracleBackend
      **/
     public function _fetch( $filePath, $uniqueName = false )
     {
-        if ( $fname )
-            $fname .= "::_fetch($filePath)";
-        else
-            $fname = "_fetch($filePath)";
+        $fname = "_fetch($filePath)";
         $metaData = $this->_fetchMetadata( $filePath, $fname );
         if ( !$metaData )
         {
@@ -737,10 +734,7 @@ class eZDFSFileHandlerOracleBackend
         if ( strcmp( $srcFilePath, $dstFilePath ) == 0 )
             return;
 
-        if ( $fname )
-            $fname .= "::_rename($srcFilePath, $dstFilePath)";
-        else
-            $fname = "_rename($srcFilePath, $dstFilePath)";
+         $fname = "_rename($srcFilePath, $dstFilePath)";
         // Fetch source file metadata.
         $metaData = $this->_fetchMetadata( $srcFilePath, $fname );
         if ( !$metaData ) // if source file does not exist then do nothing.
@@ -1791,7 +1785,7 @@ class eZDFSFileHandlerOracleBackend
 
     /// @todo add runtime support (via an ini param?) to switch to logical deletes
     //static $deletequery = "UPDATE ezdbfile SET mtime=-ABS(mtime), expired='1' ";
-    static $deletequery = "DELETE FROM ezdbfile ";
+    static $deletequery = "DELETE FROM ezdfsfile ";
 
 }
 
