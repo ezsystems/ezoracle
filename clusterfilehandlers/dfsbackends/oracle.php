@@ -819,7 +819,7 @@ class eZDFSFileHandlerOracleBackend
         // Check if a file with the same name already exists in db.
         if ( $row = $this->_fetchMetadata( $filePath ) ) // if it does
         {
-            $sql  = "UPDATE " . set::TABLE_METADATA . " SET " .
+            $sql  = "UPDATE " . self::TABLE_METADATA . " SET " .
                     //"name='$filePathEscaped', name_hash='$filePathHash', " .
                     "datatype='$datatype', scope='$scope', " .
                     "filesize=$contentLength, mtime=$fileMTime, expired='0' " .
