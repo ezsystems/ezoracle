@@ -164,8 +164,8 @@ class eZDFSFileHandlerOracleBackend
 
         $filePathEscaped = $this->_escapeString( $dstFilePath );
         $filePathHash    = md5( $dstFilePath );
-        $datatype        = $metaData['datatype'];
-        $scope           = $metaData['scope'];
+        $datatype        = $this->_escapeString( $metaData['datatype'] );
+        $scope           = $this->_escapeString( $metaData['scope'] );
         $contentLength   = $metaData['size'];
         $fileMTime       = $metaData['mtime'];
         //$nameTrunk       = self::nameTrunk( $dstFilePath, $scope );
@@ -174,7 +174,7 @@ class eZDFSFileHandlerOracleBackend
         $name = $this->_escapeString( $dstFilePath );
         $hash = md5( $dstFilePath );
         $sql  = "INSERT INTO " . self::TABLE_METADATA . " (datatype, name, name_hash, scope, filesize, mtime, expired) " .
-                "VALUES ('$datatype', '$filePathEscaped', '$filePathHash', '$datatype', '$scope', " .
+                "VALUES ('$datatype', '$filePathEscaped', '$filePathHash', '$scope', " .
                 "$contentLength, $fileMTime, '0')";
 
         $return = $this->_query( $sql, $fname, true, array(), self::RETURN_COUNT );
