@@ -56,8 +56,25 @@ DB_TEST=""
 # some system might not have this set
 # [ -n "$TMPDIR" ] || TMPDIR=/tmp
 
-# We use the current dir as tmp
+# We use the current dir as tmp, as we need to run eZ scripts in it
 TMPDIR=`pwd`
+
+# But test if we can write to it
+# nb: to read: http://www.linuxsecurity.com/content/view/115462/151/
+# @todo move this check after we made sure that we are in the eZ dir
+PHP_TEST_SCRIPT="$TMPDIR/.ezoracle_test.$$.php"
+if [ -f "$PHP_TEST_SCRIPT" ]; then
+    rm "$PHP_TEST_SCRIPT"
+fi
+cat <<EOF >"$PHP_TEST_SCRIPT" 2>/dev/null
+<?php // this file is a test for writing perms ?>
+EOF
+if [ ! -f "$PHP_TEST_SCRIPT" ]; then
+    echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+    echo "Cannot create temporary files in current directory $TMPDIR"
+    exit 1
+fi
+rm "$PHP_TEST_SCRIPT"
 
 # Reimplementation of which, for some reason the which
 # on Solaris 5.9 doesn't set a proper exit code
