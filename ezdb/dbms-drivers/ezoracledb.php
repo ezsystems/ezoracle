@@ -99,22 +99,38 @@ class eZOracleDB extends eZDBInterface
             if ( $ini->variable( "DatabaseSettings", "UsePersistentConnection" ) == "enabled" )
             {
                 eZDebugSetting::writeDebug( 'kernel-db-oracle', $ini->variable( "DatabaseSettings", "UsePersistentConnection" ), "using persistent connection" );
-                $this->DBConnection = oci_pconnect( $user, $password, $db, $oraCharset );
+                $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
+                try {
+                    $this->DBConnection = oci_pconnect( $user, $password, $db, $oraCharset );
+                } catch( ErrorException $e ) {}
+                eZDebug::setHandleType( $oldHandling );
                 while ( $this->DBConnection == false and $numAttempts <= $maxAttempts )
                 {
                     sleep( $waitTime );
-                    $this->DBConnection = oci_pconnect( $user, $password, $db, $oraCharset );
+                    $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
+                    try {
+                        $this->DBConnection = oci_pconnect( $user, $password, $db, $oraCharset );
+                    } catch( ErrorException $e ) {}
+                    eZDebug::setHandleType( $oldHandling );
                     $numAttempts++;
                 }
             }
             else
             {
                 eZDebugSetting::writeDebug( 'kernel-db-oracle', "using real connection",  "using real connection" );
-                $this->DBConnection = oci_connect( $user, $password, $db, $oraCharset );
+                $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
+                try {
+                    $this->DBConnection = oci_connect( $user, $password, $db, $oraCharset );
+                } catch( ErrorException $e ) {}
+                eZDebug::setHandleType( $oldHandling );
                 while ( $this->DBConnection == false and $numAttempts <= $maxAttempts )
                 {
                     sleep( $waitTime );
-                    $this->DBConnection = oci_connect( $user, $password, $db, $oraCharset );
+                    $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
+                    try {
+                        $this->DBConnection = @oci_connect( $user, $password, $db, $oraCharset );
+                    } catch( ErrorException $e ) {}
+                    eZDebug::setHandleType( $oldHandling );
                     $numAttempts++;
                 }
             }
@@ -151,7 +167,7 @@ class eZOracleDB extends eZDBInterface
                     eZDebug::writeError( "Connection error(" . $error["code"] . "):\n". $error["message"] .  " ", "eZOracleDB" );
                 }
 
-                throw new eZDBNoConnectionException( $db );
+                throw new eZDBNoConnectionException( $db, $this->ErrorMessage, $this->ErrorNumber );
             }
         }
         else
@@ -380,13 +396,19 @@ class eZOracleDB extends eZDBInterface
 
         eZDebug::accumulatorStop( 'oracle_query' );
 
+        $this->BindVariableArray = array();
+
         // let std error handling happen here (eg: transaction error reporting)
         if ( !$result )
         {
             $this->reportError();
+
+            if ( $this->errorHandling == eZDB::ERROR_HANDLING_EXCEPTIONS )
+            {
+                throw new eZDBException( $this->ErrorMessage, $this->ErrorNumber );
+            }
         }
 
-        $this->BindVariableArray = array();
         return $result;
     }
 
