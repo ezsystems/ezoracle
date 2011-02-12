@@ -109,7 +109,7 @@ class eZDFSFileHandlerOracleBackend
             ++$tries;
         }
         if ( !$this->db )
-            throw new eZClusterHandlerDBNoConnectionException( self::$params['dbname'], self::$dbparams['user'], self::$dbparams['pass'] );
+            throw new eZClusterHandlerDBNoConnectionException( self::$dbparams['dbname'], self::$dbparams['user'], self::$dbparams['pass'] );
 
         // DFS setup
         if ( $this->dfsbackend === null )

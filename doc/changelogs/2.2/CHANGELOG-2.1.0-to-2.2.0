@@ -3,4 +3,7 @@ Changes from 2.1.0 to 2.2.0 - released 2010/xx/yy
 *General:
 
 *Bugfixes:
-- Fixed bug #17670: ezoracle and dfs : Fatal error on when clicking "Content structure" in admin
+- Fixed bug #017451: ezoracle: Cannot add a comment in Collaboration Approval screen
+- Fixed bug #017670: ezoracle and dfs : Fatal error on when clicking "Content structure" in admin
+- Fixed bug: php fatal error when bad db connection specified for ezdfs clustering
+- Fixed bug #xxx: allow--root--user parameter doesn't work when running script
