@@ -51,13 +51,45 @@ EZDB_INSTANCE=""
 
 DB_TEST=""
 
+
+# check if user is root: do not continue. way too dangerous
+# (and scripts we invoke will not run anyway
+echo -n "Testing current user"
+USERID=`id -u`
+if [ "$USERID" == "0" ]; then
+    echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+    echo "Running scripts as root may be dangerous."
+	echo "Please run this script using another user account (eg. oracle or www-data)"
+    exit 1
+fi
+echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
+
 # OLD CODE:
 # Check tmpdir variable,
 # some system might not have this set
 # [ -n "$TMPDIR" ] || TMPDIR=/tmp
 
-# We use the current dir as tmp
+# We use the current dir as tmp, as we need to run eZ scripts in it
 TMPDIR=`pwd`
+
+# But test if we can write to it
+# nb: to read: http://www.linuxsecurity.com/content/view/115462/151/
+# @todo move this check after we made sure that we are in the eZ dir
+echo -n "Testing creation of temp files"
+PHP_TEST_SCRIPT="$TMPDIR/.ezoracle_test.$$.php"
+if [ -f "$PHP_TEST_SCRIPT" ]; then
+    rm "$PHP_TEST_SCRIPT"
+fi
+cat <<EOF >"$PHP_TEST_SCRIPT" 2>/dev/null
+<?php // this file is a test for writing perms ?>
+EOF
+if [ ! -f "$PHP_TEST_SCRIPT" ]; then
+    echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
+    echo "Cannot create temporary files in current directory $TMPDIR"
+    exit 1
+fi
+rm "$PHP_TEST_SCRIPT"
+echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 # Reimplementation of which, for some reason the which
 # on Solaris 5.9 doesn't set a proper exit code

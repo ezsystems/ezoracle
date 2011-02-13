@@ -109,7 +109,7 @@ class eZDFSFileHandlerOracleBackend
             ++$tries;
         }
         if ( !$this->db )
-            throw new eZClusterHandlerDBNoConnectionException( self::$params['dbname'], self::$dbparams['user'], self::$dbparams['pass'] );
+            throw new eZClusterHandlerDBNoConnectionException( self::$dbparams['dbname'], self::$dbparams['user'], self::$dbparams['pass'] );
 
         // DFS setup
         if ( $this->dfsbackend === null )
@@ -164,8 +164,8 @@ class eZDFSFileHandlerOracleBackend
 
         $filePathEscaped = $this->_escapeString( $dstFilePath );
         $filePathHash    = md5( $dstFilePath );
-        $datatype        = $metaData['datatype'];
-        $scope           = $metaData['scope'];
+        $datatype        = $this->_escapeString( $metaData['datatype'] );
+        $scope           = $this->_escapeString( $metaData['scope'] );
         $contentLength   = $metaData['size'];
         $fileMTime       = $metaData['mtime'];
         //$nameTrunk       = self::nameTrunk( $dstFilePath, $scope );
@@ -174,7 +174,7 @@ class eZDFSFileHandlerOracleBackend
         $name = $this->_escapeString( $dstFilePath );
         $hash = md5( $dstFilePath );
         $sql  = "INSERT INTO " . self::TABLE_METADATA . " (datatype, name, name_hash, scope, filesize, mtime, expired) " .
-                "VALUES ('$datatype', '$filePathEscaped', '$filePathHash', '$datatype', '$scope', " .
+                "VALUES ('$datatype', '$filePathEscaped', '$filePathHash', '$scope', " .
                 "$contentLength, $fileMTime, '0')";
 
         $return = $this->_query( $sql, $fname, true, array(), self::RETURN_COUNT );
@@ -592,10 +592,7 @@ class eZDFSFileHandlerOracleBackend
      **/
     public function _fetch( $filePath, $uniqueName = false )
     {
-        if ( $fname )
-            $fname .= "::_fetch($filePath)";
-        else
-            $fname = "_fetch($filePath)";
+        $fname = "_fetch($filePath)";
         $metaData = $this->_fetchMetadata( $filePath, $fname );
         if ( !$metaData )
         {
@@ -737,10 +734,7 @@ class eZDFSFileHandlerOracleBackend
         if ( strcmp( $srcFilePath, $dstFilePath ) == 0 )
             return;
 
-        if ( $fname )
-            $fname .= "::_rename($srcFilePath, $dstFilePath)";
-        else
-            $fname = "_rename($srcFilePath, $dstFilePath)";
+         $fname = "_rename($srcFilePath, $dstFilePath)";
         // Fetch source file metadata.
         $metaData = $this->_fetchMetadata( $srcFilePath, $fname );
         if ( !$metaData ) // if source file does not exist then do nothing.
@@ -825,7 +819,7 @@ class eZDFSFileHandlerOracleBackend
         // Check if a file with the same name already exists in db.
         if ( $row = $this->_fetchMetadata( $filePath ) ) // if it does
         {
-            $sql  = "UPDATE " . set::TABLE_METADATA . " SET " .
+            $sql  = "UPDATE " . self::TABLE_METADATA . " SET " .
                     //"name='$filePathEscaped', name_hash='$filePathHash', " .
                     "datatype='$datatype', scope='$scope', " .
                     "filesize=$contentLength, mtime=$fileMTime, expired='0' " .
@@ -1791,7 +1785,7 @@ class eZDFSFileHandlerOracleBackend
 
     /// @todo add runtime support (via an ini param?) to switch to logical deletes
     //static $deletequery = "UPDATE ezdbfile SET mtime=-ABS(mtime), expired='1' ";
-    static $deletequery = "DELETE FROM ezdbfile ";
+    static $deletequery = "DELETE FROM ezdfsfile ";
 
 }
 
