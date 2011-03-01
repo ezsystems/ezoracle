@@ -401,13 +401,14 @@ class eZOracleSchema extends eZDBSchemaInterface
 
     /**
      * @return string Oracle datatype matching the given MySQL type
+     * @see http://download.oracle.com/docs/cd/B28359_01/server.111/b28286/sql_elements001.htm#i45441
      */
     function getOracleType( $mysqlType )
     {
         $rslt = $mysqlType;
         $rslt = preg_replace( '/varchar/', 'VARCHAR2', $rslt );
         $rslt = preg_replace( '/char/', 'CHAR', $rslt );
-        $rslt = preg_replace( '/int(eger)?(\([0-9]+\))?( +unsigned)?/', 'INTEGER', $rslt );
+        $rslt = preg_replace( '/(big)?int(eger)?(\([0-9]+\))?( +unsigned)?/', 'INTEGER', $rslt );
         $rslt = preg_replace( '/^(medium|long)?text$/', 'CLOB', $rslt );
         $rslt = preg_replace( '/^double$/', 'DOUBLE PRECISION', $rslt );
         $rslt = preg_replace( '/^float$/', 'FLOAT', $rslt );
