@@ -942,9 +942,20 @@ BEGIN\n".
 
                 foreach ( $tableSchema['fields'] as $fieldName => $fieldSchema )
                 {
-                    if ( isset( $tableSchema['_original'] ) && isset( $tableSchema['_original']['fields'][$fieldName] ) && isset( $tableSchema['_original']['fields'][$fieldName]['default'] ) )
+                    if ( isset( $tableSchema['_original'] ) && isset( $tableSchema['_original']['fields'][$fieldName] ) )
                     {
-                        $schema[$tableName]['fields'][$fieldName]['default'] = $tableSchema['_original']['fields'][$fieldName]['default'];
+                        if ( isset( $tableSchema['_original']['fields'][$fieldName]['default'] ) )
+                        {
+                            $schema[$tableName]['fields'][$fieldName]['default'] = $tableSchema['_original']['fields'][$fieldName]['default'];
+                        }
+                        if ( isset( $tableSchema['_original']['fields'][$fieldName]['type'] ) )
+                        {
+                            $schema[$tableName]['fields'][$fieldName]['type'] = $tableSchema['_original']['fields'][$fieldName]['type'];
+                        }
+                        if ( isset( $tableSchema['_original']['fields'][$fieldName]['length'] ) )
+                        {
+                            $schema[$tableName]['fields'][$fieldName]['length'] = $tableSchema['_original']['fields'][$fieldName]['length'];
+                        }
                     }
 
                     // always fix default values for CLOB fields: they should be false instead of null
@@ -1010,6 +1021,17 @@ BEGIN\n".
                         eZDebugSetting::writeDebug( 'lib-dbschema-transformation', '',
                                                     "changed default value for $tableName.$fieldName from null to false" );
 
+                    }
+
+                    // fix bigints: oracle looses info about them not being integers
+                    if ( $fieldSchema['type'] == 'bigint' && $fieldSchema['length'] == 20 )
+                    {
+                        $schema[$tableName]['_original']['fields'][$fieldName]['type'] = 'bigint';
+                        $schema[$tableName]['_original']['fields'][$fieldName]['length'] = 20;
+                        $schema[$tableName]['fields'][$fieldName]['type'] = 'int';
+                        $schema[$tableName]['fields'][$fieldName]['length'] = 11;
+                        eZDebugSetting::writeDebug( 'lib-dbschema-transformation', '',
+                                                    "changed size for $tableName.$fieldName from bigint to int" );
                     }
                 }
             }
