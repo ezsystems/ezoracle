@@ -165,7 +165,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                 if ( $colDefault !== null && $colDefault !== false )
                 {
                     /// @todo: verify if changing NLS settings can give us back defaults with comma...
-                    $field['default'] = /*(float)*/ $colDefault; // in ezdbschema defaults are always strings
+                    $field['default'] = (float) $colDefault; // in ezdbschema defaults are always strings
                 }
             }
             elseif ( in_array( $colType, $oraStringTypes ) ) // string
@@ -719,6 +719,171 @@ BEGIN\n".
     function generateDropTable( $table )
     {
         return "DROP TABLE $table;\n";
+    }
+
+    /**
+    * Overriding the function from the base class, because for big strings we need to do binds
+    * NB: currently the MultiInsert functionality is stripped out, even though Oracle supports them
+    */
+    function generateTableInsertSQLList( $tableName, $tableDef, $dataEntries, $params, $withClosure = true )
+    {
+        $diffFriendly = isset( $params['diff_friendly'] ) ? $params['diff_friendly'] : false;
+        if ( $diffFriendly )
+        {
+            $dfnl = "\n";
+            $dfspace = ' ';
+        }
+        else
+        {
+            $dfnl = '';
+            $dfspace = '';
+        }
+        $multiInsert = ( isset( $params['allow_multi_insert'] ) and $params['allow_multi_insert'] ) ? $this->isMultiInsertSupported() : false;
+
+        // Make sure we don't generate SQL when there are no rows
+        if ( count( $dataEntries['rows'] ) == 0 )
+            return '';
+
+        $sqlList = array();
+        $sql = '';
+        $defText = '';
+        $entryIndex = 0;
+        $blobs = array();
+        foreach ( $dataEntries['fields'] as $i => $fieldName )
+        {
+            if ( !isset( $tableDef['fields'][$fieldName] ) )
+                continue;
+            if ( $this->getOracleType( $tableDef['fields'][$fieldName]['type'] ) == 'CLOB' )
+            {
+                $blobs[$fieldName] = $i;
+            }
+            if ( $entryIndex == 0 )
+            {
+                $defText .= "$dfspace$dfspace";
+            }
+            else
+            {
+                $defText .= ",$dfnl ";
+            }
+            $defText .= $fieldName;
+            ++$entryIndex;
+        }
+
+        // if there are any lob cols, check the data to see if we have to split it
+        $splitrows = array();
+        if ( count( $blobs ) )
+        {
+            foreach ( $dataEntries['rows'] as $i => $row )
+            {
+                foreach( $blobs as $blobcol )
+                {
+                    if ( strlen( $row[$blobcol] ) > 4000 )
+                    {
+                        $splitrows[] = $i;
+                    }
+                }
+            }
+        }
+
+        /*if ( $multiInsert )
+        {
+            if ( $diffFriendly )
+            {
+                $sql .= "INSERT INTO $tableName (\n  $defText\n)\nVALUES\n";
+            }
+            else
+            {
+                $sql .= "INSERT INTO $tableName ($defText) VALUES ";
+            }
+        }*/
+        $insertIndex = 0;
+        foreach ( $dataEntries['rows'] as $i => $row )
+        {
+            /*if ( $multiInsert and $insertIndex > 0 )
+            {
+                if ( $diffFriendly )
+                    $sql .= "\n,\n";
+                else
+                    $sql .= ", ";
+            }*/
+            $dataText = '';
+            $entryIndex = 0;
+            foreach ( $dataEntries['fields'] as $j => $fieldName )
+            {
+                if ( !isset( $tableDef['fields'][$fieldName] ) )
+                    continue;
+                if ( $entryIndex == 0 )
+                {
+                    $dataText .= "$dfspace$dfspace";
+                }
+                else
+                {
+                    $dataText .= ",$dfnl$dfspace$dfspace";
+                }
+                if ( in_array( $i, $splitrows ) && in_array( $j, $blobs ) )
+                {
+                    $dataText .= 'empty_clob()';
+                }
+                else
+                {
+                    $dataText .= $this->generateDataValueTextSQL( $tableDef['fields'][$fieldName], $row[$j] );
+                }
+
+                ++$entryIndex;
+            }
+            /*if ( $multiInsert )
+            {
+                if ( $diffFriendly )
+                {
+                    $sql .= "(\n  $dataText\n)";
+                }
+                else
+                {
+                    $sql .= "($dataText)";
+                }
+                ++$insertIndex;
+            }
+            else
+            {*/
+                if ( in_array( $i, $splitrows ) )
+                {
+                    $insert = "DECLARE\n";
+                    foreach ( $blobs as $blobcol )
+                    {
+                        $insert .= "  v_$blobcol CLOB;\n";
+                    }
+                    $insert .= "BEGIN\n";
+                    $insert .= "INSERT INTO $tableName ($dfnl$defText$dfnl) VALUES ($dfnl$dataText$dfnl) RETURNING ";
+                    foreach ( $blobs as $blobname => $blobcol )
+                    {
+                        $insert .= "$blobname INTO v_$blobcol, ";
+                    }
+                    $insert = substr( $insert, 0, -2 ) . ";\n";
+                    foreach ( $blobs as $blobcol )
+                    {
+                        while( ( $len = strlen( $row[$blobcol] ) > 4000 ) )
+                        {
+                            $insert .= "dbms_lob.writeappend(v_$blobcol, 4000, '" . $this->escapeSQLString( substr( $row[$blobcol], 0, 4000 ) ). "');\n";
+                            $row[$blobcol] = substr( $row[$blobcol], 4000 );
+                        }
+                        $insert .= "dbms_lob.writeappend(v_$blobcol, " . strlen( $row[$blobcol] ) . ", '" . $this->escapeSQLString( $row[$blobcol] ) . "');\n";
+                    }
+                    $insert .= "COMMIT;\nEND;"; // plsql does not parse with final ';' anyway
+                    $sqlList[] = $insert;
+                }
+                else
+                {
+                    $sqlList[] = "INSERT INTO $tableName ($dfnl$defText$dfnl) VALUES ($dfnl$dataText$dfnl)" . ( $withClosure ? ";" : "" );
+                }
+            //}
+        }
+        /*if ( $multiInsert )
+        {
+            if ( $withClosure )
+                $sql .= "\n;";
+            $sqlList[] = $sql;
+        }*/
+        return $sqlList;
     }
 
     /**
