@@ -165,7 +165,7 @@ class eZOracleSchema extends eZDBSchemaInterface
                 if ( $colDefault !== null && $colDefault !== false )
                 {
                     /// @todo: verify if changing NLS settings can give us back defaults with comma...
-                    $field['default'] = (float) $colDefault; // in ezdbschema defaults are always strings
+                    $field['default'] = /*(float)*/ $colDefault; // in ezdbschema defaults are always strings
                 }
             }
             elseif ( in_array( $colType, $oraStringTypes ) ) // string
