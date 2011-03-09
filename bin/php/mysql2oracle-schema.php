@@ -53,7 +53,10 @@ $columnTypeTransTable = array(
     'ezcontentclass.serialized_name_list' => 'VARCHAR2(3100)',
     'ezcontentclass_attribute.serialized_name_list' => 'VARCHAR2(3100)',
     'ezpending_actions.param' => 'VARCHAR2(3000)',
-    'ezcontentclass.serialized_description_list' => 'VARCHAR2(3000)'
+    'ezcontentclass.serialized_description_list' => 'VARCHAR2(3000)',
+    // changes from known extensions
+    'ezgmaplocation.latitude' => 'FLOAT',
+    'ezgmaplocation.longitude' => 'FLOAT',
     );
 
 // columns that could not have default value
@@ -110,7 +113,17 @@ $columnsWithDefaultNullVal = array(
     'ezcontentclass_name.name',
     'ezcollab_simple_message.data_text1',
     'ezcollab_simple_message.data_text2',
-    'ezcollab_simple_message.data_text3'
+    'ezcollab_simple_message.data_text3',
+    // changes from known extensions
+    'ezx_mbpaex.passwordvalidationregexp',
+    'ezsurvey.title',
+    'ezsurvey.redirect_cancel',
+    'ezsurvey.redirect_submit',
+    'ezsurveyquestion.type',
+    'ezsurveyresult.user_session_id',
+    'ezsurveymetadata.attr_name',
+    'ezsurveymetadata.attr_value',
+    'ezsurveyquestionmetadata.name'
     );
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
@@ -133,7 +146,23 @@ $indexNameTransTable = array(
     'ezsearch_object_word_link.ezsearch_object_word_link_word'          => 'ezsearch_object_word_l_word',
     'ezsubtree_notification_rule.ezsubtree_notification_rule_user_id' => 'ezsubtree_notif_rule_user_id',
     'ezwaituntildatevalue.ezwaituntildateevalue_wf_ev_id_wf_ver' => 'ezwaituntdateval_wfeid_wfever',
-    'ezgeneral_digest_user_settings.ezgeneral_digest_user_settings_address' => 'ezgen_digest_user_settings_add'
+    'ezgeneral_digest_user_settings.ezgeneral_digest_user_settings_address' => 'ezgen_digest_user_settings_add',
+    // changes from known extensions
+    'ezfind_elevate_configuration.ezfind_elevate_configuration__search_query' => 'ezfind_elevate_config_sq',
+    'ezm_pool.ezm_pool__block_id__ts_publication__priority' => 'ezm_pool_block_id_ts_publ_prio',
+    'ezstarrating_data.contentobject_id_contentobject_attribute_id' => 'contentobject_id_co_attr_id',
+    'ezsurvey.ezsurvey_contentobject_id' => 'ezsurvey_co_id_i',
+    'ezsurvey.ezsurvey_contentobjectattribute_id' => 'ezsurvey_coattribute_id_i',
+    'ezsurvey.ezsurvey_contentobjectattribute_version' => 'ezsurvey_coattribute_version_i',
+    'ezsurvey.ezsurvey_contentclassattribute_id' => 'ezsurvey_ccattribute_id_i',
+    'ezsurvey.ezsurvey_language_code]=ezsurvey_language_code_i',
+    'ezsurveymetadata.ezsurveymetadata_result_id' => 'ezsurveymetadata_result_id_i',
+    'ezsurveymetadata.ezsurveymetadata_attr_name' => 'ezsurveymetadata_attr_name_i',
+    'ezsurveymetadata.ezsurveymetadata_attr_value' => 'ezsurveymetadata_attr_value_i',
+    'ezsurveyquestion.ezsurveyquestion_survey_id' => 'ezsurveyquestion_survey_id_i',
+    'ezsurveyquestionresult.ezsurveyquestionresult_result_id' => 'ezsurveyquestionresult_00040_i',
+    'ezsurveyquestionresult.ezsurveyquestionresult_question_id' => 'ezsurveyquestionresult_00041_i',
+    'ezsurveyresult.ezsurveyresult_survey_id' => 'ezsurveyresult_survey_id_i'
     );
 
 /**
@@ -281,8 +310,8 @@ function dumpColumnSchema( $table, $col, &$primaryKey, &$autoIncrement )
     $colOraType = getOracleType( $table, $col ); // Oracle type for the column
     $colDef  = trim( $colname ) . ' '. $colOraType;
 
-    $isStringColumn = stristr( $colOraType, 'CHAR' );
-    $isLOBColumn = stristr( $colOraType, 'LOB' );
+    $isStringColumn = stristr( $colOraType, 'CHAR' ) !== false;
+    $isLOBColumn = stristr( $colOraType, 'LOB' ) !== false;
     $colHasNoDefaultValOverride = myColHasNoDefaultValOverride( $table, $colname ) ? 1 : 0;
     $colHasNotNullOverride = myColHasNotNullOverride( $table, $colname ) ? 1 : 0;
 
@@ -335,7 +364,6 @@ function appendTableIndexes( $mydb, $table, &$indexes )
         $idxRef['name']      = $row['Key_name'];
         $idxRef['unique']    = !$row['Non_unique'];
     }
-
     $indexes = array_merge( $indexes,  $tableIndexes );
     mysql_free_result($rsltCols);
 }
@@ -459,15 +487,16 @@ function dumpIndexes( &$indexes )
             if ( $idx_name == 'PRIMARY' ) // skip primary key
                 continue;
 
-            if ( strlen( $idx_name ) > 30 ) // if index name is too long
+            // look up an alias even for index names shorter than 30 chars
+            $idx_alias = getIndexAlias( $table, $idx_name );
+            if ( $idx_alias != $idx_name )
             {
-                // look up an alias
-                $idx_alias = getIndexAlias( $table, $idx_name );
-                if ( $idx_alias != $idx_name )
-                    $idx_name = $idx_alias;
-                else
-                    // in absence of the alias we truncate index name
-                    $idx_name = shorten( $table.'_'.implode('_', $cols), 30-2 ) . '_i';
+                $idx_name = $idx_alias;
+            }
+            else if ( strlen( $idx_name ) > 30 ) // if index name is too long
+            {
+                // in absence of the alias we truncate index name
+                $idx_name = shorten( $table.'_'.implode('_', $cols), 30-2 ) . '_i';
             }
             $rslt .= "CREATE " .
                 ($unique?"UNIQUE ":" ") .

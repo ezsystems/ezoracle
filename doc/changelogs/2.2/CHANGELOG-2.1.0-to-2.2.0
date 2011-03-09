@@ -1,6 +1,7 @@
 Changes from 2.1.0 to 2.2.0 - released 2010/xx/yy
 
 *General:
+- Improved the mysql2oracle-schema.php script to correctly import tables from known extensions
 
 *Bugfixes:
 - Fixed bug #017451: ezoracle: Cannot add a comment in Collaboration Approval screen
