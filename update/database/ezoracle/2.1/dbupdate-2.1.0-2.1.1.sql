@@ -46,6 +46,42 @@ BEGIN
     END IF;
 
     BEGIN
+        SELECT index_name INTO v_index_name FROM user_indexes WHERE table_name='EZSURVEY' and index_name like 'EZSURVEY_CONTENTCLASSAT0%';
+        EXECUTE IMMEDIATE 'DROP INDEX ' || v_index_name;
+        EXECUTE IMMEDIATE 'CREATE INDEX ezsurvey_ccattribute_id_i ON ezsurvey ( contentclassattribute_id )';
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            NULL;
+    END;
+    DECLARE
+        CURSOR index_cur IS
+            SELECT index_name FROM user_indexes WHERE table_name='EZSURVEYQUESTIONRESULT' and index_name like 'EZSURVEYQUESTIONRESULT_0%';
+    BEGIN
+        FOR index_rec IN index_cur LOOP
+            EXECUTE IMMEDIATE 'DROP INDEX ' || index_rec.index_name;
+        END LOOP;
+        EXECUTE IMMEDIATE 'CREATE INDEX ezsurveyquestionresult_00040_i ON ezsurveyquestionresult ( result_id )';
+        EXECUTE IMMEDIATE 'CREATE INDEX ezsurveyquestionresult_00041_i ON ezsurveyquestionresult ( question_id )';
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            NULL;
+    END;
+
+    DECLARE
+        CURSOR index_cur IS
+            SELECT index_name FROM user_indexes WHERE table_name='EZSURVEY' and index_name like 'EZSURVEY_CONTENTOBJECTA0%';
+    BEGIN
+        FOR index_rec IN index_cur LOOP
+            EXECUTE IMMEDIATE 'DROP INDEX ' || index_rec.index_name;
+        END LOOP;
+        EXECUTE IMMEDIATE 'CREATE INDEX ezsurvey_coattribute_id_i ON ezsurvey ( contentobjectattribute_id )';
+        EXECUTE IMMEDIATE 'CREATE INDEX ezsurvey_coattribute_version_i ON ezsurvey ( contentobjectattribute_version )';
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            NULL;
+    END;
+
+    BEGIN
         SELECT index_name INTO v_index_name FROM user_indexes WHERE table_name='EZM_POOL' and index_name like 'EZM_POOL_BLOCK_ID_TS_PU0%';
         EXECUTE IMMEDIATE 'DROP INDEX ' || v_index_name;
         EXECUTE IMMEDIATE 'CREATE INDEX ezm_pool_block_id_ts_publ_prio ON ezm_pool ( block_id, ts_publication, priority )';
