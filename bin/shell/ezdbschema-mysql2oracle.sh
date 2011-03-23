@@ -54,15 +54,15 @@ fi
 
 # dump schema
 bin/php/ezsqldumpschema.php -ddebug,warning,error \
-    --output-array --output-types=schema \
-    --type=ezmysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-schema.txt
+    --output-array --output-types=schema --no-sort \
+    --type=mysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-schema.dba
 
 check_rc
 
 # dump data
 bin/php/ezsqldumpschema.php -ddebug,warning,error \
     --output-array --output-types=data \
-    --type=ezmysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-data.txt
+    --type=mysql --user=$MY_USER --host=$MY_SERVER $MY_DB $MY_DB-data.dba
 
 check_rc
 
@@ -70,7 +70,7 @@ check_rc
 bin/php/ezsqlinsertschema.php -ddebug,warning,error \
     --clean-existing --insert-types=schema \
     --type=oracle --user=$ORA_USER --password=$ORA_PASS \
-    $MY_DB-schema.txt $ORA_INSTANCE
+    $MY_DB-schema.dba $ORA_INSTANCE
 
 check_rc
 
@@ -78,6 +78,6 @@ check_rc
 bin/php/ezsqlinsertschema.php -ddebug,warning,error \
     --insert-types=data \
     --type=oracle --user=$ORA_USER --password=$ORA_PASS \
-    --schema-file=$MY_DB-schema.txt $MY_DB-data.txt $ORA_INSTANCE
+    --schema-file=$MY_DB-schema.dba $MY_DB-data.dba $ORA_INSTANCE
 
 check_rc
