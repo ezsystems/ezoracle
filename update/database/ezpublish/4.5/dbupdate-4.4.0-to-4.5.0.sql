@@ -17,7 +17,7 @@ CREATE TABLE ezprest_token (
   id VARCHAR2(200) NOT NULL,
   refresh_token VARCHAR2(200) NOT NULL,
   scope VARCHAR2(200),
-  user_id VARCHAR2(200) NOT NULL,
+  user_id INTEGER DEFAULT 0 NOT NULL,
   PRIMARY KEY ( id )
 );
 
