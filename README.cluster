@@ -1,22 +1,18 @@
 eZ Oracle extension [EXTENSION_VERSION] cluster README
 
-eZ Publish 4.1 and 4.2 DFS cluster mode is supported starting with the current
-release of the eZ Oracle extension.
-
-
 Configuration
 =============
 
 The instructions to set up eZ Publish clustering configurations on oracle are
 available online:
 
-http://ez.no/doc/extensions/ez_publish_extension_for_oracle_r_database/2_1/clustering
+http://doc.ez.no/Extensions/eZ-Publish-Extension-for-Oracle-R-database/2.0/Clustering
 
 Generic instructions to set up eZ Publish clustering configurations with separate
 pages for eZDb and eZDFS modes:
 
-http://ez.no/doc/ez_publish/technical_manual/4_x/features/clustering/setting_it_up_for_an_ezdbfilehandler
-http://ez.no/doc/ez_publish/technical_manual/4_x/features/clustering/setting_it_up_for_an_ezdfsfilehandler
+http://doc.ez.no/eZ-Publish/Technical-manual/4.5/Features/Clustering/Setting-it-up-for-an-eZDBFileHandler
+http://doc.ez.no/eZ-Publish/Technical-manual/4.5/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
 
 The main differences to set up clustering modes on oracle are:
 

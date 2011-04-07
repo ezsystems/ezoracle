@@ -57,12 +57,13 @@ Getting eZ Publish
 
 You can download a version of eZ Publish from ez.no, you will find the
 various versions at:
-http://ez.no/download/ez_publish/ez_publish_4_stable_releases
+http://ez.no/ (enterprise versions)
+http://share.ez.no/download-develop (community versions)
 
 NOTE: You will require eZ Publish [EXTENSION_PUBLISH_VERSION] or higher
 
 Information on the installation of eZ Publish can be found at:
-http://ez.no/doc/ez_publish/technical_manual
+http://doc.ez.no/eZ-Publish/Technical-manual/
 
 
 Restarting Apache
@@ -84,14 +85,14 @@ Restarting Apache
 Installing eZ Oracle extension
 ==============================
 
-1. Copy or untar the package into the `extension' directory in the root of your
+1. Copy the package into the `extension' directory in the root of your
    eZ Publish installation.
 
 2. Unpack the files in the distribution.
 
    $ unzip ezoracle-[EXTENSION_VERSION].zip
 
-3. Enable the extension in eZ Publish. To do this edit site.ini.append(.php) in the
+3. Enable the extension in eZ Publish. To do this edit site.ini.append.php in the
    folder root_of_ezpublish/settings/override. If this file does not exist, create it.
    Locate (or add) the block [ExtensionSettings] and add the line:
 
@@ -99,7 +100,7 @@ Installing eZ Oracle extension
 
    If you run several sites using only one distribution and only some of the sites should use
    the extension, make the changes in the override file of that siteaccess.
-   E.g root_of_ezpublish/settings/siteaccess/news/site.ini.append(.php)
+   E.g root_of_ezpublish/settings/siteaccess/news/site.ini.append.php
    But instead of using ActiveExtensions you must add these lines instead:
 
    [ExtensionSettings]
