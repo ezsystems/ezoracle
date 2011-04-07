@@ -1,0 +1,6 @@
+# build tool scripts and directories
+bootstrap.xml
+build.xml
+build/
+dist/
+pakefile.php
