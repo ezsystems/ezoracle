@@ -119,6 +119,19 @@ class eZDFSFileHandlerOracleBackend
     }
 
     /**
+     * Disconnects the handler from the database
+     */
+    public function _disconnect()
+    {
+        if ( $this->db !== null )
+        {
+            if ( !self::$dbparams['persistent_connection'] )
+                oci_close( $this->db );
+            $this->db = null;
+        }
+    }
+
+    /**
      * Creates a copy of a file in DB+DFS
      * @param string $srcFilePath Source file
      * @param string $dstFilePath Destination file

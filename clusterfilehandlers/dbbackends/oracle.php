@@ -137,6 +137,19 @@ class eZDBFileHandlerOracleBackend
         //ociinternaldebug( 1 );
     }
 
+    /**
+     * Disconnects the handler from the database
+     */
+    public function _disconnect()
+    {
+        if ( $this->db !== null )
+        {
+            if ( !self::$dbparams['persistent_connection'] )
+                oci_close( $this->db );
+            $this->db = null;
+        }
+    }
+
     function _copy( $srcFilePath, $dstFilePath, $fname = false )
     {
         if ( $fname )
