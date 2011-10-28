@@ -1753,7 +1753,7 @@ class eZDFSFileHandlerOracleBackend
      * Amount of executed queries, for debugging purpose
      * @var int
      **/
-    protected $numQueries = 0;
+    protected static $numQueries = 0;
 
     /**
      * Current transaction level.
