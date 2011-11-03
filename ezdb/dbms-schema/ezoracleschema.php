@@ -101,10 +101,8 @@ class eZOracleSchema extends eZDBSchemaInterface
         // db handlers. We expect an array but accept a string nonetheless
         $autoIncrementColumns = is_string( $params ) ? $params : $params['autoIncrementColumns'];
 
-        $numericTypes = array( 'float', 'int' );                               // FIXME: const
         $oraNumericTypes = array( 'FLOAT', 'NUMBER' );                         // FIXME: const
         $oraStringTypes  = array( 'CHAR', 'VARCHAR2' );                        // FIXME: const
-        $blobTypes    = array( 'tinytext', 'text', 'mediumtext', 'longtext' ); // FIXME: const
         $fields      = array();
 
         $query = "SELECT   a.column_name AS col_name, " .
@@ -663,7 +661,6 @@ BEGIN\n".
      */
     function generateTableSQL( $table, $table_def, $params, $withClosure = true )
     {
-        $sql_fields = array();
         $sqlAutoinc = false;
 
         $sqlList = array( 'sequences' => array(),
