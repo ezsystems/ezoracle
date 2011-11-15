@@ -241,27 +241,25 @@ EOF
                --insert-types=data \
                share/db_data.dba <instance>
 
-     2. Migrate from existing MySQL database
-        ------------------------------------
+     2. Migrate from existing database
+        ------------------------------
 
-        This step is as automated as possible. Ideally, you should only run
-        these scripts to transfer your MySQL DB schema and data to Oracle:
+        If you want/need to migrate an existing database, you can achieve
+        this with the native eZ Publish tools.
 
-        1. mysql2oracle-schema.php
-        2. mysql2oracle-data.php
-        3. ora-update-seqs.php
+        o  Dump your existing database to the local database.dba file::
 
-        Run each script without arguments to see its usage.
-        Here is a sample scenario:
+           $ ./bin/php/ezsqldumpschema.php --output-types=all --format=generic \
+             --output-array -s plain_site_admin --type=mysql \
+             --host=<host> --user=<user> --password=<password> \
+             <database> database.dba
 
-        $ cd extension/ezoracle/bin/php/
-        $ ./mysql2oracle-schema.php corporate_34:root/@heaven:3400 \
-            > corporate_34.sql
-        $ sqlplus scott/tiger@orcl < corporate_34.sql
-        $ ./mysql2oracle-data.php corporate_34:root/@heaven:3400 \
-            scott/tiger@orcl
-        $ ./ora-update-seqs.php scott/tiger@orcl
+        o  Insert the dumped data to your oracle database::
 
+           $ ./bin/php/ezsqlinsertschema.php --type=oracle \
+               --user=<user> --password=<password> \
+               --insert-types=all \
+               --schema-file=database.dba database.dba <instance>
 
 Configuring eZ Publish
 ======================

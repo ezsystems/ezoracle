@@ -1,0 +1,7 @@
+mysql2oracle-schema.php & mysql2oracle-data.php
+===============================================
+
+These scripts are deprecated as of eZ Oracle 2.3.0. They are incompatible with some oracle specific
+settings, and won't be maintained anymore. Alternatives can be found in the INSTALL file when it
+comes to migrating from MySQL to Oracle.
+
