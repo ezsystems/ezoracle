@@ -144,7 +144,7 @@ class eZDBFileHandlerOracleBackend
     {
         if ( $this->db !== null )
         {
-            if ( !self::$dbparams['persistent_connection'] )
+            if ( !$this->dbparams['persistent_connection'] )
                 oci_close( $this->db );
             $this->db = null;
         }
