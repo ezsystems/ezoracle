@@ -230,27 +230,30 @@ EOF
         You can start from scratch by using the schema bundled with the
         eZ Publish installation, and filling it with the basic data.
 
-        o  Create the schema
-           $ ./bin/php/ezsqlinsertschema.php --type=oracle --user=<user> \
-               --password=<password> \
+        o  Import the schema
+           $ ./bin/php/ezsqlinsertschema.php --type=oracle \
+               --user=<user> --password=<password> \
+               --insert-types=schema \
                share/db_schema.dba <instance>
 
-        o  Insert data
-           $ ./bin/php/ezsqlinsertschema.php --type=oracle --user=<user> \
-               --password=<password> --schema-file=share/db_schema.dba \
+        o  Import the data
+           $ ./bin/php/ezsqlinsertschema.php --type=oracle \
+               --user=<user> --password=<password> \
                --insert-types=data \
+               --schema-file=db_data.dba \
                share/db_data.dba <instance>
 
      2. Migrate from existing database
         ------------------------------
 
         If you want/need to migrate an existing database, you can achieve
-        this with the native eZ Publish tools.
+        this with the native eZ Publish tools. Don't forget to add the --siteaccess
+        parameter if your default siteaccess isn't sufficient information::
 
         o  Dump your existing database to the local database.dba file::
 
            $ ./bin/php/ezsqldumpschema.php --output-types=all --format=generic \
-             --output-array -s plain_site_admin --type=mysql \
+             --output-array --type=mysql \
              --host=<host> --user=<user> --password=<password> \
              <database> database.dba
 
