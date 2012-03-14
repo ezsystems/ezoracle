@@ -77,6 +77,9 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
 
     public function passthrough( $filepath, $filesize, $offset = false, $length = false )
     {
+        if ( $offset || $length )
+            throw new UnexpectedValueException( "HTTP Range is not supported by " . __CLASS__ );
+
         // output image data
         while ( $chunk = $this->lob->read( $this->getChunkSize() ) )
         {
