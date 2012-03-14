@@ -17,12 +17,6 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
      */
     private $lob;
 
-    public function getDefaultPort()
-    {
-        // port isn't needed by oracle
-        return false;
-    }
-
     private function getChunkSize()
     {
         if ( defined( 'CLUSTER_CHUNK_SIZE' ) )
@@ -34,7 +28,7 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
     /**
      * Note: host & port aren't used by the oracle gateway
      */
-    public function connect( $host, $port, $user, $password, $database, $charset )
+    public function connect()
     {
         if ( !function_exists( 'oci_connect' ) )
             throw new RuntimeException( "PECL oci8 extension (http://pecl.php.net/package/oci8) is required to use Oracle clustering functionality." );
@@ -44,7 +38,7 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
         else
             $connectFunction = 'oci_connect';
 
-        if ( !$this->db = @$connectFunction( $user, $password, $database, $charset ) )
+        if ( !$this->db = @$connectFunction( $this->user, $this->password, $this->database, $this->charset ) )
         {
             $error = oci_error();
             throw new RuntimeException( "Failed to connect to the oracle database " .
@@ -110,5 +104,4 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
     }
 }
 
-// return the class name for easier instanciation
-return 'ezpDbOracleClusterGateway';
+ezpClusterGateway::setGatewayClass( 'ezpDbOracleClusterGateway' );

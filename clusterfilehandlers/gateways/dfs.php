@@ -11,16 +11,7 @@
  */
 class ezpDfsOracleClusterGateway extends ezpClusterGateway
 {
-    public function getDefaultPort()
-    {
-        // port isn't needed by oracle
-        return false;
-    }
-
-    /**
-     * Note: host & port aren't used by the oracle gateway
-     */
-    public function connect( $host, $port, $user, $password, $database, $charset )
+    public function connect()
     {
         if ( !function_exists( 'oci_connect' ) )
             throw new RuntimeException( "PECL oci8 extension (http://pecl.php.net/package/oci8) is required to use Oracle clustering functionality." );
@@ -30,7 +21,7 @@ class ezpDfsOracleClusterGateway extends ezpClusterGateway
         else
             $connectFunction = 'oci_connect';
 
-        if ( !$this->db = @$connectFunction( $user, $password, $database, $charset ) )
+        if ( !$this->db = @$connectFunction( $this->user, $this->password, $this->name, $this->charset ) )
         {
             $error = oci_error();
             throw new RuntimeException( "Failed to connect to the oracle database " .
@@ -58,30 +49,38 @@ class ezpDfsOracleClusterGateway extends ezpClusterGateway
 
         $metadata = oci_fetch_array( $statement, OCI_ASSOC );
         oci_free_statement( $statement );
+
+        if ( $metadata === false )
+            return false;
         $metadata = array_change_key_case( $metadata );
         $metadata['size'] = $metadata['filesize']; unset( $metadata["filesize"] );
         return $metadata;
     }
 
-    public function passthrough( $filepath, $offset = false, $length = false)
+    public function passthrough( $filepath, $filesize, $offset = false, $length = false )
     {
         $dfsFilePath = CLUSTER_MOUNT_POINT_PATH . '/' . $filepath;
 
         if ( !file_exists( $dfsFilePath ) )
             throw new RuntimeException( "Unable to open DFS file '$dfsFilePath'" );
 
-        $fp = fopen( $dfsFilePath, 'r' );
-        fpassthru( $fp );
+        $fp = fopen( $dfsFilePath, 'rb' );
+        if ( $offset !== false && @fseek( $fp, $offset ) === -1 )
+            throw new RuntimeException( "Failed to seek offset $offset on file '$filepath'" );
+        if ( $offset === false && $length === false )
+            fpassthru( $fp );
+        else
+            echo fread( $fp, $length );
+
         fclose( $fp );
     }
 
     public function close()
     {
-        if ( !defined( 'CLUSTER_PERSISTENT_CONNECTION' ) || CLUSTER_PERSISTENT_CONNECTION )
+        if ( !defined( 'CLUSTER_PERSISTENT_CONNECTION' ) || CLUSTER_PERSISTENT_CONNECTION === false )
             oci_close( $this->db );
         unset( $this->db );
     }
 }
 
-// return the class name for easier instanciation
-return 'ezpDfsOracleClusterGateway';
+ezpClusterGateway::setGatewayClass( 'ezpDfsOracleClusterGateway' );
