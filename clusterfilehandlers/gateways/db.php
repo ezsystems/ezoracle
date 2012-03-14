@@ -38,7 +38,7 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
         else
             $connectFunction = 'oci_connect';
 
-        if ( !$this->db = @$connectFunction( $this->user, $this->password, $this->database, $this->charset ) )
+        if ( !$this->db = @$connectFunction( $this->user, $this->password, $this->name, $this->charset ) )
         {
             $error = oci_error();
             throw new RuntimeException( "Failed to connect to the oracle database " .
@@ -75,7 +75,7 @@ class ezpDbOracleClusterGateway extends ezpClusterGateway
         return $metadata;
     }
 
-    public function passthrough( $filepath, $offset = false, $length = false)
+    public function passthrough( $filepath, $filesize, $offset = false, $length = false )
     {
         // output image data
         while ( $chunk = $this->lob->read( $this->getChunkSize() ) )
