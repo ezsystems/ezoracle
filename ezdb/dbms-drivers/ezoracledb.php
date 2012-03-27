@@ -144,6 +144,8 @@ class eZOracleDB extends eZDBInterface
             else
             {
                 $this->IsConnected = true;
+                // make sure the decimal separator is the dot
+                $this->query( "ALTER SESSION SET NLS_NUMERIC_CHARACTERS='. '" );
             }
 
             if ( $this->DBConnection === false )
