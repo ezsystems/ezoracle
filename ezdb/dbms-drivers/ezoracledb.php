@@ -99,18 +99,22 @@ class eZOracleDB extends eZDBInterface
             if ( $ini->variable( "DatabaseSettings", "UsePersistentConnection" ) == "enabled" )
             {
                 eZDebugSetting::writeDebug( 'kernel-db-oracle', $ini->variable( "DatabaseSettings", "UsePersistentConnection" ), "using persistent connection" );
+                eZDebug::accumulatorStart( 'oracle_connection', 'oracle_total', 'Database connection' );
                 $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
                 try {
                     $this->DBConnection = oci_pconnect( $user, $password, $db, $oraCharset );
                 } catch( ErrorException $e ) {}
+                eZDebug::accumulatorStop( 'oracle_connection' );
                 eZDebug::setHandleType( $oldHandling );
                 while ( $this->DBConnection == false and $numAttempts <= $maxAttempts )
                 {
                     sleep( $waitTime );
+                    eZDebug::accumulatorStart( 'oracle_connection', 'oracle_total', 'Database connection' );
                     $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
                     try {
                         $this->DBConnection = oci_pconnect( $user, $password, $db, $oraCharset );
                     } catch( ErrorException $e ) {}
+                    eZDebug::accumulatorStop( 'oracle_connection' );
                     eZDebug::setHandleType( $oldHandling );
                     $numAttempts++;
                 }
@@ -119,17 +123,21 @@ class eZOracleDB extends eZDBInterface
             {
                 eZDebugSetting::writeDebug( 'kernel-db-oracle', "using real connection",  "using real connection" );
                 $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
+                eZDebug::accumulatorStart( 'oracle_connection', 'oracle_total', 'Database connection' );
                 try {
                     $this->DBConnection = oci_connect( $user, $password, $db, $oraCharset );
                 } catch( ErrorException $e ) {}
+                eZDebug::accumulatorStop( 'oracle_connection' );
                 eZDebug::setHandleType( $oldHandling );
                 while ( $this->DBConnection == false and $numAttempts <= $maxAttempts )
                 {
                     sleep( $waitTime );
                     $oldHandling = eZDebug::setHandleType( eZDebug::HANDLE_EXCEPTION );
+                    eZDebug::accumulatorStart( 'oracle_connection', 'oracle_total', 'Database connection' );
                     try {
                         $this->DBConnection = @oci_connect( $user, $password, $db, $oraCharset );
                     } catch( ErrorException $e ) {}
+                    eZDebug::accumulatorStop( 'oracle_connection' );
                     eZDebug::setHandleType( $oldHandling );
                     $numAttempts++;
                 }
