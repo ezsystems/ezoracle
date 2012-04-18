@@ -48,7 +48,7 @@ Known differences from the mysql cluster file handler backend:
 CREATE TABLE ezdbfile (
   name      VARCHAR2(4000) NOT NULL,
   name_hash VARCHAR2(34)  PRIMARY KEY,
-  datatype  VARCHAR2(60)  DEFAULT 'application/octet-stream',
+  datatype  VARCHAR2(255)  DEFAULT 'application/octet-stream',
   scope     VARCHAR2(20)  DEFAULT 'UNKNOWN',
   filesize  INT           DEFAULT 0 NOT NULL,
   mtime     INT           DEFAULT 0 NOT NULL,
