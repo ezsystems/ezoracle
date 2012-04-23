@@ -51,6 +51,42 @@ EZDB_INSTANCE=""
 
 DB_TEST=""
 
+CUSTOM_SCHEMA_FILE=""
+CUSTOM_DATA_FILE=""
+
+print_usage()
+{
+    echo "Usage $1 [-s schema_file.dba] [-d data_file.dba]"
+    [ ! -z "$2" ] && echo `$SETCOLOR_FAILURE`$2`$SETCOLOR_NORMAL`
+}
+
+#OPTERR=0
+while getopts ":s:d:" opt ; do
+    case $opt in
+        s ) CUSTOM_SCHEMA_FILE=$OPTARG ;;
+        d ) CUSTOM_DATA_FILE=$OPTARG ;;
+        h ) print_usage "$0"
+            exit 0 ;;
+        * ) print_usage "$0" "Invalid option '-$OPTARG'"
+            exit 1 ;;
+    esac
+done
+
+if [ ! -z "$CUSTOM_SCHEMA_FILE" ] && [ ! -f "$CUSTOM_SCHEMA_FILE" ] ; then
+    print_usage "$0" "The schema file '$CUSTOM_SCHEMA_FILE' does not exist"
+    exit 1
+elif
+    # get absolute path to the file to avoid issue if the script
+    # is not launched from the eZ Publish root... (see around line 278)
+    CUSTOM_DATA_FILE=`readlink -f "$CUSTOM_DATA_FILE"`
+fi
+
+if [ ! -z "$CUSTOM_DATA_FILE" ] && [ ! -f "$CUSTOM_DATA_FILE" ] ; then
+    print_usage "$0" "The data file '$CUSTOM_DATA_FILE' does not exist"
+    exit 1
+elif
+    CUSTOM_DATA_FILE=`readlink -f "$CUSTOM_DATA_FILE"`
+fi
 
 # check if user is root: do not continue. way too dangerous
 # (and scripts we invoke will not run anyway
@@ -358,6 +394,7 @@ rm "$PHP_TEST_SCRIPT"
 echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 EZSCHEMA_PATH="$EZP_PATH/share/db_schema.dba"
+[ ! -z "$CUSTOM_SCHEMA_FILE" ] && EZSCHEMA_PATH=$CUSTOM_SCHEMA_FILE
 echo -n "Looking for database schema file"
 if [ ! -f "$EZSCHEMA_PATH" ]; then
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
@@ -369,6 +406,7 @@ fi
 echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 EZDATA_PATH="$EZP_PATH/share/db_data.dba"
+[ ! -z "$CUSTOM_DATA_FILE" ] && EZSCHEMA_PATH=$CUSTOM_DATA_FILE
 echo -n "Looking for database data file"
 if [ ! -f "$EZDATA_PATH" ]; then
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
