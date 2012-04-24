@@ -268,25 +268,28 @@ class eZDFSFileHandlerOracleBackend
             $fname = "_purgeByLike($like, $onlyExpired)";
 
         // common query part used for both DELETE and SELECT
-        $where = " WHERE name LIKE :alike";
-        $params = array ( ':alike' => $like );
+        $escapedLike = str_replace( '_', '!_', $like );
+        $where = " WHERE name LIKE '$escapedLike' ESCAPE '!'";
+
         if ( $expiry !== false )
         {
-            $where .= " AND mtime < :expiry";
-            $params[':expiry'] = $expiry;
+            $where .= " AND mtime < $expiry";
         }
         elseif ( $onlyExpired )
+        {
             $where .= " AND expired = '1'";
-        /// @todo use a bind param for rownum (is it even possible ?)
+        }
         if ( $limit )
+        {
             $where .= " and ROWNUM <= $limit";
+        }
 
         $this->_begin( $fname );
 
         // select query, in FOR UPDATE mode
         $selectSQL = "SELECT name FROM " . self::TABLE_METADATA .
                      "{$where} FOR UPDATE";
-        if ( ( $files = $this->_query( $selectSQL, $fname, true, $params, self::RETURN_DATA_BY_COL ) ) === false )
+        if ( ( $files = $this->_query( $selectSQL, $fname, true, array(), self::RETURN_DATA_BY_COL ) ) === false )
         {
             $this->_rollback( $fname );
             return $this->_fail( "Selecting file metadata by like statement $like failed" );
@@ -305,7 +308,7 @@ class eZDFSFileHandlerOracleBackend
         /// @bug what if other rows have been added / removed that match our conditions
         ///      in the meantime? we should use a condition of the form WHERE name_hash IN ( ... )
         $deleteSQL = "DELETE FROM " . self::TABLE_METADATA . " {$where}";
-        if ( !$res = $this->_query( $deleteSQL, $fname, true, $params, self::RETURN_COUNT ) )
+        if ( !$res = $this->_query( $deleteSQL, $fname, true, array(), self::RETURN_COUNT ) )
         {
             $this->_rollback( $fname );
             return $this->_fail( "Purging file metadata by like statement $like failed" );
