@@ -101,7 +101,7 @@ class eZOracleSchema extends eZDBSchemaInterface
         // db handlers. We expect an array but accept a string nonetheless
         $autoIncrementColumns = is_string( $params ) ? $params : $params['autoIncrementColumns'];
 
-        $oraNumericTypes = array( 'FLOAT', 'NUMBER' );                         // FIXME: const
+        $oraNumericTypes = array( 'FLOAT', 'NUMBER', 'BINARY_DOUBLE' );        // FIXME: const
         $oraStringTypes  = array( 'CHAR', 'VARCHAR2' );                        // FIXME: const
         $fields      = array();
 
@@ -153,14 +153,14 @@ class eZOracleSchema extends eZDBSchemaInterface
             }
             elseif ( in_array( $colType, $oraNumericTypes ) ) // number
             {
-                if ( $colType != 'FLOAT' )
+                if ( $colType != 'FLOAT' && $colType != 'BINARY_DOUBLE' )
                     $field['length'] = eZOracleSchema::parseLength( $colType, $colLength, $row['col_precision'], $row['col_scale'] );
                 $field['type']   = eZOracleSchema::parseType( $colType, isset( $field['length'] ) ? $field['length'] : '' );
 
                 if ( $colNotNull )
                     $field['not_null'] = $colNotNull;
 
-                if ( $colDefault !== null && $colDefault !== false )
+                if ( $colDefault !== null && $colDefault !== 'NULL' && $colDefault !== false )
                 {
                     /// @todo: verify if changing NLS settings can give us back defaults with comma...
                     $field['default'] = /*(float)*/ $colDefault; // in ezdbschema defaults are always strings
@@ -291,22 +291,24 @@ class eZOracleSchema extends eZDBSchemaInterface
     {
         switch ( $type )
         {
-        case 'NUMBER':
-            if ( strpos( $length, ',' ) !== false )
-            {
-                return 'decimal';
-            }
-            return 'int';
-        case 'FLOAT':
-            return 'float';
-        case 'VARCHAR2':
-            return 'varchar';
-        case 'CLOB':
-            return 'longtext';
-        case 'CHAR':
-            return 'char';
-        default:
-            return $type;
+            case 'NUMBER':
+                if ( strpos( $length, ',' ) !== false )
+                {
+                    return 'decimal';
+                }
+                return 'int';
+            case 'FLOAT':
+                return 'float';
+            case 'BINARY_DOUBLE':
+                return 'double';
+            case 'VARCHAR2':
+                return 'varchar';
+            case 'CLOB':
+                return 'longtext';
+            case 'CHAR':
+                return 'char';
+            default:
+                return $type;
         }
         return 'unknown';
     }
@@ -408,7 +410,7 @@ class eZOracleSchema extends eZDBSchemaInterface
         $rslt = preg_replace( '/char/', 'CHAR', $rslt );
         $rslt = preg_replace( '/(big)?int(eger)?(\([0-9]+\))?( +unsigned)?/', 'INTEGER', $rslt );
         $rslt = preg_replace( '/^(medium|long)?text$/', 'CLOB', $rslt );
-        $rslt = preg_replace( '/^double$/', 'DOUBLE PRECISION', $rslt );
+        $rslt = preg_replace( '/^double$/', 'BINARY_DOUBLE', $rslt );
         $rslt = preg_replace( '/^float$/', 'FLOAT', $rslt );
         $rslt = preg_replace( '/decimal/', 'NUMBER', $rslt );
         return $rslt;
@@ -419,7 +421,7 @@ class eZOracleSchema extends eZDBSchemaInterface
      */
     function generateFieldDef( $field_name, $def, $optionsToDump = array( 'default', 'not_null' ) )
     {
-        $oraNumericTypes = array( 'INTEGER', 'FLOAT', 'DOUBLE PRECISION', 'NUMBER' ); // const
+        $oraNumericTypes = array( 'INTEGER', 'FLOAT', 'DOUBLE PRECISION', 'NUMBER', 'BINARY_DOUBLE' ); // const
 
         $sql_def = $field_name . ' ';
 
