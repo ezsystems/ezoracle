@@ -958,7 +958,7 @@ class eZDBFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
@@ -1165,7 +1165,7 @@ class eZDBFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );

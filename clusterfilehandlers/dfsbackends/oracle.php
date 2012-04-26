@@ -268,28 +268,26 @@ class eZDFSFileHandlerOracleBackend
             $fname = "_purgeByLike($like, $onlyExpired)";
 
         // common query part used for both DELETE and SELECT
-        $escapedLike = str_replace( '_', '!_', $like );
-        $where = " WHERE name LIKE '$escapedLike' ESCAPE '!'";
-
+        // escape is a bit brutal, yes
+        $where = " WHERE name LIKE :alike ESCAPE '!'";
+        $params = array ( ':alike' => $escapedLike = str_replace( '_', '!_', $like ) );
         if ( $expiry !== false )
         {
-            $where .= " AND mtime < $expiry";
+            $where .= " AND mtime < :expiry";
+            $params[':expiry'] = $expiry;
         }
         elseif ( $onlyExpired )
-        {
             $where .= " AND expired = '1'";
-        }
+        /// @todo use a bind param for rownum (is it even possible ?)
         if ( $limit )
-        {
             $where .= " and ROWNUM <= $limit";
-        }
 
         $this->_begin( $fname );
 
         // select query, in FOR UPDATE mode
         $selectSQL = "SELECT name FROM " . self::TABLE_METADATA .
                      "{$where} FOR UPDATE";
-        if ( ( $files = $this->_query( $selectSQL, $fname, true, array(), self::RETURN_DATA_BY_COL ) ) === false )
+        if ( ( $files = $this->_query( $selectSQL, $fname, true, $params, self::RETURN_DATA_BY_COL ) ) === false )
         {
             $this->_rollback( $fname );
             return $this->_fail( "Selecting file metadata by like statement $like failed" );
@@ -308,7 +306,7 @@ class eZDFSFileHandlerOracleBackend
         /// @bug what if other rows have been added / removed that match our conditions
         ///      in the meantime? we should use a condition of the form WHERE name_hash IN ( ... )
         $deleteSQL = "DELETE FROM " . self::TABLE_METADATA . " {$where}";
-        if ( !$res = $this->_query( $deleteSQL, $fname, true, array(), self::RETURN_COUNT ) )
+        if ( !$res = $this->_query( $deleteSQL, $fname, true, $params, self::RETURN_COUNT ) )
         {
             $this->_rollback( $fname );
             return $this->_fail( "Purging file metadata by like statement $like failed" );
@@ -1052,7 +1050,7 @@ class eZDFSFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
@@ -1259,7 +1257,7 @@ class eZDFSFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
