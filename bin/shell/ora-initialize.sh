@@ -78,7 +78,7 @@ if [ ! -z "$CUSTOM_SCHEMA_FILE" ] && [ ! -f "$CUSTOM_SCHEMA_FILE" ] ; then
 else
     # get absolute path to the file to avoid issue if the script
     # is not launched from the eZ Publish root... (see around line 278)
-    CUSTOM_DATA_FILE=`readlink -f "$CUSTOM_DATA_FILE"`
+    CUSTOM_SCHEMA_FILE=`readlink -f "$CUSTOM_SCHEMA_FILE"`
 fi
 
 if [ ! -z "$CUSTOM_DATA_FILE" ] && [ ! -f "$CUSTOM_DATA_FILE" ] ; then
@@ -406,7 +406,7 @@ fi
 echo "`$MOVE_TO_COL``$SETCOLOR_SUCCESS`[ Success ]`$SETCOLOR_NORMAL`"
 
 EZDATA_PATH="$EZP_PATH/share/db_data.dba"
-[ ! -z "$CUSTOM_DATA_FILE" ] && EZSCHEMA_PATH=$CUSTOM_DATA_FILE
+[ ! -z "$CUSTOM_DATA_FILE" ] && EZDATA_PATH=$CUSTOM_DATA_FILE
 echo -n "Looking for database data file"
 if [ ! -f "$EZDATA_PATH" ]; then
     echo "`$MOVE_TO_COL``$SETCOLOR_FAILURE`[ Failure ]`$SETCOLOR_NORMAL`"
