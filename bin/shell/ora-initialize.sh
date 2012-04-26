@@ -75,7 +75,7 @@ done
 if [ ! -z "$CUSTOM_SCHEMA_FILE" ] && [ ! -f "$CUSTOM_SCHEMA_FILE" ] ; then
     print_usage "$0" "The schema file '$CUSTOM_SCHEMA_FILE' does not exist"
     exit 1
-elif
+else
     # get absolute path to the file to avoid issue if the script
     # is not launched from the eZ Publish root... (see around line 278)
     CUSTOM_DATA_FILE=`readlink -f "$CUSTOM_DATA_FILE"`
@@ -84,7 +84,7 @@ fi
 if [ ! -z "$CUSTOM_DATA_FILE" ] && [ ! -f "$CUSTOM_DATA_FILE" ] ; then
     print_usage "$0" "The data file '$CUSTOM_DATA_FILE' does not exist"
     exit 1
-elif
+else
     CUSTOM_DATA_FILE=`readlink -f "$CUSTOM_DATA_FILE"`
 fi
 
