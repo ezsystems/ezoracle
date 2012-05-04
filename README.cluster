@@ -11,8 +11,8 @@ http://doc.ez.no/Extensions/eZ-Publish-Extension-for-Oracle-R-database/2.0/Clust
 Generic instructions to set up eZ Publish clustering configurations with separate
 pages for eZDb and eZDFS modes:
 
-http://doc.ez.no/eZ-Publish/Technical-manual/4.5/Features/Clustering/Setting-it-up-for-an-eZDBFileHandler
-http://doc.ez.no/eZ-Publish/Technical-manual/4.5/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
+http://doc.ez.no/eZ-Publish/Technical-manual/4.7/Features/Clustering/Setting-it-up-for-an-eZDBFileHandler
+http://doc.ez.no/eZ-Publish/Technical-manual/4.7/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
 
 The main differences to set up clustering modes on oracle are:
 
