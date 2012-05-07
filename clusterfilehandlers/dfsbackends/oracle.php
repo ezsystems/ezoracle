@@ -37,7 +37,7 @@ CREATE TABLE ezdfsfile (
   name      varchar2(4000) NOT NULL,
   -- name_trunk varchar2(4000) NOT NULL,
   name_hash varchar(34)    PRIMARY KEY,
-  datatype  varchar2(60)   DEFAULT 'application/octet-stream',
+  datatype  varchar2(255)  DEFAULT 'application/octet-stream',
   scope     varchar(25)    DEFAULT '',
   filesize  INT            DEFAULT 0 NOT NULL,
   mtime     INT            DEFAULT 0 NOT NULL,
@@ -268,8 +268,9 @@ class eZDFSFileHandlerOracleBackend
             $fname = "_purgeByLike($like, $onlyExpired)";
 
         // common query part used for both DELETE and SELECT
-        $where = " WHERE name LIKE :alike";
-        $params = array ( ':alike' => $like );
+        // escape is a bit brutal, yes
+        $where = " WHERE name LIKE :alike ESCAPE '!'";
+        $params = array ( ':alike' => $escapedLike = str_replace( '_', '!_', $like ) );
         if ( $expiry !== false )
         {
             $where .= " AND mtime < :expiry";
@@ -1049,7 +1050,7 @@ class eZDFSFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
@@ -1256,7 +1257,7 @@ class eZDFSFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );

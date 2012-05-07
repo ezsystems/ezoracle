@@ -48,7 +48,7 @@ Known differences from the mysql cluster file handler backend:
 CREATE TABLE ezdbfile (
   name      VARCHAR2(4000) NOT NULL,
   name_hash VARCHAR2(34)  PRIMARY KEY,
-  datatype  VARCHAR2(60)  DEFAULT 'application/octet-stream',
+  datatype  VARCHAR2(255)  DEFAULT 'application/octet-stream',
   scope     VARCHAR2(20)  DEFAULT 'UNKNOWN',
   filesize  INT           DEFAULT 0 NOT NULL,
   mtime     INT           DEFAULT 0 NOT NULL,
@@ -958,7 +958,7 @@ class eZDBFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
@@ -1165,7 +1165,7 @@ class eZDBFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );

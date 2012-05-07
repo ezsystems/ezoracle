@@ -11,8 +11,8 @@ http://doc.ez.no/Extensions/eZ-Publish-Extension-for-Oracle-R-database/2.0/Clust
 Generic instructions to set up eZ Publish clustering configurations with separate
 pages for eZDb and eZDFS modes:
 
-http://doc.ez.no/eZ-Publish/Technical-manual/4.5/Features/Clustering/Setting-it-up-for-an-eZDBFileHandler
-http://doc.ez.no/eZ-Publish/Technical-manual/4.5/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
+http://doc.ez.no/eZ-Publish/Technical-manual/4.7/Features/Clustering/Setting-it-up-for-an-eZDBFileHandler
+http://doc.ez.no/eZ-Publish/Technical-manual/4.7/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
 
 The main differences to set up clustering modes on oracle are:
 
@@ -22,12 +22,7 @@ Step 2: the values to be used for the DBBackend are, respectively
 
 also note that the DBHost, DBPort and DBSocket parameters are not used; only the DBName
 
-Step 3: you will need to copy one of the two files
-  extension/ezoracle/index_image_oracle.php
-  extension/ezoracle/index_image_dfsoracle.php
-to the root directory of eZ Publish before proceeding
-
-Step 4: the definition of the database structures to be created can be found in:
+Step 3: the definition of the database structures to be created can be found in:
   extension/ezoracle/clusterfilehandlers/dbbackends/oracle.php
   extension/ezoracle/clusterfilehandlers/dfsackends/oracle.php
 

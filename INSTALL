@@ -117,9 +117,40 @@ Initializing Oracle database
 1. Automated install with ora-initialize.sh
    ----------------------------------------
 
-   Go to the eZ Publish installation directory and run the script:
+   1. Start from scratch
+      ------------------
 
-   $ ./extension/ezoracle/bin/shell/ora-initialize.sh
+      If you want to start with a completely new eZ Publish database, go to the
+      eZ Publish installation directory and run the script:
+
+      $ ./extension/ezoracle/bin/shell/ora-initialize.sh
+
+      Warning: when using this method, the tables needed by extensions will not
+      be automatically created.
+
+   2. Migrate from an existing database
+      ---------------------------------
+
+      To migrate an existing database with its data, you first need to generate
+      the schema file and the data file with the following commands (launched
+      from the eZ Publish installation directory):
+
+      $ ./bin/php/ezsqldumpschema.php --output-types=schema --format=generic \
+        --output-array --type=mysql \
+        --host=<host> --user=<user> --password=<password> \
+        <database> path/to/schema.dba
+
+      $ ./bin/php/ezsqldumpschema.php --output-types=data --format=generic \
+        --output-array --type=mysql \
+        --host=<host> --user=<user> --password=<password> \
+        <database> path/to/data.dba
+
+      Then, you can run the ora-initialize.sh script with the previously
+      generated files in parameter.
+
+      $ ./extension/ezoracle/bin/shell/ora-initialize.sh -s path/to/schema.dba \
+        -d path/to/data.dba
+
 
    The script will check your system against the requirements. If something
    is not as it should be it will give you information on the problem.
@@ -170,7 +201,7 @@ Initializing Oracle database
    o  Creating the database schema and inserting data
 
       The schema and data will be taken from the eZ Publish installation files
-      and initialized in the database.
+      or from the command line and the database will be initialized with them.
 
 2. Manual install
    --------------
