@@ -395,6 +395,11 @@ if ( !function_exists( 'OCILogon' )  )
 if ( !( $oradb = OCILogon( $oraUser, $oraPass, $oraInst, 'AL32UTF8' ) ) )
     die( "cannot connect to Oracle\n" );
 
+// make sure we use the correct numeric format for floats
+$alterStmt = OCIParse( $oradb, "ALTER SESSION SET NLS_NUMERIC_CHARACTERS='. '" );
+OCIExecute( $alterStmt );
+OCIFreeStatement( $alterStmt );
+
 $mysqlTables = myGetTablesList( $mydb );
 foreach ( $mysqlTables as $mysqlTable )
     copyData( $mydb, $oradb, $mysqlTable );
