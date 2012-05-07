@@ -4,3 +4,5 @@ build.xml
 build/
 dist/
 pakefile.php
+
+*.bak
