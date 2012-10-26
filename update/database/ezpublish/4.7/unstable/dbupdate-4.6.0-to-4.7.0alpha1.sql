@@ -2,7 +2,17 @@ UPDATE ezsite_data SET value='4.7.0alpha1' WHERE name='ezpublish-version';
 UPDATE ezsite_data SET value='1' WHERE name='ezpublish-release';
 
 
-ALTER TABLE ezpending_actions ADD id integer NOT NULL;
+ALTER TABLE ezpending_actions ADD id integer;
+UPDATE ezpending_actions SET id = ROWNUM;
+ALTER TABLE ezpending_actions MODIFY id integer NOT NULL;
+
+DECLARE
+    pending_start INTEGER;
+BEGIN
+    SELECT COUNT(*)+1 INTO pending_start FROM ezpending_actions;
+    EXECUTE IMMEDIATE 'CREATE SEQUENCE s_pending_actions_incr START WITH ' || pending_start;
+END;
+/
 
 CREATE SEQUENCE s_pending_actions_incr;
 CREATE OR REPLACE TRIGGER ezpending_actions_id_tr
