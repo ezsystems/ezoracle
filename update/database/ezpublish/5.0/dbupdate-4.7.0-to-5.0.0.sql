@@ -18,3 +18,5 @@ UPDATE ezgeneral_digest_user_settings SET user_id = (SELECT ezuser.contentobject
 CREATE UNIQUE INDEX ezgeneral_digest_user_id ON ezgeneral_digest_user_settings (user_id);
 ALTER TABLE ezgeneral_digest_user_settings DROP COLUMN address;
 CREATE INDEX ezuser_login ON ezuser ( login );
+
+ALTER TABLE eznode_assignment MODIFY (remote_id TYPE VARCHAR2(100));
