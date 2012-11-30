@@ -14,7 +14,6 @@ BEGIN
 END;
 /
 
-CREATE SEQUENCE s_pending_actions_incr;
 CREATE OR REPLACE TRIGGER ezpending_actions_id_tr
 BEFORE INSERT ON ezpending_actions FOR EACH ROW WHEN (new.id IS NULL)
 BEGIN
