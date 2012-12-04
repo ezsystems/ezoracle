@@ -48,7 +48,8 @@ else
 if ( !$db )
     _die( "Unable to connect to storage server.\n" );
 
-$filename = ltrim( $_SERVER['REQUEST_URI'], "/");
+// Use rawurldecode() because if the file contains " characters, they are url encoded.
+$filename = rawurldecode( ltrim( $_SERVER['REQUEST_URI'], '/' ) );
 
 $query = "SELECT filesize, datatype, mtime FROM " . TABLE_METADATA . " WHERE name_hash = :name_hash";
 if ( !$statement = oci_parse( $db, $query ) )
