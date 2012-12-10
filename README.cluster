@@ -24,7 +24,7 @@ also note that the DBHost, DBPort and DBSocket parameters are not used; only the
 
 Step 3: the definition of the database structures to be created can be found in:
   extension/ezoracle/clusterfilehandlers/dbbackends/oracle.php
-  extension/ezoracle/clusterfilehandlers/dfsackends/oracle.php
+  extension/ezoracle/clusterfilehandlers/dfsbackends/oracle.php
 
 Cronjobs: the cluster_maintenance cronjob is
 
