@@ -36,8 +36,8 @@
 CREATE TABLE ezdfsfile (
   name      varchar2(4000) NOT NULL,
   -- name_trunk varchar2(4000) NOT NULL,
+  name_hash varchar(34)    PRIMARY KEY,
   datatype  varchar2(60)   DEFAULT 'application/octet-stream',
-  datatype  varchar2(255)  DEFAULT 'application/octet-stream',
   scope     varchar(25)    DEFAULT '',
   filesize  INT            DEFAULT 0 NOT NULL,
   mtime     INT            DEFAULT 0 NOT NULL,
@@ -53,23 +53,6 @@ CREATE INDEX ezdfsfile_mtime ON ezdfsfile( mtime );
 
 class eZDFSFileHandlerOracleBackend
 {
-    /**
-     * Wait for n microseconds until retry if copy fails, to avoid DFS overload.
-     */
-    const TIME_UNTIL_RETRY = 100;
-
-    /**
-     * Max number of times a dfs file is tried to be copied.
-     *
-     * @var int
-     */
-    protected $maxCopyTries;
-
-    public function __construct()
-    {
-        $this->maxCopyTries = (int)eZINI::instance( 'file.ini' )->variable( 'eZDFSClusteringSettings', 'MaxCopyRetries' );
-    }
-
     /**
      * Connects to the database.
      *
@@ -270,10 +253,10 @@ class eZDFSFileHandlerOracleBackend
             $fname .= "::_purgeByLike($like, $onlyExpired)";
         else
             $fname = "_purgeByLike($like, $onlyExpired)";
+
+        // common query part used for both DELETE and SELECT
         $where = " WHERE name LIKE :alike";
         $params = array ( ':alike' => $like );
-        $where = " WHERE name LIKE :alike ESCAPE '!'";
-        $params = array ( ':alike' => $escapedLike = str_replace( '_', '!_', $like ) );
         if ( $expiry !== false )
         {
             $where .= " AND mtime < :expiry";
@@ -604,9 +587,9 @@ class eZDFSFileHandlerOracleBackend
      * Saving $filePath locally with its original name, or $uniqueName if given
      *
      * @param string $filePath
-     * @param bool|string $uniqueName Alternative name to save the file to
+     * @param string $uniqueName Alternative name to save the file to
      * @return string|bool the file physical path, or false if fetch failed
-     */
+     **/
     public function _fetch( $filePath, $uniqueName = false )
     {
         $fname = "_fetch($filePath)";
@@ -617,56 +600,43 @@ class eZDFSFileHandlerOracleBackend
             eZDebug::writeError( "File '$filePath' does not exist while trying to fetch.", __METHOD__ );
             return false;
         }
+        //$contentLength = $metaData['size'];
 
-        $dfsFileSize = $this->dfsbackend->getDfsFileSize( $filePath );
-        $loopCount = 0;
-        $localFileSize = 0;
+        // create temporary file
+        if ( strrpos( $filePath, '.' ) > 0 )
+            $tmpFilePath = substr_replace( $filePath, getmypid().'tmp', strrpos( $filePath, '.' ), 0  );
+        else
+            $tmpFilePath = $filePath . '.' . getmypid().'tmp';
+        $this->__mkdir_p( dirname( $tmpFilePath ) );
 
-        do
+        // copy DFS file to temporary FS path
+        // @todo Throw an exception
+        if ( !$this->dfsbackend->copyFromDFS( $filePath, $tmpFilePath ) )
         {
-            // create temporary file
-            $tmpid = getmypid() . '-' . mt_rand() .'tmp';
-            if ( strrpos( $filePath, '.' ) > 0 )
-                $tmpFilePath = substr_replace( $filePath, $tmpid, strrpos( $filePath, '.' ), 0  );
-            else
-                $tmpFilePath = $filePath . '.' . $tmpid;
-            $this->__mkdir_p( dirname( $tmpFilePath ) );
-            eZDebugSetting::writeDebug( 'kernel-clustering', "copying DFS://$filePath to FS://$tmpFilePath on try: $loopCount " );
-
-            // copy DFS file to temporary FS path
-            // @todo Throw an exception
-            if ( !$this->dfsbackend->copyFromDFS( $filePath, $tmpFilePath ) )
-            {
-                eZDebug::writeError("Failed copying DFS://$filePath to FS://$tmpFilePath ");
-                usleep( self::TIME_UNTIL_RETRY );
-                ++$loopCount;
-                continue;
-            }
-
-            if ( $uniqueName !== true )
-            {
-                eZFile::rename( $tmpFilePath, $filePath, false, eZFile::CLEAN_ON_FAILURE | eZFile::APPEND_DEBUG_ON_FAILURE );
-            }
-            $filePath = ($uniqueName) ? $tmpFilePath : $filePath ;
-
-            // If all data has been written correctly, return the filepath.
-            // Otherwise let the loop continue
-            clearstatcache( true, $filePath );
-            $localFileSize = filesize( $filePath );
-            if ( $dfsFileSize == $localFileSize )
-            {
-                return $filePath;
-            }
-
-            usleep( self::TIME_UNTIL_RETRY );
-            ++$loopCount;
+            eZDebug::writeError("Failed copying DFS://$filePath to FS://$tmpFilePath ");
+            return false;
         }
-        while ( $dfsFileSize > $localFileSize && $loopCount < $this->maxCopyTries );
 
-        // Copy from DFS has failed :-(
-        eZDebug::writeError( "Size ($localFileSize) of written data for file '$tmpFilePath' does not match expected size {$metaData['size']}", __METHOD__ );
-        unlink( $tmpFilePath );
-        return false;
+        // Make sure all data is written correctly
+        clearstatcache();
+        $tmpSize = filesize( $tmpFilePath );
+        // @todo Throw an exception
+        if ( $tmpSize != $metaData['size'] )
+        {
+            eZDebug::writeError( "Size ($tmpSize) of written data for file '$tmpFilePath' does not match expected size " . $metaData['size'], __METHOD__ );
+            return false;
+        }
+
+        if ( $uniqueName !== true )
+        {
+            eZFile::rename( $tmpFilePath, $filePath, false, eZFile::CLEAN_ON_FAILURE | eZFile::APPEND_DEBUG_ON_FAILURE );
+        }
+        else
+        {
+            $filePath = $tmpFilePath;
+        }
+
+        return $filePath;
     }
 
     public function _fetchContents( $filePath, $fname = false )
@@ -837,7 +807,7 @@ class eZDFSFileHandlerOracleBackend
     function _storeInner( $filePath, $datatype, $scope, $fname )
     {
         // Insert file metadata.
-        clearstatcache( true, $filePath );
+        clearstatcache();
         $fileMTime = (int)filemtime( $filePath );
         $contentLength = (int)filesize( $filePath );
         $filePathHash = md5( $filePath );
@@ -1063,10 +1033,10 @@ class eZDFSFileHandlerOracleBackend
         $res = false;
         $this->error = false;
         if ( $statement = oci_parse( $this->db, $query ) )
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+        {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
@@ -1269,11 +1239,11 @@ class eZDFSFileHandlerOracleBackend
 
         $this->error = null;
         $res = false;
-                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
+        if ( $statement = oci_parse( $this->db, $query ) )
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
+                if ( !oci_bind_by_name( $statement, $name, $val, -1 ) )
                 {
                     $this->error = oci_error( $statement );
                     $this->_error( $query, $fname, $error );
@@ -1778,12 +1748,12 @@ class eZDFSFileHandlerOracleBackend
      * @var array
      **/
     protected static $dbparams = null;
-    protected $numQueries = 0;
+
     /**
      * Amount of executed queries, for debugging purpose
      * @var int
      **/
-    protected static $numQueries = 0;
+    protected $numQueries = 0;
 
     /**
      * Current transaction level.
