@@ -128,11 +128,9 @@ $columnsWithDefaultNullVal = array(
 
 // index names translation table: oracle doesn't understand identifiers longer than 30 characters
 $indexNameTransTable = array(
-    'ezcontentobject_attribute.ezcontentobject_attribute_contentobject_id'    => 'ezco_attr_co_id',
     'ezcontentobject_attribute.ezcontentobject_attribute_co_id_ver_lang_code' => 'ezco_attr_co_id_ver_lang_code',
     'ezcontentobject_attribute.ezcontentobject_attribute_language_code'       => 'ezco_attr_language_code',
     'ezcontentobject_tree.ezcontentobject_tree_path_ident' => 'ezco_tree_path_ident',
-    'ezenumobjectvalue.ezenumobjectvalue_co_attr_id_co_attr_ver' => 'ezenov_co_attr_id_co_attr_ver',
     'ezenumvalue.ezenumvalue_co_cl_attr_id_co_class_att_ver' => 'ezenv_coc_attr_id_coc_attr_ver',
     'ezmodule_run.ezmodule_run_workflow_process_id_s' => 'ezmodule_run_wf_process_id_i',
     'ezoperation_memento.ezoperation_memento_memento_key_main' => 'ezoperation_memento_mkey_main',
