@@ -1179,7 +1179,7 @@ class eZOracleDB extends eZDBInterface
                 }
                 $offset += $length;
             }
-            $result = $columnName . ' ' . implode( $connector . ' ' . $columnName, $parts );
+            $result = ' ( ' . $columnName . implode( $connector . ' ' . $columnName, $parts ) . ' ) ';
         }
         else
         {
