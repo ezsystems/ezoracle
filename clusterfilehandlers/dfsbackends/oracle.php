@@ -835,7 +835,7 @@ class eZDFSFileHandlerOracleBackend
         else
             $fname = "_store($filePath, $datatype, $scope)";
 
-        $this->_protect( array( $this, '_storeInner' ), $fname,
+        return $this->_protect( array( $this, '_storeInner' ), $fname,
                          $filePath, $datatype, $scope, $fname );
     }
 
@@ -860,29 +860,20 @@ class eZDFSFileHandlerOracleBackend
         $datatype = $this->_escapeString( $datatype );
         $scope = $this->_escapeString( $scope );
 
-        // Check if a file with the same name already exists in db.
-        if ( $row = $this->_fetchMetadata( $filePath ) ) // if it does
-        {
-            $sql  = "UPDATE " . self::TABLE_METADATA . " SET " .
-                    //"name='$filePathEscaped', name_hash='$filePathHash', " .
-                    "datatype='$datatype', scope='$scope', " .
-                    "filesize=$contentLength, mtime=$fileMTime, expired='0' " .
-                    "WHERE name_hash='$filePathHash'";
-        }
-        else // else if it doesn't
-        {
-            // create file in db
-            $sql  = "INSERT INTO " . self::TABLE_METADATA . " (name, name_hash, datatype, scope, filesize, mtime, expired) " .
-                    "VALUES ('$filePathEscaped', '$filePathHash', '$datatype', '$scope', " .
-                    "$contentLength, $fileMTime, '0')";
-        }
+        $result = $this->_insertUpdate(
+            $filePath,
+            array(
+                'datatype' => $datatype,
+                'scope' => $scope,
+                'filesize' => $contentLength,
+                'mtime' => $fileMTime,
+                'expired' => 0
+            ),
+            $fname
+        );
 
-        /// @todo move to stored params convention
-        $return = $this->_query( $sql, $fname, true, array(), self::RETURN_COUNT );
-        if ( !$return )
-        {
-            return $this->_fail( "Failed to insert file metadata while storing. Possible race condition" );
-        }
+        if ( !$result )
+            return false;
 
         // copy given $filePath to DFS
         if ( !$this->dfsbackend->copyToDFS( $filePath ) )
@@ -891,6 +882,98 @@ class eZDFSFileHandlerOracleBackend
         }
 
         return true;
+    }
+
+    /**
+     * Performs an insert of the given items in $array.
+     *
+     * If entry specified already exists the $update SQL is executed to update
+     * the entry instead.
+     *
+     * @param string $filePath Path of file to update
+     * @param array $fields Associative array with fields to update/insert
+     *                      Keys are the field names, and the values will be quoted
+     *                      according to type.
+     * @param array $extraConditionFields Hash of extra fields to use in update condition (to limit the update)
+     * @param string $fname Name of caller function (for logging purpuse)
+     */
+    private function _insertUpdate( $filePath, $fields = array(), $extraConditionFields = array(), $fname = null )
+    {
+        $nameHash = md5( $filePath );
+
+        $invalidFields = array_diff(
+            array_keys( $fields ),
+            array( 'datatype', 'scope', 'filesize', 'mtime', 'expired' )
+        );
+        if ( count( $invalidFields ) > 0 )
+        {
+            eZDebug::writeError( "Invalid insert/update fields: " . implode( ', ', $invalidFields ), $fname ?: __METHOD__ );
+            return false;
+        }
+
+        $extraFields = array( 'name_hash' => $nameHash, 'name' => $filePath );
+        foreach ( array_merge( $fields, $extraFields ) as $key => $value )
+            $bindParameters[":$key"] = $value;
+
+        // We update existing data if the database contains an entry for this file path
+        if ( $row = $this->_fetchMetadata( $filePath ) )
+        {
+            // we use the mtime as an extra argument to prevent race conditions
+            $bindParameters[':currentmtime'] = $row['mtime'];
+            unset( $bindParameters[':name'] );
+
+            $query = "UPDATE " . self::TABLE_METADATA . ' ' .
+                     "SET " . $this->_sqlList( $fields ) . ' ' .
+                     "WHERE name_hash=:name_hash AND mtime=:currentmtime";
+
+            if ( !$statement = oci_parse( $this->db, $query ) )
+            {
+                $this->error = oci_error( $this->db );
+                $this->_error( $query, $fname, $this->error );
+                return false;
+            }
+
+            $result = $this->_query( $query, $fname, false, $bindParameters, self::RETURN_COUNT );
+
+            return $result > 0;
+        }
+        // No entry was found
+        else
+        {
+            $query = "INSERT INTO " . self::TABLE_METADATA . ' ' .
+                     "(" . implode( ', ', array_keys( array_merge( $fields, $extraFields ) ) ) . ") " .
+                     "VALUES ( " . implode( ', ', array_keys( $bindParameters ) ) . ")";
+
+            // error on insert. Race condition ?
+            if ( !$result = $this->_query( $query, $fname, false, $bindParameters, self::RETURN_COUNT ) )
+            {
+                eZDebug::writeNotice( "Error. Code: " . $this->error['code'], $fname ?: __METHOD__ );
+                if ( (int)$this->error['code'] == 1 )
+                {
+                    eZDebugSetting::writeNotice( "kernel-clustering", "Handled race condition when inserting $filePath", $fname ?: __METHOD__ );
+                }
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    /**
+     * Formats a list of entries as an SQL list which is separated by commas.
+     * Each entry in the list is quoted using _quote().
+     *
+     * @param array $fields
+     * @param string $separator
+     * @return string
+     */
+    protected function _sqlList( $fields, $separator = ',' )
+    {
+        foreach ( $fields as $fieldName => $fieldValue )
+        {
+            $fields[$fieldName] = "$fieldName=:$fieldName";
+        }
+        return implode( $separator, $fields );
     }
 
     /**
@@ -911,7 +994,7 @@ class eZDFSFileHandlerOracleBackend
         else
             $fname = "_storeContents($filePath, ..., $scope, $datatype)";
 
-        $this->_protect( array( $this, '_storeContentsInner' ), $fname,
+        return $this->_protect( array( $this, '_storeContentsInner' ), $fname,
                          $filePath, $contents, $scope, $datatype, $mtime, $fname );
     }
 
@@ -923,46 +1006,21 @@ class eZDFSFileHandlerOracleBackend
         else
             $fname = "_storeContents($filePath, ..., $scope, $datatype)";
 
-        // Prepare file metadata for storing.
-        $filePathHash = md5( $filePath );
-        $filePathEscaped = $this->_escapeString( $filePath );
-        $datatype = $this->_escapeString( $datatype );
-        $scope = $this->_escapeString( $scope );
-        if ( $mtime === false )
-        {
-            $mtime = time();
-        }
-        else
-        {
-            $mtime = (int)$mtime;
-        }
-        $expired = ($mtime < 0) ? '1' : '0';
-        $contentLength = strlen( $contents );
+        $return = $this->_insertUpdate(
+            $filePath,
+            array(
+                'datatype' => $datatype,
+                'scope' => $scope,
+                'filesize' => strlen( $contents ),
+                'mtime' => (int)$mtime ?: time(),
+                'expired' => (int)( (int)$mtime < 0 ), // Note: files are not expired with oracle, they're deleted
+            ),
+            $fname
+        );
 
-        // Transaction is started implicitly.
-
-        // Check if a file with the same name already exists in db.
-        if ( $row = $this->_fetchMetadata( $filePath ) ) // if it does
-        {
-            $sql  = "UPDATE " . self::TABLE_METADATA . " SET " .
-                //"name='$filePathEscaped', name_hash='$filePathHash', " .
-                "datatype='$datatype', scope='$scope', " .
-                "filesize=$contentLength, mtime=$mtime, expired='$expired' " .
-                "WHERE name_hash='$filePathHash'";
-        }
-        else // else if it doesn't
-        {
-            // create file in db
-            $sql  = "INSERT INTO " . self::TABLE_METADATA . " (name, name_hash, datatype, scope, filesize, mtime, expired) " .
-                    "VALUES ('$filePathEscaped', '$filePathHash', '$datatype', '$scope', " .
-                    "'$contentLength', $mtime, '$expired')";
-        }
-
-        /// @todo move to stored params convention
-        $return = $this->_query( $sql, $fname, true, array(), self::RETURN_COUNT );
         if ( !$return )
         {
-            return $this->_fail( "Failed to insert file metadata while storing contents. Possible race condition" );
+            return false;
         }
 
         if ( !$this->dfsbackend->createFileOnDFS( $filePath, $contents ) )
@@ -1287,14 +1345,16 @@ class eZDFSFileHandlerOracleBackend
         {
             foreach( $bindparams as $name => $val )
             {
-                if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                 {
-                    $this->error = oci_error( $statement );
-                    $this->_error( $query, $fname, $error );
+                    if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
+                    {
+                        $this->error = oci_error( $statement );
+                        $this->_error( $query, $fname, $this->error );
+                    }
                 }
             }
 
-            if ( ! $res = oci_execute( $statement, OCI_DEFAULT ) )
+            if ( !$res = @oci_execute( $statement, OCI_DEFAULT ) )
             {
                 $this->error = oci_error( $statement );
             }
@@ -1324,11 +1384,8 @@ class eZDFSFileHandlerOracleBackend
         // take care: 0 might be a valid result if RETURN_COUNT is used
         if ( $res === false && $reportError )
         {
-            $this->_error( $query, $fname, false, $statement );
+            $this->_error( $query, $fname, false, $this->error );
         }
-
-
-        //$numRows = mysql_affected_rows( $this->db );
 
         $time = microtime( true ) - $time;
         eZDebug::accumulatorStop( 'oracle_cluster_query' );
