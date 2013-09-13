@@ -8,28 +8,19 @@ available online:
 
 http://doc.ez.no/Extensions/eZ-Publish-extensions/eZ-Publish-Extension-for-Oracle-R-database/5.0/Installation/Clustering
 
-Generic instructions to set up eZ Publish clustering configurations with separate
-pages for eZDb and eZDFS modes:
-
-http://doc.ez.no/eZ-Publish/Technical-manual/5.x/Features/Clustering/Setting-it-up-for-an-eZDBFileHandler
-http://doc.ez.no/eZ-Publish/Technical-manual/5.x/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
+eZDFS instructions:
+http://doc.ez.no/eZ-Publish/Technical-manual/4.7/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
 
 The main differences to set up clustering modes on oracle are:
 
-Step 2: the values to be used for the DBBackend are, respectively
-  eZDBFileHandlerOracleBackend
-  eZDFSFileHandlerOracleBackend
+Step 2: the value to be used for the DBBackend is eZDFSFileHandlerOracleBackend
 
 also note that the DBHost, DBPort and DBSocket parameters are not used; only the DBName
 
 Step 3: the definition of the database structures to be created can be found in:
-  extension/ezoracle/clusterfilehandlers/dbbackends/oracle.php
   extension/ezoracle/clusterfilehandlers/dfsbackends/oracle.php
 
 Cronjobs: the cluster_maintenance cronjob is
-
-. not needed when using the Oracle eZDB handler.
-  All binary files are immediately deleted in the database
 
 . not effective when using the Oracle eZDFS handler.
   A separate script is provided to the same effect:
@@ -46,7 +37,7 @@ Cronjobs: the cluster_maintenance cronjob is
 Recommendations
 ===============
 
-For both eZDB and eZDFS, we strongly recommend to use a separate oracle schema
+We strongly recommend to use a separate oracle schema
 for the main content data and for cluster data.
 Besides easing backups and maintenance operations, this setup guarantees that
 the transactions used to insure correctness of operations in both databases
