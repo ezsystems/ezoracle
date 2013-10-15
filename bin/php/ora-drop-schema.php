@@ -55,9 +55,9 @@ function showUsage( $argv )
 {
     echo "\n";
     echo "Usage: $argv[0] <login_string>\n";
-    echo "login_string:\t<dbname>:<user>/<pass>@<host>[:<port>]\n";
+    echo "login_string:\t<user>/<pass>@<db>\n";
     echo "\n";
-    echo "Example:    corporate:ezuser/secret@localhost\n";
+    echo "Example:    ezuser/secret@orcl\n";
     exit( 1 );
 }
 
