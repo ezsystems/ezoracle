@@ -1293,6 +1293,33 @@ class eZOracleDB extends eZDBInterface
         $value = array_combine( $params[1], $value );
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * Oracle's strings are truncated counting bytes instead of char
+     */
+    public function truncateString( $string, $maxLength, $fieldName, $truncationSuffix = '' )
+    {
+        if ( strlen( $string ) <= $maxLength )
+        {
+            return $string;
+        }
+
+        eZDebug::writeDebug( $string, "truncation of $fieldName to max_length=". $maxLength );
+
+        return mb_strcut( $string, 0, $maxLength - strlen( $truncationSuffix ), "utf-8" );
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * Oracle's string's size are bytes instead of char
+     */
+    public function countStringSize( $string )
+    {
+        return strlen( $string );
+    }
+
     /// \privatesection
     /// Database connection
     var $DBConnection;
