@@ -37,6 +37,8 @@
 
 class eZOracleSchema extends eZDBSchemaInterface
 {
+    // we suppose to be using AL32UTF8
+    protected static $charWidth = 4;
 
     function eZOracleSchema( $params )
     {
@@ -318,7 +320,7 @@ class eZOracleSchema extends eZDBSchemaInterface
      */
     function parseLength( $oraType, $oraLength, $oraPrecision = '', $oraScale = '' )
     {
-        // for NUMBER, we say default lenght is 11,0 unless there is more info in the db
+        // for NUMBER, we say default length is 11,0 unless there is more info in the db
         if ( $oraType == 'NUMBER' )
         {
             $length = 11;
@@ -332,6 +334,10 @@ class eZOracleSchema extends eZDBSchemaInterface
             }
 
             return $length;
+        }
+        if ( $oraType == 'VARCHAR2' )
+        {
+            return floor( $oraLength / static::$charWidth );
         }
         return $oraLength;
     }
@@ -436,7 +442,14 @@ class eZOracleSchema extends eZDBSchemaInterface
             // NB: the following code is not entirely correct, as it prevents us to generate INTEGER(x),
             //     but it has always been like this in ezoracle, so we do not change (yet)
             if ( isset( $def['length'] ) && ( !$isNumericField || $oraType == 'NUMBER' ) )
-                $sql_def .= "({$def['length']})";
+            {
+                $sql_def .= "({$def['length']}";
+                if ( $oraType == 'VARCHAR2' )
+                {
+                    $sql_def .= ' CHAR';
+                }
+                $sql_def .= ")";
+            }
 
             // default
             if ( in_array( 'default', $optionsToDump ) /*&& array_key_exists( 'default', $def )*/ )
