@@ -2,8 +2,8 @@
 /**
  * Cluster binary files purge script for oracle DFS implementation
  *
- * @copyright Copyright (C) 2010-2013 eZ Systems AS. All rights reserved.
- * @license http://ez.no/licenses/gnu_gpl GNU GPLv2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  *
  * @todo harden the script to disallow the passing of directories external to
  *       eZ Publish as root directories
