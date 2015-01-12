@@ -36,4 +36,7 @@ ALTER TABLE ezcontentobject_link DROP COLUMN op_code;
 UPDATE ezcobj_state_group_language SET real_language_id = language_id - bitand(language_id, 1);
 
 -- See https://jira.ez.no/browse/EZP-20673
-ALTER TABLE eznode_assignment MODIFY( remote_id VARCHAR2(100) DEFAULT '0' NOT NULL );
+ALTER TABLE eznode_assignment ADD (remote_id2 VARCHAR2(100) DEFAULT '0' NOT NULL);
+UPDATE eznode_assignment SET remote_id2 = remote_id;
+ALTER TABLE eznode_assignment DROP COLUMN remote_id;
+ALTER TABLE eznode_assignment RENAME COLUMN remote_id2 TO remote_id;
