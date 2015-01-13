@@ -20,7 +20,7 @@ DROP INDEX ezurlalias_ml_actt;
 -- Combining "ezurlalias_ml_par_txt" and "ezurlalias_ml_par_lnk_txt" by moving "link" after "text" in the latter:
 DROP INDEX ezurlalias_ml_par_txt;
 DROP INDEX ezurlalias_ml_par_lnk_txt;
-CREATE INDEX ezurlalias_ml_par_lnk_txt ON ezurlalias_ml (parent, text, link),
+CREATE INDEX ezurlalias_ml_par_lnk_txt ON ezurlalias_ml (parent, text, link);
 
 -- Combining "ezurlalias_ml_action" and "ezurlalias_ml_par_act_id_lnk" by moving "parent" after "link" in the latter:
 DROP INDEX ezurlalias_ml_action;
