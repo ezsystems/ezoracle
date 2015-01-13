@@ -241,6 +241,11 @@ class eZOracleSchema extends eZDBSchemaInterface
             $indexes[$idxName]['type']     = $idxType;
             $indexes[$idxName]['fields'][$row['col_pos'] - 1] = strtolower( $row['col_name'] );
         }
+        // make sure all index elements are sorted, to ease comparisons
+        foreach( $indexes as &$index )
+        {
+            ksort( $index['fields'] );
+        }
         if ( $params['sort_indexes'] )
         {
             ksort( $indexes );
