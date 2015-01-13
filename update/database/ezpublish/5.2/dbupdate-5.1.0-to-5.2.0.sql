@@ -26,6 +26,8 @@ WHERE EXISTS (
     AND ezurl_object_link.contentobject_attribute_id = ezurl_object_link_temp.contentobject_attribute_id
     AND ezurl_object_link.contentobject_attr_version = ezurl_object_link_temp.contentobject_attr_version
 );
+
+DROP TABLE ezurl_object_link_temp;
 -- End ezp-21465
 
 -- Start EZP-21469
