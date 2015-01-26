@@ -35,7 +35,7 @@ DROP TABLE ezurl_object_link_temp;
 -- the UPDATE statement below fixes that based on the language_mask of the current version.
 UPDATE ezcontentobject o
 SET language_mask = (
-  SELECT bitor(bitand(o.language_mask, 1), bitand(v.language_mask, 1))
+  SELECT bitor(bitand(o.language_mask, 1), (v.language_mask - bitand(v.language_mask, 1)))
   FROM ezcontentobject_version v
   WHERE o.id = v.contentobject_id AND o.current_version = v.version
 )
