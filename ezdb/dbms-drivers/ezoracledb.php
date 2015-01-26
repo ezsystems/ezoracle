@@ -245,9 +245,9 @@ class eZOracleDB extends eZDBInterface
                     {
                         for ( $i = 0; $i < $numRows; ++$i )
                         {
-                            foreach( $row[$i] as $key => $data )
+                            foreach( $rows[$i] as $key => $data )
                             {
-                                $row[$i][$key] = $this->OutputTextCodec->convertString( $data );
+                                $rows[$i][$key] = $this->OutputTextCodec->convertString( $data );
                             }
                         }
                     }
