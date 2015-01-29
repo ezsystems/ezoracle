@@ -46,12 +46,14 @@ o  PHP with Oracle support:
    Make sure your PHP installation has compiled in support for Oracle. To
    compile this you will need the Oracle client libraries and headers.
    The standard windows version of php includes the dll needed for oracle support
-   (but the oracle client is still neded).
+   (but the oracle client is still needed).
 
 o  Oracle user with correct permissions:
 
    Make sure you have a user on the oracle server that can create the
    following elements: session, table, trigger, sequence and procedure.
+   It should also have quotas set appropriately for the amount of content
+   to be created.
 
 
 Installation
@@ -69,9 +71,13 @@ for detailed upgrade instructions from previous versions.
 Clustering
 ==========
 Please read the online documentation at
-http://doc.ez.no/Extensions/eZ-Publish-Extension-for-Oracle-R-database/2.0/Clustering
+  https://doc.ez.no/Extensions/eZ-Publish-extensions/eZ-Publish-Extension-for-Oracle-R-database/5.0/Installation/Clustering
+and
+  https://doc.ez.no/eZ-Publish/Technical-manual/5.x/Features/Clustering
 for detailed information on setting up an eZ Publish clustering configuration
 using an Oracle database.
+
+* Note that only DFS Cluster is supported starting with this release of the extension. *
 
 
 Troubleshooting

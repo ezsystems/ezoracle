@@ -1,28 +1,32 @@
 eZ Oracle extension [EXTENSION_VERSION] cluster README
 
+* Note that only DFS Cluster is supported starting with this release of the extension. *
+
+
 Configuration
 =============
 
-The instructions to set up eZ Publish clustering configurations on oracle are
+The instructions to set up eZ Publish clustering configurations on Oracle are
 available online:
 
 http://doc.ez.no/Extensions/eZ-Publish-extensions/eZ-Publish-Extension-for-Oracle-R-database/5.0/Installation/Clustering
 
-eZDFS instructions:
-http://doc.ez.no/eZ-Publish/Technical-manual/4.7/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
+General instructions for setting up eZDFS are at:
+https://doc.ez.no/eZ-Publish/Technical-manual/5.x/Features/Clustering/Setting-it-up-for-an-eZDFSFileHandler
 
-The main differences to set up clustering modes on oracle are:
+The main differences to set up clustering mode on oracle are:
 
-Step 2: the value to be used for the DBBackend is eZDFSFileHandlerOracleBackend
+Step 2: settings for the [eZDFSClusteringSettings] block are to be taken from the Oracle instructions
 
-also note that the DBHost, DBPort and DBSocket parameters are not used; only the DBName
+  note that the DBHost, DBPort and DBSocket parameters are not used; only the DBName
 
-Step 3: the definition of the database structures to be created can be found in:
+Step 3: the constants and values for file config.php are to be taken from the Oracle instructions
+
+Step 4: the definition of the database structures to be created can be found in:
   extension/ezoracle/clusterfilehandlers/dfsbackends/oracle.php
 
-Cronjobs: the cluster_maintenance cronjob is
+Cronjobs: the cluster_maintenance cronjob is not effective when using the Oracle eZDFS handler.
 
-. not effective when using the Oracle eZDFS handler.
   A separate script is provided to the same effect:
 
   extension/ezoracle/bin/php/oracleclusterbinarypurge.php
