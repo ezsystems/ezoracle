@@ -29,7 +29,7 @@
 //
 
 /*
-   This is the structure / SQL CREATE for the DFS database table.
+   This is the structure / SQL CREATE for the DFS database tables.
    It can be created anywhere, in the same database on the same server, or on a
    distinct database / server.
 
@@ -49,9 +49,25 @@ CREATE INDEX ezdfsfile_name ON ezdfsfile( name );
 CREATE INDEX ezdfsfile_mtime ON ezdfsfile( mtime );
 --CREATE INDEX ezdfsfile_expired_name ON ezdfsfile( expired, name );
 
+CREATE TABLE ezdfsfile_cache (
+  name VARCHAR2(4000) NOT NULL,
+  --name_trunk VARCHAR2(4000) NOT NULL,
+  name_hash VARCHAR2(34) PRIMARY KEY,
+  datatype VARCHAR2(255) DEFAULT 'application/octet-stream',
+  scope VARCHAR2(25)     DEFAULT '',
+  filesize INT           DEFAULT 0 NOT NULL,
+  mtime INT              DEFAULT 0 NOT NULL,
+  expired CHAR(1)        DEFAULT '0' NOT NULL,
+  status    char(1)        DEFAULT '0' NOT NULL
+);
+CREATE INDEX ezdfsfile_cache_name ON ezdfsfile_cache (name);
+--CREATE INDEX ezdfsfile_cache_name_trunk ON ezdfsfile_cache (name_trunk);
+CREATE INDEX ezdfsfile_cache_mtime ON ezdfsfile_cache (mtime);
+--CREATE INDEX ezdfsfile_cache_expired_name ON ezdfsfile_cache (expired, name);
+
 */
 
-class eZDFSFileHandlerOracleBackend
+class eZDFSFileHandlerOracleBackend implements eZClusterEventNotifier
 {
     /**
      * Wait for n microseconds until retry if copy fails, to avoid DFS overload.
@@ -67,7 +83,43 @@ class eZDFSFileHandlerOracleBackend
 
     public function __construct()
     {
-        $this->maxCopyTries = (int)eZINI::instance( 'file.ini' )->variable( 'eZDFSClusteringSettings', 'MaxCopyRetries' );
+        $this->eventHandler = ezpEvent::getInstance();
+        $fileINI = eZINI::instance( 'file.ini' );
+        $this->maxCopyTries = (int)$fileINI->variable( 'eZDFSClusteringSettings', 'MaxCopyRetries' );
+
+        if ( defined( 'CLUSTER_METADATA_TABLE_CACHE' ) )
+        {
+            $this->metaDataTableCache = CLUSTER_METADATA_TABLE_CACHE;
+        }
+        else if ( $fileINI->hasVariable( 'eZDFSClusteringSettings', 'MetaDataTableNameCache' ) )
+        {
+            $this->metaDataTableCache = $fileINI->variable('eZDFSClusteringSettings', 'MetaDataTableNameCache');
+        }
+
+        $this->cacheDir = eZINI::instance( 'site.ini' )->variable( 'FileSettings', 'CacheDir' );
+        $this->storageDir = eZINI::instance( 'site.ini' )->variable( 'FileSettings', 'StorageDir' );
+    }
+
+    /**
+     * Returns the database table name to use for the specified file.
+     *
+     * For files detected as cache files the cache table is returned, if not
+     * the generic table is returned.
+     *
+     * @param string $filePath
+     * @return string The database table name
+     */
+    protected function dbTable( $filePath )
+    {
+        if ( $this->metaDataTableCache == $this->metaDataTable )
+            return $this->metaDataTable;
+
+        if ( strpos( $filePath, $this->cacheDir ) !== false && strpos( $filePath, $this->storageDir ) === false )
+        {
+            return $this->metaDataTableCache;
+        }
+
+        return $this->metaDataTable;
     }
 
     /**
@@ -126,7 +178,14 @@ class eZDFSFileHandlerOracleBackend
             ++$tries;
         }
         if ( !$this->db )
-            throw new eZClusterHandlerDBNoConnectionException( self::$dbparams['dbname'], self::$dbparams['user'], self::$dbparams['pass'] );
+        {
+            throw new eZClusterHandlerDBNoConnectionException(
+                self::$dbparams['dbname'],
+                self::$dbparams['user'],
+                self::$dbparams['pass'],
+                'Error ' . oci_error()
+            );
+        }
 
         // DFS setup
         if ( $this->dfsbackend === null )
@@ -173,8 +232,12 @@ class eZDFSFileHandlerOracleBackend
         {
             return false;
         }
-        return $this->_protect( array( $this, "_copyInner" ), $fname,
+        $result = $this->_protect( array( $this, "_copyInner" ), $fname,
                                 $srcFilePath, $dstFilePath, $fname, $metaData );
+
+        $this->eventHandler->notify( 'cluster/deleteFile', array( $dstFilePath ) );
+
+        return $result;
     }
 
     /**
@@ -203,7 +266,7 @@ class eZDFSFileHandlerOracleBackend
         /// @todo move to stored params convention
         $name = $this->_escapeString( $dstFilePath );
         $hash = md5( $dstFilePath );
-        $sql  = "INSERT INTO " . self::TABLE_METADATA . " (datatype, name, name_hash, scope, filesize, mtime, expired) " .
+        $sql  = "INSERT INTO " . $this->dbTable( $dstFilePath ) . " (datatype, name, name_hash, scope, filesize, mtime, expired) " .
                 "VALUES ('$datatype', '$filePathEscaped', '$filePathHash', '$scope', " .
                 "$contentLength, $fileMTime, '0')";
 
@@ -241,7 +304,7 @@ class eZDFSFileHandlerOracleBackend
             $fname .= "::_purge($filePath)";
         else
             $fname = "_purge($filePath)";
-        $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=:hash";
+        $sql = "DELETE FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=:hash";
         $params = array( ':hash' => md5( $filePath ) );
         if ( $expiry !== false )
         {
@@ -256,6 +319,9 @@ class eZDFSFileHandlerOracleBackend
         {
             $this->dfsbackend->delete( $filePath );
         }
+
+        $this->eventHandler->notify( 'cluster/deleteFile', array( $filePath ) );
+
         return true;
     }
 
@@ -302,7 +368,7 @@ class eZDFSFileHandlerOracleBackend
         $this->_begin( $fname );
 
         // select query, in FOR UPDATE mode
-        $selectSQL = "SELECT name FROM " . self::TABLE_METADATA .
+        $selectSQL = "SELECT name FROM " . $this->dbTable( $like ) .
                      "{$where} FOR UPDATE";
         if ( ( $files = $this->_query( $selectSQL, $fname, true, $params, self::RETURN_DATA_BY_COL ) ) === false )
         {
@@ -322,7 +388,7 @@ class eZDFSFileHandlerOracleBackend
         // delete query
         /// @bug what if other rows have been added / removed that match our conditions
         ///      in the meantime? we should use a condition of the form WHERE name_hash IN ( ... )
-        $deleteSQL = "DELETE FROM " . self::TABLE_METADATA . " {$where}";
+        $deleteSQL = "DELETE FROM " . $this->dbTable( $like ) . " {$where}";
         if ( !$res = $this->_query( $deleteSQL, $fname, true, $params, self::RETURN_COUNT ) )
         {
             $this->_rollback( $fname );
@@ -375,9 +441,13 @@ class eZDFSFileHandlerOracleBackend
         }
         else
         {
-            return $this->_protect( array( $this, '_deleteInner' ), $fname,
+            $res = $this->_protect( array( $this, '_deleteInner' ), $fname,
                                     $filePath, $fname );
         }
+
+        $this->eventHandler->notify( 'cluster/deleteFile', array( $filePath ) );
+
+        return $res;
     }
 
     /**
@@ -390,7 +460,7 @@ class eZDFSFileHandlerOracleBackend
     protected function _deleteInner( $filePath, $fname )
     {
         $hash = md5( $filePath );
-        $sql = self::$deletequery . "WHERE name_hash=:hash";
+        $sql = $this->deleteQuery( $filePath ) . "WHERE name_hash=:hash";
         if ( !$this->_query( $sql, $fname, true, array( ':hash' => $hash ) ) )
             return $this->_fail( "Deleting file $filePath failed" );
         return true;
@@ -416,8 +486,13 @@ class eZDFSFileHandlerOracleBackend
             $fname .= "::_deleteByLike($like)";
         else
             $fname = "_deleteByLike($like)";
-        return $this->_protect( array( $this, '_deleteByLikeInner' ), $fname,
+        $return = $this->_protect( array( $this, '_deleteByLikeInner' ), $fname,
                                 $like, $fname );
+
+        if ( $return )
+            $this->eventHandler->notify( 'cluster/deleteByLike', array( $like ) );
+
+        return $return;
     }
 
     /**
@@ -429,46 +504,10 @@ class eZDFSFileHandlerOracleBackend
      */
     private function _deleteByLikeInner( $like, $fname )
     {
-        $sql = self::$deletequery . "WHERE name LIKE :alike" ;
-        if ( !$res = $this->_query( $sql, $fname, true, array ( ':alike' => $like ) ) )
+        $sql = $this->deleteQuery( $like ) . "WHERE name LIKE :alike ESCAPE '!'" ;
+        if ( !$res = $this->_query( $sql, $fname, true, array ( ':alike' => str_replace( '_', '!_', $like ) ) ) )
         {
             return $this->_fail( "Failed to delete files by like: '$like'" );
-        }
-        return true;
-    }
-
-    /**
-     * Deletes DB files by using a SQL regular expression applied to file names
-     *
-     * @param string $regex
-     * @param mixed $fname
-     * @return bool
-     * @deprecated Has severe performance issues
-     */
-    public function _deleteByRegex( $regex, $fname = false )
-    {
-        if ( $fname )
-            $fname .= "::_deleteByRegex($regex)";
-        else
-            $fname = "_deleteByRegex($regex)";
-        return $this->_protect( array( $this, '_deleteByRegexInner' ), $fname,
-                                $regex, $fname );
-    }
-
-    /**
-     * Callback used by _deleteByRegex to perform the deletion
-     *
-     * @param mixed $regex
-     * @param mixed $fname
-     * @return
-     * @deprecated Has severe performances issues
-     */
-    public function _deleteByRegexInner( $regex, $fname )
-    {
-        $sql = self::$deletequery . "WHERE REGEXP_LIKE( name, :escapedRegex )";
-        if ( !$res = $this->_query( $sql, $fname, true, array( ':escapedRegex' => $regex ) ) )
-        {
-            return $this->_fail( "Failed to delete files by regex: '$regex'" );
         }
         return true;
     }
@@ -513,7 +552,7 @@ class eZDFSFileHandlerOracleBackend
                               array( '.', '.*', '(', ')', '|' ),
                               $regex );
 
-        $sql = self::$deletequery . "WHERE REGEXP_LIKE( name, :escapedRegex )";
+        $sql = $this->deleteQuery( $wildcard ) . "WHERE REGEXP_LIKE( name, :escapedRegex )";
         if ( !$res = $this->_query( $sql, $fname, true, array( ':escapedRegex' => $regex ) ) )
         {
             return $this->_fail( "Failed to delete files by regex: '$regex'" );
@@ -521,6 +560,9 @@ class eZDFSFileHandlerOracleBackend
         return true;
     }
 
+    /**
+     * NB: not to be used to delete at the same time cache and non-cache files
+     */
     public function _deleteByDirList( $dirList, $commonPath, $commonSuffix, $fname = false )
     {
         if ( $fname )
@@ -531,19 +573,22 @@ class eZDFSFileHandlerOracleBackend
                                 $dirList, $commonPath, $commonSuffix, $fname );
     }
 
+    /**
+     * NB: not to be used to delete at the same time cache and non-cache files
+     */
     protected function _deleteByDirListInner( $dirList, $commonPath, $commonSuffix, $fname )
     {
         $result = true;
         $this->error = false;
         $like = ''; // not sure it is necessary to initialize, but in case...
-        $sql = self::$deletequery . "WHERE name LIKE :alike" ;
+        $sql = $this->deletequery( $commonPath ) . "WHERE name LIKE :alike ESCAPE '!'" ;
         /// @todo !important test that oci_parse went ok, and oci_bind_by_name too
         $statement = oci_parse( $this->db, $sql );
         oci_bind_by_name( $statement, ':alike', $like, 4000 );
 
         foreach ( $dirList as $dirItem )
         {
-            $like = "$commonPath/$dirItem/$commonSuffix%";
+            $like = str_replace( '_', '!_', "$commonPath/$dirItem/$commonSuffix%" );
 
             if ( !@oci_execute( $statement, OCI_DEFAULT ) )
             {
@@ -552,6 +597,10 @@ class eZDFSFileHandlerOracleBackend
                 $result = false;
                 break;
             }
+
+            $event = 'cluster/deleteByDirList';
+            $eventParameters = array( $commonPath, $dirItem, $commonSuffix );
+            $this->eventHandler->notify( $event, $eventParameters );
         }
 
         oci_free_statement( $statement );
@@ -570,8 +619,11 @@ class eZDFSFileHandlerOracleBackend
             $fname .= "::_exists($filePath)";
         else
             $fname = "_exists($filePath)";
+
+        $row = $this->eventHandler->filter( 'cluster/fileExists', $filePath );
+
         $hash = md5( $filePath );
-        $sql = "SELECT mtime, expired FROM " . self::TABLE_METADATA . " WHERE name_hash=:hash";
+        $sql = "SELECT mtime, expired FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=:hash";
 
         if ( ! $row = $this->_selectOneAssoc( $sql, $fname, false, false, array( ':hash' => $hash ) ) )
         {
@@ -659,7 +711,12 @@ class eZDFSFileHandlerOracleBackend
 
             if ( $uniqueName !== true )
             {
-                eZFile::rename( $tmpFilePath, $filePath, false, eZFile::CLEAN_ON_FAILURE | eZFile::APPEND_DEBUG_ON_FAILURE );
+                if( !eZFile::rename( $tmpFilePath, $filePath, false, eZFile::CLEAN_ON_FAILURE | eZFile::APPEND_DEBUG_ON_FAILURE ) )
+                {
+                    usleep( self::TIME_UNTIL_RETRY );
+                    ++$loopCount;
+                    continue;
+                }
             }
             $filePath = ($uniqueName) ? $tmpFilePath : $filePath ;
 
@@ -671,6 +728,11 @@ class eZDFSFileHandlerOracleBackend
             {
                 return $filePath;
             }
+            // Sizes might have been corrupted by FS problems. Enforcing temp file removal.
+            else if ( file_exists( $tmpFilePath ) )
+            {
+                unlink( $tmpFilePath );
+            }
 
             usleep( self::TIME_UNTIL_RETRY );
             ++$loopCount;
@@ -678,8 +740,7 @@ class eZDFSFileHandlerOracleBackend
         while ( $dfsFileSize > $localFileSize && $loopCount < $this->maxCopyTries );
 
         // Copy from DFS has failed :-(
-        eZDebug::writeError( "Size ($localFileSize) of written data for file '$tmpFilePath' does not match expected size {$metaData['size']}", __METHOD__ );
-        unlink( $tmpFilePath );
+        eZDebug::writeError( "Size ({$localFileSize}) of written data for file '{$tmpFilePath}' does not match expected size {$metaData['size']}", __METHOD__ );
         return false;
     }
 
@@ -714,13 +775,17 @@ class eZDFSFileHandlerOracleBackend
      */
     function _fetchMetadata( $filePath, $fname = false )
     {
+        $metadata = $this->eventHandler->filter( 'cluster/loadMetadata', $filePath );
+        if ( is_array( $metadata ) )
+            return $metadata;
+
         if ( $fname )
             $fname .= "::_fetchMetadata($filePath)";
         else
             $fname = "_fetchMetadata($filePath)";
         $hash = md5( $filePath );
         $sql  = "SELECT datatype,name,name_hash,scope,filesize,mtime,expired " .
-                "FROM " . self::TABLE_METADATA . " WHERE name_hash=:hash" ;
+                "FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=:hash" ;
 
         $row = $this->_selectOneAssoc( $sql, $fname, false, false, array( ':hash' => $hash ) );
 
@@ -730,6 +795,9 @@ class eZDFSFileHandlerOracleBackend
             $row['size'] = $row['filesize'];
             unset( $row['filesize'] );
         }
+
+        if ( is_array( $row ) )
+            $this->eventHandler->notify( 'cluster/storeMetadata', array( $row ) );
 
         return $row;
     }
@@ -778,13 +846,23 @@ class eZDFSFileHandlerOracleBackend
         if ( strcmp( $srcFilePath, $dstFilePath ) == 0 )
             return;
 
-         $fname = "_rename($srcFilePath, $dstFilePath)";
+        $fname = "_rename($srcFilePath, $dstFilePath)";
         // Fetch source file metadata.
         $metaData = $this->_fetchMetadata( $srcFilePath, $fname );
-        if ( !$metaData ) // if source file does not exist then do nothing.
+        // if source file does not exist then do nothing.
+        // @todo Throw an exception
+        if ( !$metaData )
             return false;
-        return $this->_protect( array( $this, "_renameInner" ), $fname,
+        $result = $this->_protect( array( $this, "_renameInner" ), $fname,
                         $srcFilePath, $dstFilePath, $fname, $metaData );
+
+        if ( $result )
+        {
+            $this->eventHandler->notify( 'cluster/deleteFile', array( $srcFilePath ) );
+            // do we need to notify about the destination filePath ?
+        }
+
+        return $result;
     }
 
     function _renameInner( $srcFilePath, $dstFilePath, $fname, $metaData )
@@ -793,24 +871,65 @@ class eZDFSFileHandlerOracleBackend
         // NOTE: no use in fetching before deleting it...
         $this->_delete( $dstFilePath, true, $fname );
 
-        // Update source file metadata.
-        $name = $this->_escapeString( $dstFilePath );
-        $hash = md5( $dstFilePath );
-        $sql = "UPDATE " . self::TABLE_METADATA . " SET name='$name', name_hash='$hash' WHERE name_hash=:name_hash";
+        $sameTable = ( $this->dbTable( $srcFilePath ) == $this->dbTable( $dstFilePath ) );
 
-        // we count the rows updated: if zero, it means another transaction
-        // removed the src file after we fetched metadata above, so we rollback
-        $return = $this->_query( $sql, $fname, true, array(
-            /*':name' => $name, ':hash' => $hash,*/ ':name_hash' => $metaData['name_hash'] ), self::RETURN_COUNT );
-        if ( $return === 0 )
+        if ( $sameTable )
         {
-            $return = false;
+            // Update source file metadata.
+            $name = $this->_escapeString( $dstFilePath );
+            $hash = md5( $dstFilePath );
+            $sql = "UPDATE " . $this->dbTable( $srcFilePath ) . " SET name='$name', name_hash='$hash' WHERE name_hash=:name_hash";
+
+            // we count the rows updated: if zero, it means another transaction
+            // removed the src file after we fetched metadata above, so we rollback
+            $return = $this->_query( $sql, $fname, true, array(
+                /*':name' => $name, ':hash' => $hash,*/ ':name_hash' => $metaData['name_hash'] ), self::RETURN_COUNT );
+
+            if ( $return === 0 )
+            {
+                $return = false;
+            }
+
+            if ( $return )
+            {
+                $return = $this->dfsbackend->renameOnDFS( $srcFilePath, $dstFilePath );
+            }
+        }
+        else
+        {
+            // Create a new meta-data entry for the new file.
+            $name = $this->_escapeString( $dstFilePath );
+            $hash = md5( $dstFilePath );
+            /// @todo use bind parameters
+            $sql = "INSERT INTO " . $this->dbTable( $dstFilePath ) . " (name, name_hash, datatype, scope, filesize, mtime, expired, status) SELECT '$name' AS name, '$hash' AS name_hash, datatype, scope, filessize, mtime, expired, status FROM " . $this->dbTable( $srcFilePath ) . " WHERE name_hash = " . $this->_md5( $srcFilePath );
+            if ( !$this->_query( $sql, "_rename($srcFilePath, $dstFilePath)" ) )
+            {
+                eZDebug::writeError( "Failed making new file entry '$dstFilePath'", __METHOD__ );
+                // @todo Throw an exception
+                return false;
+            }
+
+            if ( !$this->dfsbackend->copyFromDFSToDFS( $srcFilePath, $dstFilePath ) )
+            {
+                return $this->_fail( "Failed to copy DFS://$srcFilePath to DFS://$dstFilePath" );
+            }
+
+            // Remove old entry
+            $sql = "DELETE FROM " . $this->dbTable( $srcFilePath ) . " WHERE name_hash = " . $this->_md5( $srcFilePath );
+            if ( !$this->_query( $sql, "_rename($srcFilePath, $dstFilePath)" ) )
+            {
+                eZDebug::writeError( "Failed removing old file '$srcFilePath'", __METHOD__ );
+                // @todo Throw an exception
+                return false;
+            }
+
+            // delete original DFS file
+            // @todo Catch an exception
+            $this->dfsbackend->delete( $srcFilePath );
+
+            $return = true;
         }
 
-        if ( $return )
-        {
-            $return = $this->dfsbackend->renameOnDFS( $srcFilePath, $dstFilePath );
-        }
         return $return;
     }
 
@@ -835,8 +954,12 @@ class eZDFSFileHandlerOracleBackend
         else
             $fname = "_store($filePath, $datatype, $scope)";
 
-        return $this->_protect( array( $this, '_storeInner' ), $fname,
+        $return = $this->_protect( array( $this, '_storeInner' ), $fname,
                          $filePath, $datatype, $scope, $fname );
+
+        $this->eventHandler->notify( 'cluster/deleteFile', array( $filePath ) );
+
+        return $return;
     }
 
     /**
@@ -922,7 +1045,7 @@ class eZDFSFileHandlerOracleBackend
             $bindParameters[':currentmtime'] = $row['mtime'];
             unset( $bindParameters[':name'] );
 
-            $query = "UPDATE " . self::TABLE_METADATA . ' ' .
+            $query = "UPDATE " . $this->dbTable( $filePath ) . ' ' .
                      "SET " . $this->_sqlList( $fields ) . ' ' .
                      "WHERE name_hash=:name_hash AND mtime=:currentmtime";
 
@@ -940,7 +1063,7 @@ class eZDFSFileHandlerOracleBackend
         // No entry was found
         else
         {
-            $query = "INSERT INTO " . self::TABLE_METADATA . ' ' .
+            $query = "INSERT INTO " . $this->dbTable( $filePath ) . ' ' .
                      "(" . implode( ', ', array_keys( array_merge( $fields, $extraFields ) ) ) . ") " .
                      "VALUES ( " . implode( ', ', array_keys( $bindParameters ) ) . ")";
 
@@ -1031,29 +1154,64 @@ class eZDFSFileHandlerOracleBackend
         return true;
     }
 
-    public function _getFileList( $scopes = false, $excludeScopes = false )
+    /**
+     * gets the list of cluster files, filtered by the optional params
+     * @param array $scopes filter by array of scopes to include in the list
+     * @param bool $excludeScopes if true, $scopes param acts as an exclude filter
+     * @param array $limit limits the search to offset limit[0], limit limit[1]
+     * @param string $path filter to include entries only including $path
+     * @return array|false the db list of entries of false if none found
+     */
+    public function _getFileList( $scopes = false, $excludeScopes = false, $limit = false, $path = false )
     {
-        $query = 'SELECT name FROM ' . self::TABLE_METADATA;
-
-        if ( is_array( $scopes ) && count( $scopes ) > 0 )
-        {
-            $query .= ' WHERE scope ';
-            if ( $excludeScopes )
-                $query .= 'NOT ';
-            $query .= "IN ('" . implode( "', '", $scopes ) . "')";
-        }
-
-        $rows = $this->_query( $query, "_getFileList( array( " . implode( ', ', $scopes ) . " ), $excludeScopes )", true, array(), self::RETURN_DATA );
-        if ( $rows === false )
-        {
-            eZDebug::writeDebug( 'Unable to get file list', __METHOD__ );
-            // @todo Throw an exception
-            return false;
-        }
-
         $filePathList = array();
-        foreach( $rows as $row )
-            $filePathList[] = $row['NAME'];
+
+        $tables = array_unique( array( $this->metaDataTable, $this->metaDataTableCache ) );
+
+        foreach( $tables as $table )
+        {
+            $query = 'SELECT name FROM ' . $table;
+
+            if ( is_array( $scopes ) && count( $scopes ) > 0 )
+            {
+                $query .= ' WHERE scope ';
+                if ( $excludeScopes )
+                    $query .= 'NOT ';
+                $query .= "IN ('" . implode( "', '", $scopes ) . "')";
+            }
+            if ( $path != false && $scopes == false )
+            {
+                $query .= " WHERE name LIKE '" . str_replace( '_', '!_', $path ) . "%' ESCAPE '!'";
+            }
+            else if ( $path != false )
+            {
+                $query .= " AND name LIKE '" . str_replace( '_', '!_', $path ) . "%' ESCAPE '!'";
+            }
+            if ( $limit && array_sum($limit) )
+            {
+                $offset = $limit[0];
+                $limit = $limit[1];
+            }
+            else
+            {
+                $offset = 0;
+                $limit = -1;
+            }
+
+            $rows = $this->_query( $query, "_getFileList( array( " . implode( ', ', $scopes ) . " ), $excludeScopes )", true, array(), self::RETURN_DATA, $offset, $limit );
+            if ( $rows === false )
+            {
+                eZDebug::writeError( 'Unable to get file list', __METHOD__ );
+                throw new Exception(
+                    "dfs/oracle DB error: " . oci_error( $this->db ) . "\nSQL Query: $query"
+                );
+            }
+
+            foreach( $rows as $row )
+            {
+                $filePathList[] = $row['NAME'];
+            }
+        }
 
         return $filePathList;
     }
@@ -1162,7 +1320,9 @@ class eZDFSFileHandlerOracleBackend
         {
             $this->error = oci_error( $statement );
             $this->_error( $query, $fname, $error );
-            return false;
+            throw new Exception(
+                "dfs/oracle DB error: " . $this->error . "\nSQL Query: $query"
+            );
         }
 
         if ( $row2 !== false )
@@ -1281,7 +1441,7 @@ class eZDFSFileHandlerOracleBackend
             /// @todo replace with an exception
             if ( $result === false )
             {
-                $this->transactionCount--;
+                // rollback does already lower the transaction count, there should be no need to do that here...
                 $this->_rollback( $fname );
                 return false;
             }
@@ -1328,13 +1488,13 @@ class eZDFSFileHandlerOracleBackend
     }
 
     /**
-     * Performs mysql query and returns mysql result.
+     * Performs oracle query and returns oracle result.
      * Times the sql execution, adds accumulator timings and reports SQL to
      * debug.
      * @param string $fname The function name that started the query, should
      *                      contain relevant arguments in the text.
      **/
-    protected function _query( $query, $fname = false, $reportError = true, $bindparams = array(), $return_type = self::RETURN_BOOL )
+    protected function _query( $query, $fname = false, $reportError = true, $bindparams = array(), $return_type = self::RETURN_BOOL, $offset = 0, $limit = -1 )
     {
         eZDebug::accumulatorStart( 'oracle_cluster_query', 'oracle_cluster_total', 'Oracle_cluster_queries' );
         $time = microtime( true );
@@ -1366,11 +1526,11 @@ class eZDFSFileHandlerOracleBackend
                 }
                 else if ( $return_type == self::RETURN_DATA )
                 {
-                    oci_fetch_all( $statement, $res, 0, 0, OCI_FETCHSTATEMENT_BY_ROW+OCI_ASSOC );
+                    oci_fetch_all( $statement, $res, $offset, $limit, OCI_FETCHSTATEMENT_BY_ROW+OCI_ASSOC );
                 }
                 else if ( $return_type == self::RETURN_DATA_BY_COL )
                 {
-                    oci_fetch_all( $statement, $res, 0, 0, OCI_FETCHSTATEMENT_BY_COLUMN+OCI_ASSOC );
+                    oci_fetch_all( $statement, $res, $offset, $limit, OCI_FETCHSTATEMENT_BY_COLUMN+OCI_ASSOC );
                 }
             }
 
@@ -1390,7 +1550,7 @@ class eZDFSFileHandlerOracleBackend
         $time = microtime( true ) - $time;
         eZDebug::accumulatorStop( 'oracle_cluster_query' );
 
-        $this->_report( $query, $fname, $time, 0 );
+        $this->_report( $query, $fname, $time, ( is_array( $res ) ? count( $res ) : $res ) );
         return $res;
     }
 
@@ -1487,7 +1647,7 @@ class eZDFSFileHandlerOracleBackend
                              'datatype' => "''",
                              'mtime' => $mtime,
                              'expired' => 0 );
-        $query = 'INSERT INTO ' . self::TABLE_METADATA . ' ( '. implode(', ', array_keys( $insertData ) ) . ' ) ' .
+        $query = 'INSERT INTO ' . $this->dbTable( $filePath ) . ' ( '. implode(', ', array_keys( $insertData ) ) . ' ) ' .
                  "VALUES(" . implode( ', ', $insertData ) . ")";
 
         if ( !$this->_query( $query, "_startCacheGeneration( $filePath )", false ) )
@@ -1505,11 +1665,11 @@ class eZDFSFileHandlerOracleBackend
             else
             {
                 // generation timout check
-                $query = "SELECT mtime FROM " . self::TABLE_METADATA . " WHERE name_hash = $nameHash";
+                $query = "SELECT mtime FROM " . $this->dbTable( $filePath ) . " WHERE name_hash = $nameHash";
                 $row = $this->_selectOneRow( $query, $fname, false, false );
 
                 // file has been renamed, i.e it is no longer a .generating file
-                if( $row and !isset( $row[0] ) )
+                if ( $row and !isset( $row[0] ) )
                     return array( 'result' => 'ok', 'mtime' => $mtime );
 
                 $remainingGenerationTime = $this->remainingCacheGenerationTime( $row );
@@ -1518,7 +1678,7 @@ class eZDFSFileHandlerOracleBackend
                     $previousMTime = $row[0];
 
                     eZDebugSetting::writeDebug( 'kernel-clustering', "$filePath generation has timedout, taking over", __METHOD__ );
-                    $updateQuery = "UPDATE " . self::TABLE_METADATA . " SET mtime = {$mtime} WHERE name_hash = {$nameHash} AND mtime = {$previousMTime}";
+                    $updateQuery = "UPDATE " . $this->dbTable( $filePath ) . " SET mtime = {$mtime} WHERE name_hash = {$nameHash} AND mtime = {$previousMTime}";
                     //eZDebug::writeDebug( $updateQuery, '$updateQuery' );
 
                     // we run the query manually since the default _query won't
@@ -1567,7 +1727,7 @@ class eZDFSFileHandlerOracleBackend
         // no rename: the .generating entry is just deleted
         if ( $rename === false )
         {
-            $this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash" );
+            $this->_query( "DELETE FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=$nameHash" );
             $this->dfsbackend->delete( $generatingFilePath );
             return true;
         }
@@ -1580,26 +1740,27 @@ class eZDFSFileHandlerOracleBackend
             $newPath = "'" . md5( $filePath ) . "'";
 
             // both files are locked for update
-            if ( !$generatingMetaData = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash FOR UPDATE", $fname, true, array(), self::RETURN_DATA ) )
+            if ( !$generatingMetaData = $this->_query( "SELECT * FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=$nameHash FOR UPDATE", $fname, true, array(), self::RETURN_DATA ) )
             {
+                eZDebug::writeError("An error occured while ending cache generation,  $generatingFilePath", $fname );
                 $this->_rollback( $fname );
                 return false;
             }
             //$generatingMetaData = mysql_fetch_assoc( $res );
 
             // we cannot use RETURN COUNT here, as it does not work with selects
-            $res = $this->_query( "SELECT * FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath FOR UPDATE", $fname, false, array(), self::RETURN_DATA );
+            $res = $this->_query( "SELECT * FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=$newPath FOR UPDATE", $fname, false, array(), self::RETURN_DATA );
             if ( $res && count( $res ) === 1 )
             {
                 // the original file exists: we remove it before updating the .generating file
-                if ( !$this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$newPath", $fname, true ) )
+                if ( !$this->_query( "DELETE FROM " . $this->dbTable( $filePath ) . " WHERE name_hash=$newPath", $fname, true ) )
                 {
                     $this->_rollback( $fname );
                     return false;
                 }
             }
 
-            if ( !$this->_query( "UPDATE " . self::TABLE_METADATA . " SET name = '" . $this->_escapeString( $filePath ) . "', name_hash=$newPath WHERE name_hash=$nameHash", $fname, true ) )
+            if ( !$this->_query( "UPDATE " . $this->dbTable( $filePath ) . " SET name = '" . $this->_escapeString( $filePath ) . "', name_hash=$newPath WHERE name_hash=$nameHash", $fname, true ) )
             {
                 $this->_rollback( $fname );
                 return false;
@@ -1643,7 +1804,7 @@ class eZDFSFileHandlerOracleBackend
         $newMtime = time();
 
         // The update query will only succeed if the mtime wasn't changed in between
-        $query = "UPDATE " . self::TABLE_METADATA . " SET mtime = $newMtime WHERE name_hash = $nameHash AND mtime = $generatingFileMtime";
+        $query = "UPDATE " . $this->dbTable( $generatingFilePath ) . " SET mtime = $newMtime WHERE name_hash = $nameHash AND mtime = $generatingFileMtime";
         $numRows = $this->_query( $query, $fname, false, array(), self::RETURN_COUNT );
         if ( $numRows === false )
         {
@@ -1677,7 +1838,7 @@ class eZDFSFileHandlerOracleBackend
         /// @bug why use a transaction here if no rollback is possible?
         $this->_begin( $fname );
 
-        $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash = '" . md5( $generatingFilePath ) . "'";
+        $sql = "DELETE FROM " . $this->dbTable( $generatingFilePath ) . " WHERE name_hash = '" . md5( $generatingFilePath ) . "'";
         $this->_query( $sql, $fname );
         $this->dfsbackend->delete( $generatingFilePath );
 
@@ -1694,7 +1855,7 @@ class eZDFSFileHandlerOracleBackend
      **/
     protected function remainingCacheGenerationTime( $row )
     {
-        if( !isset( $row[0] ) )
+        if ( !isset( $row[0] ) )
             return -1;
 
         return ( $row[0] + self::$dbparams['cache_generation_timeout'] ) - time();
@@ -1808,11 +1969,19 @@ class eZDFSFileHandlerOracleBackend
 
     protected function _dfspurgeInner( $array, $dryRun = false, $printCallback = false, $microsleep = false )
     {
-        // look for files present in the db
-        $selectSQL = 'select name_hash from ' . self::TABLE_METADATA . " where name_hash in ('" . implode( "', '", array_keys( $array ) ) . "')";
-        //$connector = new eZDFSFileHandlerOracleBackend();
-        //$connector->connect();
-        $found = $this->_query( $selectSQL, '_dfspurgeInner', true, array(), self::RETURN_DATA_BY_COL );
+        // look for files present in the db, across the different tables
+        $tables = array();
+        foreach( $array as $nameHash => $fileName )
+        {
+            $table = $this->dbTable( $fileName );
+            $tables[$table][] = $nameHash;
+        }
+        $found = array();
+        foreach( $tables as $table => $nameHashes )
+        {
+            $selectSQL = 'select name_hash from ' . $table . " where name_hash in ('" . implode( "', '", $nameHashes ) . "')";
+            $found = array_merge( $found, $this->_query( $selectSQL, '_dfspurgeInner', true, array(), self::RETURN_DATA_BY_COL ) );
+        }
 
         /// @todo manage db error case
         if ( $found )
@@ -1837,6 +2006,71 @@ class eZDFSFileHandlerOracleBackend
         usleep( $microsleep );
     }
 
+    /// @todo add runtime support (via an ini param?) to switch to logical deletes
+    protected function deleteQuery( $filePath )
+    {
+
+        //return "UPDATE " . $this->dbTable( $filePath ) . " SET mtime=-ABS(mtime), expired='1' ";
+        return "DELETE FROM " . $this->dbTable( $filePath ) . " ";
+    }
+
+    /**
+     * Registers $listener as the cluster event listener.
+     *
+     * @param eZClusterEventListener $listener
+     * @return void
+     */
+    public function registerListener( eZClusterEventListener $listener )
+    {
+        $suppliedEvents = array(
+            'cluster/storeMetadata',
+            'cluster/loadMetadata',
+            'cluster/fileExists',
+            'cluster/deleteFile',
+            'cluster/deleteByLike',
+            'cluster/deleteByDirList',
+            'cluster/deleteByNametrunk'
+        );
+
+        foreach ( $suppliedEvents as $eventName )
+        {
+            list( $domain, $method ) = explode( '/', $eventName );
+            $this->eventHandler->attach( $eventName, array( $listener, $method ) );
+        }
+    }
+
+    /**
+     * Deletes a batch of cache files from the storage table.
+     *
+     * @param int $limit
+     *
+     * @return int The number of moved rows
+     *
+     * @throws RuntimeException if a query error occurs
+     * @throws InvalidArgumentException if the split table feature is disabled
+     */
+    public function deleteCacheFiles( $limit )
+    {
+        if ( $this->metaDataTable === $this->metaDataTableCache )
+        {
+            throw new InvalidArgumentException( "The split table features is disabled: cache and storage table are identical" );
+        }
+
+        $like = str_replace( '_', '!_', eZSys::cacheDirectory() ) . DIRECTORY_SEPARATOR . '%';
+
+        $query = "DELETE FROM {$this->metaDataTable} WHERE name LIKE '$like' ESCAPE  '!'";
+        if ( $limit > 0 )
+        {
+            $query .= ' AND ROWNUM <= ' . (int)$limit;
+        }
+        $statement = oci_parse( $this->db, $query );
+        if ( !$statement || !oci_execute( $statement ) )
+        {
+            throw new RuntimeException( "Oracle error in $query\n" . oci_error( $this->db ) );
+        }
+
+        return oci_num_rows( $statement );
+    }
 
     /**
      * DB connection handle
@@ -1865,12 +2099,6 @@ class eZDFSFileHandlerOracleBackend
     protected $transactionCount = 0;
 
     /**
-     * DB file table name
-     * @var string
-     **/
-    const TABLE_METADATA = 'ezdfsfile';
-
-    /**
      * Distributed filesystem backend
      * @var eZDFSFileHandlerDFSBackend
      **/
@@ -1884,10 +2112,40 @@ class eZDFSFileHandlerOracleBackend
     const RETURN_DATA = 2;
     const RETURN_DATA_BY_COL = 4;
 
-    /// @todo add runtime support (via an ini param?) to switch to logical deletes
-    //static $deletequery = "UPDATE ezdbfile SET mtime=-ABS(mtime), expired='1' ";
-    static $deletequery = "DELETE FROM ezdfsfile ";
+    /**
+     * Event handler
+     * @var ezpEvent
+     */
+    protected $eventHandler;
 
+    /**
+     * custom dfs table name support
+     * @var string
+     */
+    protected $metaDataTable = 'ezdfsfile';
+
+    /**
+     * Custom DFS table for cache storage.
+     * Defaults to the "normal" storage table, meaning that only one table is used.
+     * @var string
+     */
+    protected $metaDataTableCache = 'ezdfsfile_cache';
+
+    /**
+     * Cache files directory, including leading & trailing slashes.
+     * Will be filled in using FileSettings.CacheDir from site.ini
+     * @var string
+     */
+    protected $cacheDir;
+
+    /**
+     * Storage directory, including leading & trailing slashes.
+     * Will be filled in using FileSettings.StorageDir from site.ini
+     * @var string
+     */
+    protected $storageDir;
+
+    protected $error;
 }
 
 ?>

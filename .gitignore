@@ -3,6 +3,13 @@ bootstrap.xml
 build.xml
 build/
 dist/
+branches/
+var/
+.idea/
+
 pakefile.php
+copies
+todo*
+.gitignore
 
 *.bak

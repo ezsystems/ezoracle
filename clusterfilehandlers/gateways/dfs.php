@@ -7,6 +7,11 @@
  */
 
 /**
+ * Explicitely loaded here for the case index_cluster.php is used
+ */
+include_once 'autoload.php';
+
+/**
  * DFS/Oracle cluster gateway
  */
 class ezpDfsOracleClusterGateway extends ezpClusterGateway
@@ -29,9 +34,32 @@ class ezpDfsOracleClusterGateway extends ezpClusterGateway
         }
     }
 
+    /**
+     * Returns the database table name to use for the specified file.
+     *
+     * For files detected as cache files the cache table is returned, if not
+     * the generic table is returned.
+     *
+     *
+     * @param string $filePath
+     * @return string The database table name
+     */
+    protected function dbTable( $filePath )
+    {
+        $cacheDir = defined( 'CLUSTER_METADATA_CACHE_PATH' ) ? CLUSTER_METADATA_CACHE_PATH : "/cache/";
+        $storageDir = defined( 'CLUSTER_METADATA_STORAGE_PATH' ) ? CLUSTER_METADATA_STORAGE_PATH : "/storage/";
+
+        if ( strpos( $filePath, $cacheDir ) !== false && strpos( $filePath, $storageDir ) === false )
+        {
+            return defined( 'CLUSTER_METADATA_TABLE_CACHE' ) ? CLUSTER_METADATA_TABLE_CACHE : 'ezdfsfile_cache';
+        }
+
+        return 'ezdfsfile';
+    }
+
     public function fetchFileMetadata( $filepath )
     {
-        $query = "SELECT filesize, datatype, mtime FROM ezdfsfile WHERE name_hash = :name_hash";
+        $query = "SELECT filesize, datatype, mtime FROM " . $this->dbTable( $filepath ) . " WHERE name_hash = :name_hash";
         if ( !$statement = oci_parse( $this->db, $query ) )
         {
             $error = oci_error();
@@ -39,7 +67,8 @@ class ezpDfsOracleClusterGateway extends ezpClusterGateway
                 "(error #{$error['code']}: {$error['message']})" );
         }
 
-        oci_bind_by_name( $statement, ':name_hash', md5( $filepath ), -1 );
+        $md5 = md5( $filepath );
+        oci_bind_by_name( $statement, ':name_hash', $md5, -1 );
         if ( !oci_execute( $statement, OCI_DEFAULT ) )
         {
             $error = oci_error();
