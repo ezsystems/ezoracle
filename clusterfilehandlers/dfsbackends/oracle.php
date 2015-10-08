@@ -201,8 +201,6 @@ class eZDFSFileHandlerOracleBackend
         //$nameTrunk       = self::nameTrunk( $dstFilePath, $scope );
 
         /// @todo move to stored params convention
-        $name = $this->_escapeString( $dstFilePath );
-        $hash = md5( $dstFilePath );
         $sql  = "INSERT INTO " . self::TABLE_METADATA . " (datatype, name, name_hash, scope, filesize, mtime, expired) " .
                 "VALUES ('$datatype', '$filePathEscaped', '$filePathHash', '$scope', " .
                 "$contentLength, $fileMTime, '0')";
@@ -524,9 +522,9 @@ class eZDFSFileHandlerOracleBackend
     public function _deleteByDirList( $dirList, $commonPath, $commonSuffix, $fname = false )
     {
         if ( $fname )
-            $fname .= "::_deleteByDirList($dirList, $commonPath, $commonSuffix)";
+            $fname .= "::_deleteByDirList(" . implode( ',', $dirList ) . ", $commonPath, $commonSuffix)";
         else
-            $fname = "_deleteByDirList($dirList, $commonPath, $commonSuffix)";
+            $fname = "_deleteByDirList(" . implode( ',', $dirList ) . ", $commonPath, $commonSuffix)";
         return $this->_protect( array( $this, '_deleteByDirListInner' ), $fname,
                                 $dirList, $commonPath, $commonSuffix, $fname );
     }
@@ -787,7 +785,7 @@ class eZDFSFileHandlerOracleBackend
                         $srcFilePath, $dstFilePath, $fname, $metaData );
     }
 
-    function _renameInner( $srcFilePath, $dstFilePath, $fname, $metaData )
+    protected function _renameInner( $srcFilePath, $dstFilePath, $fname, $metaData )
     {
         // Delete destination file if exists.
         // NOTE: no use in fetching before deleting it...
@@ -848,7 +846,7 @@ class eZDFSFileHandlerOracleBackend
      * @see eZDFSFileHandlerMySQLBackend::_store()
      * @return bool
      **/
-    function _storeInner( $filePath, $datatype, $scope, $fname )
+    protected function _storeInner( $filePath, $datatype, $scope, $fname )
     {
         // Insert file metadata.
         clearstatcache( true, $filePath );
@@ -998,7 +996,7 @@ class eZDFSFileHandlerOracleBackend
                          $filePath, $contents, $scope, $datatype, $mtime, $fname );
     }
 
-    function _storeContentsInner( $filePath, $contents, $scope, $datatype, $mtime, $fname )
+    protected function _storeContentsInner( $filePath, $contents, $scope, $datatype, $mtime, $fname )
     {
         // Mostly cut&pasted from _store().
         if ( $fname )
@@ -1196,10 +1194,6 @@ class eZDFSFileHandlerOracleBackend
      **/
     protected function _begin( $fname = false )
     {
-        if ( $fname )
-            $fname .= "::_begin";
-        else
-            $fname = "_begin";
         $this->transactionCount++;
         /// @todo set savepoint
     }
@@ -1210,10 +1204,6 @@ class eZDFSFileHandlerOracleBackend
      **/
     protected function _commit( $fname = false )
     {
-        if ( $fname )
-            $fname .= "::_commit";
-        else
-            $fname = "_commit";
         $this->transactionCount--;
         if ( $this->transactionCount == 0 )
            oci_commit( $this->db );
@@ -1226,10 +1216,6 @@ class eZDFSFileHandlerOracleBackend
      **/
     protected function _rollback( $fname = false )
     {
-        if ( $fname )
-            $fname .= "::_rollback";
-        else
-            $fname = "_rollback";
         $this->transactionCount--;
         if ( $this->transactionCount == 0 )
             oci_rollback( $this->db );
@@ -1354,7 +1340,8 @@ class eZDFSFileHandlerOracleBackend
                     if ( !oci_bind_by_name( $statement, $name, $bindparams[$name], -1 ) )
                     {
                         $this->error = oci_error( $statement );
-                        $this->_error( $query, $fname, $this->error );
+                        // binding errors we always report, regardless of $reportError
+                        $this->_error( $query, $fname, "Failed to bind parameter '$name'" );
                     }
                 }
             }
@@ -1367,7 +1354,8 @@ class eZDFSFileHandlerOracleBackend
             {
                 $commitMode = OCI_DEFAULT;
             }
-            if ( ! $res = oci_execute( $statement, $commitMode ) )
+            // swallow oci warnings, as we report them only if caller asks for it
+            if ( ! $res = @oci_execute( $statement, $commitMode ) )
             {
                 $this->error = oci_error( $statement );
             }
@@ -1388,16 +1376,18 @@ class eZDFSFileHandlerOracleBackend
             }
 
             oci_free_statement( $statement );
+
+            // take care: 0 might be a valid result if RETURN_COUNT is used
+            if ( $res === false && $reportError )
+            {
+                $this->_error( $query, $fname, false );
+            }
         }
         else
         {
             $this->error = oci_error( $this->db );
-        }
-
-        // take care: 0 might be a valid result if RETURN_COUNT is used
-        if ( $res === false && $reportError )
-        {
-            $this->_error( $query, $fname, false, $this->error );
+            // parsing errors we always report, regardless of $reportError
+            $this->_error( $query, $fname, "Failed to parse query" );
         }
 
         $time = microtime( true ) - $time;
@@ -1538,7 +1528,7 @@ class eZDFSFileHandlerOracleBackend
                     // report affected rows
                     //$stmt = oci_parse( $this->db, $updateQuery );
                     //$res = oci_execute( $stmt );
-                    $res = $this->_queryAndCommit( $updateQuery, $fname, false, array(), self::RETURN_COUNT );
+                    $res = $this->_queryAndCommit( $updateQuery, $fname, true, array(), self::RETURN_COUNT );
                     if ( $res === 1 )
                     {
                         return array( 'result' => 'ok', 'mtime' => $mtime );
@@ -1650,14 +1640,13 @@ class eZDFSFileHandlerOracleBackend
 
         // reporting
         eZDebug::accumulatorStart( 'oracle_cluster_query', 'oracle_cluster_total', 'Oracle_cluster_queries' );
-        $time = microtime( true );
 
         $nameHash = "'" . md5( $generatingFilePath ) . "'";
         $newMtime = time();
 
         // The update query will only succeed if the mtime wasn't changed in between
         $query = "UPDATE " . self::TABLE_METADATA . " SET mtime = $newMtime WHERE name_hash = $nameHash AND mtime = $generatingFileMtime";
-        $numRows = $this->_queryAndCommit( $query, $fname, false, array(), self::RETURN_COUNT );
+        $numRows = $this->_queryAndCommit( $query, $fname, true, array(), self::RETURN_COUNT );
         if ( $numRows === false )
         {
             /// @todo Throw an exception
@@ -1848,7 +1837,6 @@ class eZDFSFileHandlerOracleBackend
 
     /**
      * DB connection handle
-     * @var handle
      **/
     public $db = null;
 
@@ -1896,6 +1884,7 @@ class eZDFSFileHandlerOracleBackend
     //static $deletequery = "UPDATE ezdbfile SET mtime=-ABS(mtime), expired='1' ";
     static $deletequery = "DELETE FROM ezdfsfile ";
 
+    protected $error;
 }
 
 ?>
