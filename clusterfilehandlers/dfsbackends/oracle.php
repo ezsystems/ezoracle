@@ -1327,14 +1327,19 @@ class eZDFSFileHandlerOracleBackend
         return new eZMySQLBackendError( $value, $text );
     }
 
+    protected function _queryAndCommit( $query, $fname = false, $reportError = true, $bindparams = array(), $return_type = self::RETURN_BOOL )
+    {
+        return $this->_query($query, $fname, $reportError, $bindparams, $return_type, true );
+    }
+
     /**
-     * Performs mysql query and returns mysql result.
+     * Performs query and returns result.
      * Times the sql execution, adds accumulator timings and reports SQL to
      * debug.
      * @param string $fname The function name that started the query, should
      *                      contain relevant arguments in the text.
      **/
-    protected function _query( $query, $fname = false, $reportError = true, $bindparams = array(), $return_type = self::RETURN_BOOL )
+    protected function _query( $query, $fname = false, $reportError = true, $bindparams = array(), $return_type = self::RETURN_BOOL, $commit = false )
     {
         eZDebug::accumulatorStart( 'oracle_cluster_query', 'oracle_cluster_total', 'Oracle_cluster_queries' );
         $time = microtime( true );
@@ -1354,7 +1359,15 @@ class eZDFSFileHandlerOracleBackend
                 }
             }
 
-            if ( !$res = @oci_execute( $statement, OCI_DEFAULT ) )
+            if ($commit && $this->transactionCount == 0 )
+            {
+                $commitMode = OCI_COMMIT_ON_SUCCESS;
+            }
+            else
+            {
+                $commitMode = OCI_DEFAULT;
+            }
+            if ( ! $res = oci_execute( $statement, $commitMode ) )
             {
                 $this->error = oci_error( $statement );
             }
@@ -1490,7 +1503,7 @@ class eZDFSFileHandlerOracleBackend
         $query = 'INSERT INTO ' . self::TABLE_METADATA . ' ( '. implode(', ', array_keys( $insertData ) ) . ' ) ' .
                  "VALUES(" . implode( ', ', $insertData ) . ")";
 
-        if ( !$this->_query( $query, "_startCacheGeneration( $filePath )", false ) )
+        if ( !$this->_queryAndCommit( $query, "_startCacheGeneration( $filePath )", false ) )
         {
             $errno = $this->error['code'];
             if ( $errno != 1 )
@@ -1525,7 +1538,7 @@ class eZDFSFileHandlerOracleBackend
                     // report affected rows
                     //$stmt = oci_parse( $this->db, $updateQuery );
                     //$res = oci_execute( $stmt );
-                    $res = $this->_query( $updateQuery, $fname, false, array(), self::RETURN_COUNT );
+                    $res = $this->_queryAndCommit( $updateQuery, $fname, false, array(), self::RETURN_COUNT );
                     if ( $res === 1 )
                     {
                         return array( 'result' => 'ok', 'mtime' => $mtime );
@@ -1567,7 +1580,7 @@ class eZDFSFileHandlerOracleBackend
         // no rename: the .generating entry is just deleted
         if ( $rename === false )
         {
-            $this->_query( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash" );
+            $this->_queryAndCommit( "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash=$nameHash" );
             $this->dfsbackend->delete( $generatingFilePath );
             return true;
         }
@@ -1644,7 +1657,7 @@ class eZDFSFileHandlerOracleBackend
 
         // The update query will only succeed if the mtime wasn't changed in between
         $query = "UPDATE " . self::TABLE_METADATA . " SET mtime = $newMtime WHERE name_hash = $nameHash AND mtime = $generatingFileMtime";
-        $numRows = $this->_query( $query, $fname, false, array(), self::RETURN_COUNT );
+        $numRows = $this->_queryAndCommit( $query, $fname, false, array(), self::RETURN_COUNT );
         if ( $numRows === false )
         {
             /// @todo Throw an exception
@@ -1674,14 +1687,9 @@ class eZDFSFileHandlerOracleBackend
     {
         $fname = "_abortCacheGeneration( $generatingFilePath )";
 
-        /// @bug why use a transaction here if no rollback is possible?
-        $this->_begin( $fname );
-
         $sql = "DELETE FROM " . self::TABLE_METADATA . " WHERE name_hash = '" . md5( $generatingFilePath ) . "'";
-        $this->_query( $sql, $fname );
+        $this->_queryAndCommit( $sql, $fname );
         $this->dfsbackend->delete( $generatingFilePath );
-
-        $this->_commit( $fname );
     }
 
     /**
