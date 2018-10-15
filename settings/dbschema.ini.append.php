@@ -8,21 +8,21 @@ ColumnNameTranslation[ezenumobjectvalue.contentobject_attribute_version]=content
 ColumnNameTranslation[ezurl_object_link.contentobject_attribute_version]=contentobject_attr_version
 ColumnNameTranslation[ezdbfile.size]=filesize
 
-ColumnTypeTranslation[ezurlalias.source_url]=longtext;varchar(3000)
-ColumnTypeTranslation[ezurl.url]=longtext;varchar(3000)
-ColumnTypeTranslation[ezurlalias_ml.action]=longtext;varchar(3000)
-ColumnTypeTranslation[ezurlalias_ml.text]=longtext;varchar(3000)
-ColumnTypeTranslation[ezurlalias.destination_url]=longtext;varchar(3000)
-ColumnTypeTranslation[ezcontentobject_tree.path_identification_string]=longtext;varchar(3100)
-ColumnTypeTranslation[ezcontentobject_trash.path_identification_string]=longtext;varchar(3100)
-ColumnTypeTranslation[ezimagefile.filepath]=longtext;varchar(3000)
-ColumnTypeTranslation[eznotificationcollection.data_subject]=longtext;varchar(3100)
-ColumnTypeTranslation[ezrss_import.url]=longtext;varchar(3100)
-ColumnTypeTranslation[ezrss_import.import_description]=longtext;varchar(3100)
-ColumnTypeTranslation[ezcontentclass.serialized_name_list]=longtext;varchar(3100)
-ColumnTypeTranslation[ezcontentclass_attribute.serialized_name_list]=longtext;varchar(3100)
-ColumnTypeTranslation[ezpending_actions.param]=longtext;varchar(3000)
-ColumnTypeTranslation[ezcontentclass.serialized_description_list]=longtext;varchar(3000)
+ColumnTypeTranslation[ezurlalias.source_url]=longtext;varchar(1000)
+ColumnTypeTranslation[ezurl.url]=longtext;varchar(1000)
+ColumnTypeTranslation[ezurlalias_ml.action]=longtext;varchar(1000)
+ColumnTypeTranslation[ezurlalias_ml.text]=longtext;varchar(1000)
+ColumnTypeTranslation[ezurlalias.destination_url]=longtext;varchar(1000)
+ColumnTypeTranslation[ezcontentobject_tree.path_identification_string]=longtext;varchar(1000)
+ColumnTypeTranslation[ezcontentobject_trash.path_identification_string]=longtext;varchar(1000)
+ColumnTypeTranslation[ezimagefile.filepath]=longtext;varchar(1000)
+ColumnTypeTranslation[eznotificationcollection.data_subject]=longtext;varchar(1000)
+ColumnTypeTranslation[ezrss_import.url]=longtext;varchar(1000)
+ColumnTypeTranslation[ezrss_import.import_description]=longtext;varchar(1000)
+ColumnTypeTranslation[ezcontentclass.serialized_name_list]=longtext;varchar(1000)
+ColumnTypeTranslation[ezcontentclass_attribute.serialized_name_list]=longtext;varchar(1000)
+ColumnTypeTranslation[ezpending_actions.param]=longtext;varchar(1000)
+ColumnTypeTranslation[ezcontentclass.serialized_description_list]=longtext;varchar(1000)
 
 # Translation of column options, such as NOT NULL and DEFAULT xxx.
 # Currently only "null" (remove "NOT NULL" requirement) is supported.
